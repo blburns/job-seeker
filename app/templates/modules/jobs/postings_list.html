@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Job Postings{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Job Postings</h4>
+  <div>
+    <a href="{{ url_for('jobs.posting_fetch') }}" class="btn btn-outline-primary">Fetch URL</a>
+    <a href="{{ url_for('jobs.posting_new') }}" class="btn btn-primary">Add Job</a>
+  </div>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr><th>Title</th><th>Company</th><th>Fit Score</th><th>Source</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for posting in postings %}
+        <tr>
+          <td>{{ posting.title }}</td>
+          <td>{{ posting.company }}</td>
+          <td>{% if posting.fit_score %}{{ posting.fit_score }}%{% else %}-{% endif %}</td>
+          <td>{{ posting.source }}</td>
+          <td><a href="{{ url_for('jobs.posting_detail', posting_id=posting.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No job postings yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Discover Jobs{% endblock %}
+{% block extra_vendor_js %}
+<script>
+document.getElementById('rssForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const feedUrl = document.getElementById('feedUrl').value;
+  const results = document.getElementById('rssResults');
+  results.innerHTML = '<p class="text-muted">Loading...</p>';
+  const resp = await fetch('/api/v1/jobs/discover/rss', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content},
+    body: JSON.stringify({feed_url: feedUrl, limit: 20})
+  });
+  const data = await resp.json();
+  if (!resp.ok) { results.innerHTML = '<div class="alert alert-danger">' + (data.error || 'Failed') + '</div>'; return; }
+  let html = '<div class="list-group">';
+  (data.data || []).forEach(job => {
+    html += '<div class="list-group-item"><strong>' + job.title + '</strong><br><small>' + (job.url || '') + '</small></div>';
+  });
+  html += '</div>';
+  results.innerHTML = html || '<p class="text-muted">No jobs found.</p>';
+});
+</script>
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="mb-0">RSS Job Feed</h5></div>
+      <div class="card-body">
+        <form id="rssForm">
+          <div class="mb-3">
+            <label class="form-label">RSS Feed URL</label>
+            <input type="url" id="feedUrl" class="form-control" placeholder="https://example.com/jobs.rss" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Search Feed</button>
+        </form>
+        <div id="rssResults" class="mt-4"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h6>Also available</h6>
+        <ul class="mb-0">
+          <li><a href="{{ url_for('jobs.posting_fetch') }}">Fetch job from URL</a></li>
+          <li><a href="{{ url_for('jobs.posting_new') }}">Paste job description manually</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

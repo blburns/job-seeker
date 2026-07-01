@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Fetch Job from URL{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header"><h5 class="mb-0">Fetch Job from URL</h5></div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">Job posting URL</label>
+            <input type="url" name="url" class="form-control" placeholder="https://..." required>
+          </div>
+          <button type="submit" class="btn btn-primary">Fetch &amp; Review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

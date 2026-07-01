@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ posting.title }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h4 class="mb-1">{{ posting.title }}</h4>
+    <p class="text-muted mb-0">{{ posting.company }}{% if posting.location %} · {{ posting.location }}{% endif %}</p>
+  </div>
+  <a href="{{ url_for('applications.new_application') }}?job_id={{ posting.id }}" class="btn btn-primary">Create Application</a>
+</div>
+
+{% if analysis %}
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card"><div class="card-body text-center">
+      <h3 class="mb-1">{{ analysis.coverage_score }}%</h3>
+      <small class="text-muted">Keyword Coverage</small>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card"><div class="card-body text-center">
+      <h3 class="mb-1 text-success">{{ analysis.matched_keywords|length }}</h3>
+      <small class="text-muted">Matched Keywords</small>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card"><div class="card-body text-center">
+      <h3 class="mb-1 text-danger">{{ analysis.missing_keywords|length }}</h3>
+      <small class="text-muted">Missing Keywords</small>
+    </div></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header bg-label-success"><h6 class="mb-0">Matched</h6></div>
+      <div class="card-body">
+        {% for kw in analysis.matched_keywords %}
+        <span class="badge bg-label-success me-1 mb-1">{{ kw }}</span>
+        {% else %}<span class="text-muted">None</span>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-header bg-label-danger"><h6 class="mb-0">Missing (do not invent)</h6></div>
+      <div class="card-body">
+        {% for kw in analysis.missing_keywords[:30] %}
+        <span class="badge bg-label-danger me-1 mb-1">{{ kw }}</span>
+        {% else %}<span class="text-muted">None</span>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% elif not profile %}
+<div class="alert alert-warning">Upload a master profile to see keyword analysis.</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header"><h6 class="mb-0">Job Description</h6></div>
+  <div class="card-body"><pre class="mb-0 small" style="white-space:pre-wrap">{{ posting.description }}</pre></div>
+</div>
+{% endblock %}
