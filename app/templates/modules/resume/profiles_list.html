@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}Master Profiles{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">Master Profiles</h4>
-  <a href="{{ url_for('resume.upload') }}" class="btn btn-primary">Upload Resume</a>
-</div>
+{% call page_header('Master Profiles', 'Structured resume data for tailoring and export') %}
+  <a href="{{ url_for('resume.upload') }}" class="btn btn-primary btn-sm">Upload Resume</a>
+{% endcall %}
+
 <div class="card">
-  <div class="table-responsive">
-    <table class="table table-hover mb-0">
+  <div class="card-datatable table-responsive">
+    <table class="table border-top">
       <thead>
         <tr>
           <th>Name</th>
@@ -15,7 +16,7 @@
           <th>Status</th>
           <th>Confidence</th>
           <th>Created</th>
-          <th></th>
+          <th class="text-end">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -30,14 +31,16 @@
             <span class="badge bg-label-secondary">Inactive</span>
             {% endif %}
           </td>
-          <td>{{ profile.parse_confidence or '-' }}%</td>
+          <td>{% if profile.parse_confidence %}{{ profile.parse_confidence }}%{% else %}-{% endif %}</td>
           <td>{{ profile.created_at.strftime('%Y-%m-%d') if profile.created_at else '-' }}</td>
-          <td>
+          <td class="text-end">
             <a href="{{ url_for('resume.profile_detail', profile_id=profile.id) }}" class="btn btn-sm btn-outline-primary">View</a>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="6" class="text-center text-muted py-4">No profiles yet. Upload your resume to get started.</td></tr>
+        <tr class="table-empty">
+          <td colspan="6" class="text-center text-muted">No profiles yet. <a href="{{ url_for('resume.upload') }}">Upload your resume</a> to get started.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>

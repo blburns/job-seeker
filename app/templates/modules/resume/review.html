@@ -1,12 +1,16 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}Review Parsed Resume{% endblock %}
 {% block content %}
-<div class="row">
+{% call page_header('Review Parsed Resume', 'Edit structured JSON before saving your master profile') %}
+  <span class="badge bg-label-info align-self-center">Parse confidence: {{ parse_confidence }}%</span>
+{% endcall %}
+
+<div class="row g-4">
   <div class="col-lg-8">
-    <div class="card mb-4">
-      <div class="card-header d-flex justify-content-between">
-        <h5 class="mb-0">Review &amp; Edit</h5>
-        <span class="badge bg-label-info">Parse confidence: {{ parse_confidence }}%</span>
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Structured Profile</h5>
       </div>
       <div class="card-body">
         {% if validation_errors %}
@@ -18,21 +22,35 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="source_filename" value="{{ source_filename }}">
           <input type="hidden" name="parse_confidence" value="{{ parse_confidence }}">
-          <div class="mb-3">
-            <label class="form-label">Structured profile (JSON)</label>
-            <textarea name="profile_data" class="form-control font-monospace" rows="24">{{ profile_json }}</textarea>
+          <div class="mb-4">
+            <label class="form-label" for="profile-data">Profile JSON</label>
+            <textarea name="profile_data" id="profile-data" class="form-control font-monospace" rows="24">{{ profile_json }}</textarea>
           </div>
-          <button type="submit" class="btn btn-primary">Save Master Profile</button>
-          <a href="{{ url_for('resume.upload') }}" class="btn btn-outline-secondary">Cancel</a>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save Master Profile</button>
+            <a href="{{ url_for('resume.upload') }}" class="btn btn-label-secondary">Cancel</a>
+          </div>
         </form>
       </div>
     </div>
   </div>
   <div class="col-lg-4">
-    <div class="card">
+    <div class="card mb-4">
+      <div class="card-header"><h6 class="card-title mb-0">Parse Diagnostics</h6></div>
       <div class="card-body">
-        <h6>ATS tips</h6>
-        <ul class="small text-muted mb-0">
+        <ul class="small text-muted mb-0 ps-3">
+          {% for hint in parse_diagnostics or [] %}
+          <li>{{ hint }}</li>
+          {% else %}
+          <li>No diagnostics available.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h6 class="card-title mb-0">ATS Tips</h6></div>
+      <div class="card-body">
+        <ul class="small text-muted mb-0 ps-3">
           <li>Single-column export only</li>
           <li>Standard section headings</li>
           <li>No invented experience</li>

@@ -1,25 +1,39 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}Applications{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between mb-4">
-  <h4 class="mb-0">All Applications</h4>
-  <a href="{{ url_for('applications.new_application') }}" class="btn btn-primary">New Application</a>
-</div>
+{% call page_header('All Applications', 'Every job you are tracking') %}
+  <a href="{{ url_for('applications.pipeline') }}" class="btn btn-outline-primary btn-sm">Pipeline</a>
+  <a href="{{ url_for('applications.new_application') }}" class="btn btn-primary btn-sm">New Application</a>
+{% endcall %}
+
 <div class="card">
-  <div class="table-responsive">
-    <table class="table table-hover mb-0">
-      <thead><tr><th>Job</th><th>Company</th><th>Stage</th><th>Coverage</th><th></th></tr></thead>
+  <div class="card-datatable table-responsive">
+    <table class="table border-top">
+      <thead>
+        <tr>
+          <th>Job</th>
+          <th>Company</th>
+          <th>Stage</th>
+          <th>Coverage</th>
+          <th class="text-end">Action</th>
+        </tr>
+      </thead>
       <tbody>
         {% for app in applications %}
         <tr>
           <td>{{ app.job_posting.title if app.job_posting else '-' }}</td>
           <td>{{ app.job_posting.company if app.job_posting else '-' }}</td>
           <td><span class="badge bg-label-info">{{ app.stage }}</span></td>
-          <td>{{ app.keyword_coverage_at_apply or '-' }}{% if app.keyword_coverage_at_apply %}%{% endif %}</td>
-          <td><a href="{{ url_for('applications.detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+          <td>{% if app.keyword_coverage_at_apply %}{{ app.keyword_coverage_at_apply }}%{% else %}-{% endif %}</td>
+          <td class="text-end">
+            <a href="{{ url_for('applications.detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+          </td>
         </tr>
         {% else %}
-        <tr><td colspan="5" class="text-center text-muted py-4">No applications.</td></tr>
+        <tr class="table-empty">
+          <td colspan="5" class="text-center text-muted">No applications.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>

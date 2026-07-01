@@ -1,39 +1,38 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}Application Detail{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-start mb-4">
-  <div>
-    <h4 class="mb-1">{{ job.title if job else 'Application' }}</h4>
-    <p class="text-muted mb-0">{{ job.company if job else '' }} · <span class="badge bg-label-primary">{{ application.stage }}</span></p>
-  </div>
-  <div class="d-flex gap-2">
-    {% if application.stage == 'saved' or application.stage == 'tailoring' %}
-    <form method="post" action="{{ url_for('applications.tailor', application_id=application.id) }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="btn btn-outline-primary">Tailor Resume</button>
-    </form>
-    {% endif %}
-    {% if version and version.status == 'pending_approval' %}
-    <form method="post" action="{{ url_for('applications.approve', application_id=application.id) }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="btn btn-success">Approve Resume</button>
-    </form>
-    {% endif %}
-    {% if application.stage in ['ready_to_apply', 'tailoring'] and version %}
-    <a href="{{ url_for('apply.review', application_id=application.id) }}" class="btn btn-primary">Review &amp; Apply</a>
-    {% endif %}
-  </div>
-</div>
+{% call page_header(job.title if job else 'Application', (job.company if job else '') ~ ' · ' ~ application.stage) %}
+  {% if application.stage == 'saved' or application.stage == 'tailoring' %}
+  <form method="post" action="{{ url_for('applications.tailor', application_id=application.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-primary btn-sm">Tailor Resume</button>
+  </form>
+  {% endif %}
+  {% if version and version.status == 'pending_approval' %}
+  <form method="post" action="{{ url_for('applications.approve', application_id=application.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-success btn-sm">Approve Resume</button>
+  </form>
+  {% endif %}
+  {% if application.stage in ['ready_to_apply', 'tailoring'] and version %}
+  <a href="{{ url_for('apply.review', application_id=application.id) }}" class="btn btn-primary btn-sm">Review &amp; Apply</a>
+  {% endif %}
+{% endcall %}
 
 {% if version %}
 <div class="card mb-4">
-  <div class="card-header"><h6 class="mb-0">Tailored Resume v{{ version.version_number }}</h6></div>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="card-title mb-0">Tailored Resume v{{ version.version_number }}</h5>
+    <span class="badge bg-label-info">{{ version.status }}</span>
+  </div>
   <div class="card-body">
-    <p>Status: <span class="badge bg-label-info">{{ version.status }}</span>
-    {% if version.ats_score %} · ATS Score: {{ version.ats_score }}%{% endif %}</p>
+    {% if version.ats_score %}
+    <p class="mb-3">ATS Score: <strong>{{ version.ats_score }}%</strong></p>
+    {% endif %}
     {% if version.diff_log %}
-    <h6 class="mt-3">Changes made</h6>
-    <ul class="small mb-0">
+    <h6 class="mb-2">Changes Made</h6>
+    <ul class="small mb-0 ps-3">
       {% for change in version.diff_log[:10] %}
       <li>{{ change.action }} — {{ change.field }}{% if change.keyword_added %} ({{ change.keyword_added }}){% endif %}</li>
       {% endfor %}
@@ -44,7 +43,7 @@
 {% endif %}
 
 <div class="card">
-  <div class="card-header"><h6 class="mb-0">Notes</h6></div>
+  <div class="card-header"><h5 class="card-title mb-0">Notes</h5></div>
   <div class="card-body">
     <p class="mb-0 text-muted">{{ application.notes or 'No notes yet.' }}</p>
   </div>

@@ -1,18 +1,24 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}Job Postings{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">Job Postings</h4>
-  <div>
-    <a href="{{ url_for('jobs.posting_fetch') }}" class="btn btn-outline-primary">Fetch URL</a>
-    <a href="{{ url_for('jobs.posting_new') }}" class="btn btn-primary">Add Job</a>
-  </div>
-</div>
+{% call page_header('Job Postings', 'Saved roles for keyword analysis and applications') %}
+  <a href="{{ url_for('jobs.posting_fetch') }}" class="btn btn-outline-primary btn-sm">Fetch URL</a>
+  <a href="{{ url_for('jobs.discover') }}" class="btn btn-outline-primary btn-sm">Discover</a>
+  <a href="{{ url_for('jobs.posting_new') }}" class="btn btn-primary btn-sm">Add Job</a>
+{% endcall %}
+
 <div class="card">
-  <div class="table-responsive">
-    <table class="table table-hover mb-0">
+  <div class="card-datatable table-responsive">
+    <table class="table border-top">
       <thead>
-        <tr><th>Title</th><th>Company</th><th>Fit Score</th><th>Source</th><th></th></tr>
+        <tr>
+          <th>Title</th>
+          <th>Company</th>
+          <th>Fit Score</th>
+          <th>Source</th>
+          <th class="text-end">Action</th>
+        </tr>
       </thead>
       <tbody>
         {% for posting in postings %}
@@ -20,11 +26,15 @@
           <td>{{ posting.title }}</td>
           <td>{{ posting.company }}</td>
           <td>{% if posting.fit_score %}{{ posting.fit_score }}%{% else %}-{% endif %}</td>
-          <td>{{ posting.source }}</td>
-          <td><a href="{{ url_for('jobs.posting_detail', posting_id=posting.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+          <td><span class="badge bg-label-secondary">{{ posting.source }}</span></td>
+          <td class="text-end">
+            <a href="{{ url_for('jobs.posting_detail', posting_id=posting.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+          </td>
         </tr>
         {% else %}
-        <tr><td colspan="5" class="text-center text-muted py-4">No job postings yet.</td></tr>
+        <tr class="table-empty">
+          <td colspan="5" class="text-center text-muted">No job postings yet. <a href="{{ url_for('jobs.posting_new') }}">Add one</a></td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>

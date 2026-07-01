@@ -1,13 +1,8 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}Application Pipeline{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/libs/jkanban/jkanban.css') }}" />
-<style>
-.kanban-board { min-height: 400px; }
-.kanban-item { cursor: grab; }
-.kanban-item-title { font-weight: 600; font-size: 0.9rem; }
-.kanban-item-company { font-size: 0.8rem; color: #697a8d; }
-</style>
 {% endblock %}
 {% block extra_vendor_js %}
 <script src="{{ url_for('static', filename='assets/vendor/libs/jkanban/jkanban.js') }}"></script>
@@ -28,11 +23,11 @@ const boards = Object.keys(STAGE_LABELS).map(stage => ({
   }))
 }));
 
-const kanban = new jKanban({
+new jKanban({
   element: '#kanban-board',
   boards: boards,
   dragBoards: false,
-  dropEl: function(el, target, source, sibling) {
+  dropEl: function(el, target) {
     const appId = el.dataset.eid;
     const newStage = target.parentElement.dataset.id;
     fetch('/api/v1/applications/' + appId + '/stage', {
@@ -48,9 +43,13 @@ const kanban = new jKanban({
 </script>
 {% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4 class="mb-0">Application Pipeline</h4>
-  <a href="{{ url_for('applications.new_application') }}" class="btn btn-primary">New Application</a>
+{% call page_header('Application Pipeline', 'Drag cards to update stage') %}
+  <a href="{{ url_for('applications.list_view') }}" class="btn btn-outline-primary btn-sm">List View</a>
+  <a href="{{ url_for('applications.new_application') }}" class="btn btn-primary btn-sm">New Application</a>
+{% endcall %}
+<div class="card">
+  <div class="card-body">
+    <div id="kanban-board" class="kanban-board"></div>
+  </div>
 </div>
-<div id="kanban-board" class="kanban-board"></div>
 {% endblock %}

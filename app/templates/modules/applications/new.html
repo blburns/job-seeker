@@ -1,16 +1,17 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}New Application{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-lg-8">
+    {% call page_header('New Application', 'Link a job posting to your pipeline') %}{% endcall %}
     <div class="card">
-      <div class="card-header"><h5 class="mb-0">New Application</h5></div>
       <div class="card-body">
         <form method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="mb-3">
-            <label class="form-label">Select Job Posting</label>
-            <select name="job_posting_id" class="form-select" required>
+          <div class="mb-4">
+            <label class="form-label" for="job-posting">Select Job Posting</label>
+            <select name="job_posting_id" id="job-posting" class="form-select" required>
               <option value="">Choose a job...</option>
               {% for posting in postings %}
               <option value="{{ posting.id }}" {% if request.args.get('job_id') == posting.id|string %}selected{% endif %}>

@@ -1,19 +1,23 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}Upload Resume{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-lg-8">
+    {% call page_header('Upload Resume', 'PDF, DOCX, or TXT — we extract a structured master profile') %}{% endcall %}
     <div class="card">
-      <div class="card-header"><h5 class="mb-0">Upload Resume</h5></div>
       <div class="card-body">
-        <p class="text-muted">Upload PDF, DOCX, or TXT. We'll extract a structured master profile for ATS-safe tailoring.</p>
         <form method="post" enctype="multipart/form-data">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="mb-3">
-            <label class="form-label">Resume file</label>
-            <input type="file" name="file" class="form-control" accept=".pdf,.docx,.txt" required>
+          <div class="mb-4">
+            <label class="form-label" for="resume-file">Resume file</label>
+            <input type="file" name="file" id="resume-file" class="form-control" accept=".pdf,.docx,.txt" required>
+            <div class="form-text">Supported formats: PDF, DOCX, TXT</div>
           </div>
-          <button type="submit" class="btn btn-primary">Parse Resume</button>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Parse Resume</button>
+            <a href="{{ url_for('resume.profiles_list') }}" class="btn btn-label-secondary">Cancel</a>
+          </div>
         </form>
       </div>
     </div>

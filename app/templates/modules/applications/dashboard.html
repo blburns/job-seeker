@@ -1,37 +1,35 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header, stat_card %}
 {% block title %}Applications Dashboard{% endblock %}
 {% block content %}
-<h4 class="mb-4">Applications Dashboard</h4>
+{% call page_header('Applications Dashboard', 'Pipeline summary and recent activity') %}
+  <a href="{{ url_for('applications.pipeline') }}" class="btn btn-outline-primary btn-sm">Pipeline</a>
+  <a href="{{ url_for('applications.new_application') }}" class="btn btn-primary btn-sm">New Application</a>
+{% endcall %}
+
 <div class="row g-4 mb-4">
-  <div class="col-md-3">
-    <div class="card"><div class="card-body text-center">
-      <h3>{{ pipeline.summary.total }}</h3><small class="text-muted">Total</small>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card"><div class="card-body text-center">
-      <h3>{{ pipeline.summary.applied }}</h3><small class="text-muted">Applied</small>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card"><div class="card-body text-center">
-      <h3>{{ pipeline.summary.interviews }}</h3><small class="text-muted">Interviews</small>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card"><div class="card-body text-center">
-      <h3>{{ pipeline.summary.response_rate }}%</h3><small class="text-muted">Response Rate</small>
-    </div></div>
-  </div>
+  {{ stat_card('Total', pipeline.summary.total, 'All tracked applications', 'bg-label-primary', 'tabler-briefcase') }}
+  {{ stat_card('Applied', pipeline.summary.applied, 'Submitted applications', 'bg-label-success', 'tabler-send') }}
+  {{ stat_card('Interviews', pipeline.summary.interviews, 'Active interview stages', 'bg-label-warning', 'tabler-calendar-event') }}
+  {{ stat_card('Response Rate', pipeline.summary.response_rate ~ '%', 'Interview rate', 'bg-label-info', 'tabler-chart-line') }}
 </div>
-<div class="d-flex justify-content-between mb-3">
-  <h5 class="mb-0">Recent Applications</h5>
-  <a href="{{ url_for('applications.pipeline') }}" class="btn btn-outline-primary btn-sm">View Pipeline</a>
-</div>
+
 <div class="card">
-  <div class="table-responsive">
-    <table class="table mb-0">
-      <thead><tr><th>Job</th><th>Company</th><th>Stage</th><th>Applied</th><th></th></tr></thead>
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="card-title mb-0">Recent Applications</h5>
+    <a href="{{ url_for('applications.list_view') }}" class="btn btn-sm btn-outline-primary">View All</a>
+  </div>
+  <div class="card-datatable table-responsive">
+    <table class="table border-top">
+      <thead>
+        <tr>
+          <th>Job</th>
+          <th>Company</th>
+          <th>Stage</th>
+          <th>Applied</th>
+          <th class="text-end">Action</th>
+        </tr>
+      </thead>
       <tbody>
         {% for app in applications[:10] %}
         <tr>
@@ -39,10 +37,14 @@
           <td>{{ app.job_posting.company if app.job_posting else '-' }}</td>
           <td><span class="badge bg-label-primary">{{ app.stage }}</span></td>
           <td>{{ app.applied_at.strftime('%Y-%m-%d') if app.applied_at else '-' }}</td>
-          <td><a href="{{ url_for('applications.detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+          <td class="text-end">
+            <a href="{{ url_for('applications.detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+          </td>
         </tr>
         {% else %}
-        <tr><td colspan="5" class="text-center text-muted py-4">No applications yet.</td></tr>
+        <tr class="table-empty">
+          <td colspan="5" class="text-center text-muted">No applications yet. <a href="{{ url_for('applications.new_application') }}">Create one</a></td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>

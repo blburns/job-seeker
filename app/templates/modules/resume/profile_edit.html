@@ -1,14 +1,23 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}Edit Profile{% endblock %}
 {% block content %}
+{% call page_header('Edit Master Profile', profile.full_name) %}
+  <a href="{{ url_for('resume.profile_detail', profile_id=profile.id) }}" class="btn btn-label-secondary btn-sm">Cancel</a>
+{% endcall %}
+
 <div class="card">
-  <div class="card-header"><h5 class="mb-0">Edit Master Profile</h5></div>
   <div class="card-body">
     <form method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <textarea name="profile_data" class="form-control font-monospace mb-3" rows="28">{{ profile_json }}</textarea>
-      <button type="submit" class="btn btn-primary">Save Changes</button>
-      <a href="{{ url_for('resume.profile_detail', profile_id=profile.id) }}" class="btn btn-outline-secondary">Cancel</a>
+      <div class="mb-4">
+        <label class="form-label" for="profile-data">Profile JSON</label>
+        <textarea name="profile_data" id="profile-data" class="form-control font-monospace" rows="28">{{ profile_json }}</textarea>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{{ url_for('resume.profile_detail', profile_id=profile.id) }}" class="btn btn-label-secondary">Cancel</a>
+      </div>
     </form>
   </div>
 </div>
