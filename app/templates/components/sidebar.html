@@ -78,11 +78,8 @@
             <!-- Module with Children (Accordion) -->
             <li class="menu-item{% if ns.module_active %} active open{% endif %}">
               <a href="javascript:void(0);" class="menu-link menu-toggle">
-                {% if module_icons and module.icon in module_icons %}
-                  <span class="menu-icon icon-base">{{ module_icons[module.icon]|safe }}</span>
-                {% else %}
-                  <i class="menu-icon icon-base ti ti-circle"></i>
-                {% endif %}
+                {% set module_icon = module_icons.get(module.icon, 'tabler-circle') if module_icons and module.icon else 'tabler-circle' %}
+                <i class="menu-icon icon-base ti {{ module_icon }}"></i>
                 <div data-i18n="{{ module.display_name }}">{{ module.display_name }}</div>
               </a>
               <ul class="menu-sub">
@@ -115,6 +112,8 @@
                           {% endif %}
                           <li class="menu-item{% if current_endpoint == gc_endpoint %} active{% endif %}">
                             <a href="{{ gc_href }}" class="menu-link">
+                              {% set gc_icon = module_icons.get(grandchild.icon) if grandchild.get('icon') and module_icons else none %}
+                              {% if gc_icon %}<i class="menu-icon icon-base ti {{ gc_icon }}"></i>{% endif %}
                               <div data-i18n="{{ grandchild.display_name }}">{{ grandchild.display_name }}</div>
                             </a>
                           </li>
@@ -128,6 +127,8 @@
                     {% set child_url = safe_url_for(child_endpoint) %}
                     <li class="menu-item{% if current_endpoint == child_endpoint %} active{% endif %}">
                       <a href="{{ child_url if child_url != '#' else '#' }}" class="menu-link">
+                        {% set child_icon = module_icons.get(child.icon) if child.get('icon') and module_icons else none %}
+                        {% if child_icon %}<i class="menu-icon icon-base ti {{ child_icon }}"></i>{% endif %}
                         <div data-i18n="{{ child.display_name }}">{{ child.display_name }}</div>
                       </a>
                     </li>
@@ -141,11 +142,8 @@
             {% set module_url = safe_url_for(endpoint) if endpoint else '#' %}
             <li class="menu-item{% if current_endpoint == endpoint %} active{% endif %}">
               <a href="{{ module_url }}" class="menu-link">
-                {% if module_icons and module.icon in module_icons %}
-                  <span class="menu-icon icon-base">{{ module_icons[module.icon]|safe }}</span>
-                {% else %}
-                  <i class="menu-icon icon-base ti ti-circle"></i>
-                {% endif %}
+                {% set module_icon = module_icons.get(module.icon, 'tabler-circle') if module_icons and module.icon else 'tabler-circle' %}
+                <i class="menu-icon icon-base ti {{ module_icon }}"></i>
                 <div data-i18n="{{ module.display_name }}">{{ module.display_name }}</div>
               </a>
             </li>

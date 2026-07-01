@@ -210,7 +210,7 @@ def init_template_context(app):
             visible_modules = get_visible_modules(current_user)
         else:
             # If not authenticated, only show dashboard
-            visible_modules = [m for m in MODULES if m['name'] == 'dashboard']
+            visible_modules = [m for m in MODULES if m['name'] == 'overview']
         
         # Get modules organized by section
         modules_by_section = {}
@@ -218,13 +218,13 @@ def init_template_context(app):
             modules_by_section = get_modules_by_section(current_user)
         else:
             # If not authenticated, only show dashboard
-            modules_by_section = {'dashboards': [m for m in MODULES if m['name'] == 'dashboard']}
+            modules_by_section = {'job_seeker': [m for m in MODULES if m['name'] == 'overview']}
         
         # Check if user has access to any module (for showing/hiding launcher button)
-        has_module_access = len([m for m in visible_modules if m['name'] != 'dashboard']) > 0
+        has_module_access = len([m for m in visible_modules if m['name'] != 'overview']) > 0
         
         # Only expose the intended sidebar sections (avoids duplicate/extra "Users" or other sections)
-        allowed_section_names = ('dashboards', 'apps', 'pages', 'account', 'management', 'developer')
+        allowed_section_names = ('dashboards', 'job_seeker', 'apps', 'pages', 'account', 'management', 'developer')
         menu_sections = [s for s in MENU_SECTIONS if s.get('name') in allowed_section_names]
         
         return {

@@ -1,474 +1,130 @@
 {% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header, stat_card %}
 
-{% block title %}Dashboard - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+{% block title %}Overview - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
 
 {% block page_header %}
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
-  <div>
-    <h4 class="mb-1">{% block page_title %}Dashboard{% endblock page_title %}</h4>
-    <p class="mb-0">{% block page_subtitle %}Welcome back! Here's what's happening with your account today.{% endblock page_subtitle %}</p>
-  </div>
-  <div class="d-flex gap-2">
-    {% block page_actions %}{% endblock page_actions %}
-  </div>
-</div>
+{% call page_header('Overview', 'Your job search at a glance') %}
+  <a href="{{ url_for('resume.upload') }}" class="btn btn-primary btn-sm">
+    <i class="icon-base ti tabler-upload me-1"></i>Upload Resume
+  </a>
+  <a href="{{ url_for('jobs.posting_new') }}" class="btn btn-outline-primary btn-sm">
+    <i class="icon-base ti tabler-plus me-1"></i>Add Job
+  </a>
+  <a href="{{ url_for('applications.pipeline') }}" class="btn btn-outline-primary btn-sm">
+    <i class="icon-base ti tabler-layout-kanban me-1"></i>Pipeline
+  </a>
+{% endcall %}
 {% endblock %}
 
 {% block content %}
-<!-- Statistics Cards -->
+{% if not active_profile %}
+<div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+  <i class="icon-base ti tabler-alert-circle me-2"></i>
+  <div class="flex-grow-1">
+    <strong>Get started:</strong> Upload your resume to create a master profile for tailoring and keyword analysis.
+  </div>
+  <a href="{{ url_for('resume.upload') }}" class="btn btn-sm btn-warning ms-3">Upload Resume</a>
+</div>
+{% endif %}
+
 <div class="row g-4 mb-4">
-  <!-- Total Revenue -->
-  <div class="col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="card-title mb-2">
-            <span class="badge bg-label-primary rounded-pill mb-2">Total Revenue</span>
-            <h3 class="mb-2 mt-1">$28,450</h3>
-            <small class="text-muted">vs last month</small>
-          </div>
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-primary">
-              <i class="icon-base ti tabler-currency-dollar icon-md"></i>
-            </span>
-          </div>
-        </div>
-        <div class="d-flex align-items-center mt-3">
-          <span class="badge bg-label-success me-1">+18.2%</span>
-          <small class="text-muted">from last month</small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Total Sales -->
-  <div class="col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="card-title mb-2">
-            <span class="badge bg-label-success rounded-pill mb-2">Total Sales</span>
-            <h3 class="mb-2 mt-1">$42.5k</h3>
-            <small class="text-muted">vs last month</small>
-          </div>
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-success">
-              <i class="icon-base ti tabler-chart-bar icon-md"></i>
-            </span>
-          </div>
-        </div>
-        <div class="d-flex align-items-center mt-3">
-          <span class="badge bg-label-success me-1">+12.5%</span>
-          <small class="text-muted">from last month</small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Conversion Rate -->
-  <div class="col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="card-title mb-2">
-            <span class="badge bg-label-warning rounded-pill mb-2">Conversion Rate</span>
-            <h3 class="mb-2 mt-1">28.5%</h3>
-            <small class="text-muted">vs last month</small>
-          </div>
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-warning">
-              <i class="icon-base ti tabler-trending-up icon-md"></i>
-            </span>
-          </div>
-        </div>
-        <div class="d-flex align-items-center mt-3">
-          <span class="badge bg-label-danger me-1">-2.4%</span>
-          <small class="text-muted">from last month</small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Active Users -->
-  <div class="col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="card-title mb-2">
-            <span class="badge bg-label-info rounded-pill mb-2">Active Users</span>
-            <h3 class="mb-2 mt-1">1.2k</h3>
-            <small class="text-muted">vs last month</small>
-          </div>
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-info">
-              <i class="icon-base ti tabler-users icon-md"></i>
-            </span>
-          </div>
-        </div>
-        <div class="d-flex align-items-center mt-3">
-          <span class="badge bg-label-success me-1">+8.7%</span>
-          <small class="text-muted">from last month</small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sessions -->
-  <div class="col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="card-title mb-2">
-            <span class="badge bg-label-primary rounded-pill mb-2">Sessions</span>
-            <h3 class="mb-2 mt-1">3.1k</h3>
-            <small class="text-muted">Page Views</small>
-          </div>
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-primary">
-              <i class="icon-base ti tabler-eye icon-md"></i>
-            </span>
-          </div>
-        </div>
-        <div class="d-flex align-items-center mt-3">
-          <span class="badge bg-label-success me-1">+28%</span>
-          <small class="text-muted">from last month</small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Leads -->
-  <div class="col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="card-title mb-2">
-            <span class="badge bg-label-success rounded-pill mb-2">Leads</span>
-            <h3 class="mb-2 mt-1">1.2k</h3>
-            <small class="text-muted">Conversions</small>
-          </div>
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-success">
-              <i class="icon-base ti tabler-user-plus icon-md"></i>
-            </span>
-          </div>
-        </div>
-        <div class="d-flex align-items-center mt-3">
-          <span class="badge bg-label-success me-1">+12%</span>
-          <small class="text-muted">from last month</small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Orders -->
-  <div class="col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="card-title mb-2">
-            <span class="badge bg-label-warning rounded-pill mb-2">Orders</span>
-            <h3 class="mb-2 mt-1">127</h3>
-            <small class="text-muted">Order Size: 18</small>
-          </div>
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-warning">
-              <i class="icon-base ti tabler-shopping-cart icon-md"></i>
-            </span>
-          </div>
-        </div>
-        <div class="d-flex align-items-center mt-3">
-          <span class="badge bg-label-success me-1">+18%</span>
-          <small class="text-muted">from last month</small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Items -->
-  <div class="col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="card-title mb-2">
-            <span class="badge bg-label-info rounded-pill mb-2">Items</span>
-            <h3 class="mb-2 mt-1">2.3k</h3>
-            <small class="text-muted">Total Items</small>
-          </div>
-          <div class="avatar flex-shrink-0">
-            <span class="avatar-initial rounded bg-label-info">
-              <i class="icon-base ti tabler-package icon-md"></i>
-            </span>
-          </div>
-        </div>
-        <div class="d-flex align-items-center mt-3">
-          <span class="badge bg-label-success me-1">+8%</span>
-          <small class="text-muted">from last month</small>
-        </div>
-      </div>
-    </div>
-  </div>
+  {{ stat_card('Master Profile', profiles|length, active_profile.headline or active_profile.full_name if active_profile else 'No active profile', 'bg-label-info', 'tabler-file-text') }}
+  {{ stat_card('Job Postings', postings|length, 'Saved for analysis', 'bg-label-primary', 'tabler-briefcase') }}
+  {{ stat_card('Applications', pipeline.summary.total, pipeline.summary.applied ~ ' submitted', 'bg-label-success', 'tabler-send') }}
+  {{ stat_card('Interviews', pipeline.summary.interviews, pipeline.summary.response_rate ~ '% response rate', 'bg-label-warning', 'tabler-calendar-event') }}
 </div>
 
-<!-- Main Content Grid -->
-<div class="row g-4 mb-4">
-  <!-- Sales Overview Chart -->
-  <div class="col-lg-6">
+<div class="row g-4">
+  <div class="col-lg-8">
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Average Daily Sales</h5>
-        <div class="text-end">
-          <h3 class="mb-0">$28,450</h3>
-          <small class="text-muted">Total Sales This Month</small>
-        </div>
+        <h5 class="card-title mb-0">Recent Applications</h5>
+        <a href="{{ url_for('applications.list_view') }}" class="btn btn-sm btn-outline-primary">View All</a>
       </div>
-      <div class="card-body">
-        <div class="d-flex align-items-center mb-3">
-          <span class="badge bg-label-success me-2">+18.2%</span>
-          <small class="text-muted">Sales Overview</small>
-        </div>
-        <div class="d-flex align-items-center justify-content-center" style="height: 300px; background-color: var(--bs-gray-100); border-radius: 0.375rem;">
-          <p class="text-muted mb-0">Chart visualization area</p>
-        </div>
+      <div class="card-datatable table-responsive">
+        <table class="table border-top">
+          <thead>
+            <tr>
+              <th>Job</th>
+              <th>Company</th>
+              <th>Stage</th>
+              <th>Updated</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in applications[:8] %}
+            <tr>
+              <td>{{ app.job_posting.title if app.job_posting else '-' }}</td>
+              <td>{{ app.job_posting.company if app.job_posting else '-' }}</td>
+              <td><span class="badge bg-label-primary">{{ app.stage }}</span></td>
+              <td>{{ app.updated_at.strftime('%Y-%m-%d') if app.updated_at else '-' }}</td>
+              <td class="text-end">
+                <a href="{{ url_for('applications.detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">Open</a>
+              </td>
+            </tr>
+        {% else %}
+        <tr class="table-empty">
+          <td colspan="5" class="text-center text-muted">
+                No applications yet.
+                <a href="{{ url_for('applications.new_application') }}">Create one</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
-  <!-- Revenue Sources -->
-  <div class="col-lg-6">
-    <div class="card h-100">
+  <div class="col-lg-4">
+    <div class="card mb-4">
       <div class="card-header">
-        <h5 class="card-title mb-0">Revenue Sources</h5>
+        <h5 class="card-title mb-0">Quick Actions</h5>
       </div>
-      <div class="card-body">
-        <div class="d-flex flex-column gap-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-              <span class="badge badge-dot bg-primary"></span>
-              <span class="text-body">Direct</span>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="fw-semibold">268</span>
-              <small class="text-muted">$8,567k</small>
-            </div>
-          </div>
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-              <span class="badge badge-dot bg-success"></span>
-              <span class="text-body">Referral</span>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="fw-semibold">62</span>
-              <small class="text-muted">$2,415k</small>
-            </div>
-          </div>
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-              <span class="badge badge-dot bg-warning"></span>
-              <span class="text-body">Organic</span>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="fw-semibold">890</span>
-              <small class="text-muted">$865k</small>
-            </div>
-          </div>
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-              <span class="badge badge-dot bg-info"></span>
-              <span class="text-body">Campaign</span>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="fw-semibold">1.2k</span>
-              <small class="text-muted">$745k</small>
-            </div>
-          </div>
-        </div>
+      <div class="card-body d-grid gap-2">
+        <a href="{{ url_for('resume.profiles_list') }}" class="btn btn-label-secondary text-start">
+          <i class="icon-base ti tabler-user-circle me-2"></i>Master Profiles
+        </a>
+        <a href="{{ url_for('jobs.postings_list') }}" class="btn btn-label-secondary text-start">
+          <i class="icon-base ti tabler-list me-2"></i>Job Postings
+        </a>
+        <a href="{{ url_for('jobs.discover') }}" class="btn btn-label-secondary text-start">
+          <i class="icon-base ti tabler-search me-2"></i>Discover Jobs
+        </a>
+        <a href="{{ url_for('jobs.posting_fetch') }}" class="btn btn-label-secondary text-start">
+          <i class="icon-base ti tabler-link me-2"></i>Fetch from URL
+        </a>
+        <a href="{{ url_for('applications.new_application') }}" class="btn btn-label-secondary text-start">
+          <i class="icon-base ti tabler-file-plus me-2"></i>New Application
+        </a>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Second Row Grid -->
-<div class="row g-4 mb-4">
-  <!-- Earning Reports -->
-  <div class="col-lg-4">
-    <div class="card h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Earning Reports</h5>
-        <button type="button" class="btn btn-sm btn-label-secondary">View More</button>
-      </div>
-      <div class="card-body">
-        <div class="mb-3">
-          <div class="d-flex align-items-center gap-2 mb-1">
-            <h3 class="mb-0">$468</h3>
-            <span class="badge bg-label-success">+4.2%</span>
-          </div>
-          <p class="text-muted mb-0 small">You informed of this week compared to last week</p>
-        </div>
-        <div class="border-top pt-3">
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-body">Earnings</span>
-            <span class="fw-semibold">$545.69</span>
-          </div>
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-body">Profit</span>
-            <span class="fw-semibold">$256.34</span>
-          </div>
-          <div class="d-flex justify-content-between">
-            <span class="text-body">Expense</span>
-            <span class="fw-semibold">$74.19</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Support Tracker -->
-  <div class="col-lg-4">
-    <div class="card h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">Support Tracker</h5>
-        <button type="button" class="btn btn-sm btn-label-secondary">View More</button>
-      </div>
-      <div class="card-body">
-        <div class="mb-3">
-          <h3 class="mb-1">164</h3>
-          <p class="text-muted mb-0">Total Tickets</p>
-        </div>
-        <div class="border-top pt-3">
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-body">New Tickets</span>
-            <span class="fw-semibold">142</span>
-          </div>
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-body">Open Tickets</span>
-            <span class="fw-semibold">28</span>
-          </div>
-          <div class="d-flex justify-content-between">
-            <span class="text-body">Response Time</span>
-            <span class="fw-semibold">1 Day</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Total Earning -->
-  <div class="col-lg-4">
-    <div class="card h-100">
+    <div class="card">
       <div class="card-header">
-        <h5 class="card-title mb-0">Total Earning</h5>
+        <h5 class="card-title mb-0">Recent Job Postings</h5>
       </div>
-      <div class="card-body">
-        <div class="mb-3">
-          <h3 class="mb-1">87%</h3>
-          <p class="text-muted mb-0">Total Revenue</p>
-        </div>
-        <div class="border-top pt-3">
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-body">Client Payment</span>
-            <span class="fw-semibold text-success">+$126</span>
+      <ul class="list-group list-group-flush">
+        {% for posting in postings[:5] %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-medium">{{ posting.title }}</div>
+            <small class="text-muted">{{ posting.company }}</small>
           </div>
-          <div class="d-flex justify-content-between">
-            <span class="text-body">Refund</span>
-            <span class="fw-semibold text-success">+$98</span>
-          </div>
-        </div>
-      </div>
+          <a href="{{ url_for('jobs.posting_detail', posting_id=posting.id) }}" class="btn btn-sm btn-icon btn-outline-primary">
+            <i class="icon-base ti tabler-chevron-right"></i>
+          </a>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted text-center py-4">
+          No job postings yet.
+          <a href="{{ url_for('jobs.posting_new') }}">Add one</a>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
-  </div>
-</div>
-
-<!-- Recent Projects Table -->
-<div class="card">
-  <div class="card-header">
-    <h5 class="card-title mb-0">Recent Projects</h5>
-  </div>
-  <div class="card-datatable table-responsive">
-    <table class="datatables-basic table border-top">
-      <thead>
-        <tr>
-          <th>Project</th>
-          <th>Leader</th>
-          <th>Team</th>
-          <th>Progress</th>
-          <th class="text-end">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            <span class="text-body">Website Redesign</span>
-          </td>
-          <td>
-            <div class="d-flex align-items-center gap-2">
-              <div class="avatar avatar-sm">
-                <span class="avatar-initial rounded bg-label-primary">JD</span>
-              </div>
-              <span class="text-body">John Doe</span>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex align-items-center">
-              <div class="avatar avatar-sm me-n2">
-                <span class="avatar-initial rounded bg-label-success">A</span>
-              </div>
-              <div class="avatar avatar-sm me-n2">
-                <span class="avatar-initial rounded bg-label-warning">B</span>
-              </div>
-              <div class="avatar avatar-sm">
-                <span class="avatar-initial rounded bg-label-info">C</span>
-              </div>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex align-items-center gap-2">
-              <div class="progress flex-grow-1" style="height: 8px;">
-                <div class="progress-bar" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-              <span class="fw-semibold">75%</span>
-            </div>
-          </td>
-          <td class="text-end">
-            <button type="button" class="btn btn-sm btn-label-secondary">View</button>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <span class="text-body">Mobile App Development</span>
-          </td>
-          <td>
-            <div class="d-flex align-items-center gap-2">
-              <div class="avatar avatar-sm">
-                <span class="avatar-initial rounded bg-label-success">JS</span>
-              </div>
-              <span class="text-body">Jane Smith</span>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex align-items-center">
-              <div class="avatar avatar-sm me-n2">
-                <span class="avatar-initial rounded bg-label-primary">D</span>
-              </div>
-              <div class="avatar avatar-sm">
-                <span class="avatar-initial rounded bg-label-warning">E</span>
-              </div>
-            </div>
-          </td>
-          <td>
-            <div class="d-flex align-items-center gap-2">
-              <div class="progress flex-grow-1" style="height: 8px;">
-                <div class="progress-bar bg-success" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-              <span class="fw-semibold">60%</span>
-            </div>
-          </td>
-          <td class="text-end">
-            <button type="button" class="btn btn-sm btn-label-secondary">View</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 </div>
 {% endblock %}

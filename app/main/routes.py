@@ -44,14 +44,36 @@ def health():
 
 
 @main_bp.route('/', methods=['GET', 'POST'])
+@login_required
 def index():
-    """Index page - redirects to login if not authenticated."""
-    if not current_user.is_authenticated:
-        return redirect(url_for('auth.login'))
-    
-    title = 'Home'
-    logos = get_logo_urls()
-    return render_template('main/home.html', title=title, **logos)
+    """Job seeker overview dashboard."""
+    from app.models.jobs import Application, JobPosting, MasterProfile
+    from app.services.pipeline_service import pipeline_service
+
+    profiles = MasterProfile.query.filter_by(
+        user_id=current_user.id, is_deleted=False
+    ).order_by(MasterProfile.created_at.desc()).all()
+    active_profile = next((p for p in profiles if p.is_active), None)
+
+    postings = JobPosting.query.filter_by(
+        user_id=current_user.id, is_deleted=False
+    ).order_by(JobPosting.created_at.desc()).all()
+
+    applications = Application.query.filter_by(
+        user_id=current_user.id, is_deleted=False
+    ).order_by(Application.updated_at.desc()).all()
+    pipeline = pipeline_service.get_pipeline_data(current_user.id, applications)
+
+    return render_template(
+        'main/home.html',
+        title='Overview',
+        profiles=profiles,
+        active_profile=active_profile,
+        postings=postings,
+        applications=applications,
+        pipeline=pipeline,
+        **get_logo_urls(),
+    )
 
 
 

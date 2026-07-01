@@ -432,8 +432,8 @@ class User(UserMixin, db.Model):
         if not module_config:
             return False
         
-        # Dashboard is always visible
-        if module_config['name'] == 'dashboard':
+        # Overview is always visible
+        if module_config['name'] == 'overview':
             return True
         
         # Admin and Super Admin see all modules by default

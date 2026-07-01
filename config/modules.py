@@ -5,24 +5,23 @@ Job seeker automation sidebar modules
 from typing import List, Dict, Any
 
 MENU_SECTIONS = [
-    {'name': 'dashboards', 'display_name': 'Dashboards', 'sort_order': 0},
-    {'name': 'job_seeker', 'display_name': 'Job Seeker', 'sort_order': 1},
-    {'name': 'management', 'display_name': 'Management', 'sort_order': 2},
-    {'name': 'account', 'display_name': 'Account', 'sort_order': 3},
+    {'name': 'job_seeker', 'display_name': 'Job Seeker', 'sort_order': 0},
+    {'name': 'management', 'display_name': 'Management', 'sort_order': 1},
+    {'name': 'account', 'display_name': 'Account', 'sort_order': 2},
 ]
 
 MODULES = [
     {
-        'name': 'dashboard',
-        'display_name': 'Dashboard',
-        'description': 'Overview',
+        'name': 'overview',
+        'display_name': 'Overview',
+        'description': 'Job search dashboard',
         'icon': 'dashboard',
         'color': 'gray',
         'permission': None,
         'blueprint_name': 'main',
         'route': 'index',
         'sort_order': 0,
-        'section': 'dashboards',
+        'section': 'job_seeker',
         'parent': None,
         'children': []
     },
@@ -30,7 +29,7 @@ MODULES = [
         'name': 'resume',
         'display_name': 'Resume',
         'description': 'Master profile and ATS export',
-        'icon': 'file',
+        'icon': 'resume',
         'color': 'info',
         'permission': None,
         'blueprint_name': 'resume',
@@ -39,8 +38,8 @@ MODULES = [
         'section': 'job_seeker',
         'parent': None,
         'children': [
-            {'name': 'profiles', 'display_name': 'Master Profile', 'route': 'profiles_list'},
-            {'name': 'upload', 'display_name': 'Upload Resume', 'route': 'upload'},
+            {'name': 'profiles', 'display_name': 'Master Profile', 'route': 'profiles_list', 'icon': 'profile'},
+            {'name': 'upload', 'display_name': 'Upload Resume', 'route': 'upload', 'icon': 'upload'},
         ]
     },
     {
@@ -56,17 +55,17 @@ MODULES = [
         'section': 'job_seeker',
         'parent': None,
         'children': [
-            {'name': 'postings', 'display_name': 'Job Postings', 'route': 'postings_list'},
-            {'name': 'new', 'display_name': 'Add Job', 'route': 'posting_new'},
-            {'name': 'fetch', 'display_name': 'Fetch from URL', 'route': 'posting_fetch'},
-            {'name': 'discover', 'display_name': 'Discover Jobs', 'route': 'discover'},
+            {'name': 'postings', 'display_name': 'Job Postings', 'route': 'postings_list', 'icon': 'list'},
+            {'name': 'new', 'display_name': 'Add Job', 'route': 'posting_new', 'icon': 'add'},
+            {'name': 'fetch', 'display_name': 'Fetch from URL', 'route': 'posting_fetch', 'icon': 'link'},
+            {'name': 'discover', 'display_name': 'Discover Jobs', 'route': 'discover', 'icon': 'search'},
         ]
     },
     {
         'name': 'applications',
         'display_name': 'Applications',
         'description': 'Track and manage applications',
-        'icon': 'users',
+        'icon': 'applications',
         'color': 'success',
         'permission': None,
         'blueprint_name': 'applications',
@@ -75,10 +74,9 @@ MODULES = [
         'section': 'job_seeker',
         'parent': None,
         'children': [
-            {'name': 'dashboard', 'display_name': 'Dashboard', 'route': 'dashboard'},
-            {'name': 'list', 'display_name': 'All Applications', 'route': 'list_view'},
-            {'name': 'pipeline', 'display_name': 'Pipeline', 'route': 'pipeline'},
-            {'name': 'new', 'display_name': 'New Application', 'route': 'new_application'},
+            {'name': 'list', 'display_name': 'All Applications', 'route': 'list_view', 'icon': 'list'},
+            {'name': 'pipeline', 'display_name': 'Pipeline', 'route': 'pipeline', 'icon': 'kanban'},
+            {'name': 'new', 'display_name': 'New Application', 'route': 'new_application', 'icon': 'add'},
         ]
     },
     {
@@ -94,7 +92,7 @@ MODULES = [
         'section': 'management',
         'parent': None,
         'children': [
-            {'name': 'dashboard', 'display_name': 'Dashboard', 'route': 'dashboard'},
+            {'name': 'dashboard', 'display_name': 'Dashboard', 'route': 'dashboard', 'icon': 'chart'},
         ]
     },
     {
@@ -128,13 +126,23 @@ MODULES = [
 ]
 
 ICONS = {
-    'dashboard': '<i class="ti ti-dashboard"></i>',
-    'file': '<i class="ti ti-file-text"></i>',
-    'briefcase': '<i class="ti ti-briefcase"></i>',
-    'users': '<i class="ti ti-users"></i>',
-    'user': '<i class="ti ti-user"></i>',
-    'settings': '<i class="ti ti-settings"></i>',
-    'logout': '<i class="ti ti-logout"></i>',
+    # Top-level modules
+    'dashboard': 'tabler-layout-dashboard',
+    'resume': 'tabler-file-cv',
+    'briefcase': 'tabler-briefcase',
+    'applications': 'tabler-clipboard-list',
+    'settings': 'tabler-settings',
+    'user': 'tabler-user',
+    'logout': 'tabler-logout',
+    # Submenu items
+    'profile': 'tabler-user-circle',
+    'upload': 'tabler-upload',
+    'list': 'tabler-list',
+    'add': 'tabler-plus',
+    'link': 'tabler-link',
+    'search': 'tabler-search',
+    'kanban': 'tabler-layout-kanban',
+    'chart': 'tabler-chart-bar',
 }
 
 COLOR_CLASSES = {
@@ -169,7 +177,7 @@ COLOR_CLASSES = {
 def get_visible_modules(user) -> List[Dict[str, Any]]:
     visible_modules = []
     for module in MODULES:
-        if module['name'] == 'dashboard':
+        if module['name'] == 'overview':
             visible_modules.append(module)
         elif module.get('permission'):
             if module['permission'] == 'admin.access':
