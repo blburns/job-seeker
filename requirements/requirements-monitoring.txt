@@ -1,0 +1,5 @@
+# System Monitoring
+psutil==5.9.6  # System and process utilities
+
+# Error tracking (optional: set SENTRY_DSN in .env to enable)
+sentry-sdk[flask]==2.19.2

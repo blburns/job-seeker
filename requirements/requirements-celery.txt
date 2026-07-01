@@ -1,0 +1,6 @@
+# Celery - Async Task Queue
+celery==5.3.4
+redis==5.0.1
+
+# Optional: For monitoring and management
+flower==2.0.1  # Celery monitoring tool

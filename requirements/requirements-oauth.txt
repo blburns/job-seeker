@@ -1,0 +1,5 @@
+# OAuth Integration Requirements
+# Install with: pip install -r requirements-oauth.txt
+
+Authlib>=1.3.0
+requests>=2.31.0
