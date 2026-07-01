@@ -1,0 +1,41 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Members - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Members</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Get started with team member management
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <button class="kt-btn kt-btn-primary">
+                <i class="ki-filled ki-plus text-lg"></i>
+                Add Member
+            </button>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-content flex flex-col items-center gap-4 p-5 lg:p-7.5 text-center">
+            <div class="size-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <i class="ki-filled ki-people text-primary text-4xl"></i>
+            </div>
+            <div class="flex flex-col gap-2">
+                <h3 class="text-lg font-semibold text-mono">No Members Yet</h3>
+                <p class="text-sm text-secondary-foreground">Start building your team by adding your first member.</p>
+            </div>
+            <button class="kt-btn kt-btn-primary">Add First Member</button>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

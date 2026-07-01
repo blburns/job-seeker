@@ -1,0 +1,107 @@
+{% extends "base_auth.html" %}
+
+{% block title %}Login - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center authentication-wrapper authentication-basic container-p-y">
+  <div class="col-md-6 col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <h4 class="mb-1">Welcome back 👋</h4>
+          <p class="mb-0 text-muted">Please sign in to your account</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category in ['danger','error'] else 'warning' if category == 'warning' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form id="sign_in_form" method="POST" action="{{ url_for('auth.login') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <div class="mb-3">
+            <label for="login-username" class="form-label">Email or Username</label>
+            <input
+              type="text"
+              class="form-control"
+              id="login-username"
+              name="username"
+              placeholder="Enter your email or username"
+              value="{{ request.form.username or '' }}"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <label for="login-password" class="form-label mb-0">Password</label>
+              <a href="{{ url_for('auth.forgot_password') }}" class="small">Forgot Password?</a>
+            </div>
+            <div class="input-group input-group-merge">
+              <input
+                type="password"
+                class="form-control"
+                id="login-password"
+                name="password"
+                placeholder="••••••••"
+                required
+              />
+              <span class="input-group-text cursor-pointer" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'">
+                <i class="ti tabler-eye"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="remember-me" name="remember" />
+            <label class="form-check-label" for="remember-me">Remember me for 30 days</label>
+          </div>
+
+          <div class="mb-3 d-grid">
+            <button class="btn btn-primary" type="submit">Sign In</button>
+          </div>
+        </form>
+
+        <p class="text-center mb-3">
+          <span class="me-1">New on our platform?</span>
+          <a href="{{ url_for('auth.register') }}">Create an account</a>
+        </p>
+
+        <div class="divider my-4">
+          <div class="divider-text">or continue with</div>
+        </div>
+
+        <div class="d-grid gap-2">
+          {% if config.get('GOOGLE_CLIENT_ID') %}
+          <a href="{{ url_for('auth.oauth_login', provider='google') }}" class="btn btn-outline-secondary">
+            <i class="ti ti-brand-google me-2"></i>
+            Sign in with Google
+          </a>
+          {% endif %}
+          
+          {% if config.get('MICROSOFT_CLIENT_ID') %}
+          <a href="{{ url_for('auth.oauth_login', provider='microsoft') }}" class="btn btn-outline-secondary">
+            <i class="ti ti-brand-windows me-2"></i>
+            Sign in with Microsoft
+          </a>
+          {% endif %}
+          
+          {% if config.get('GITHUB_CLIENT_ID') %}
+          <a href="{{ url_for('auth.oauth_login', provider='github') }}" class="btn btn-outline-secondary">
+            <i class="ti ti-brand-github me-2"></i>
+            Sign in with GitHub
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

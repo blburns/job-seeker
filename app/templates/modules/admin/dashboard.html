@@ -1,0 +1,679 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Floating loading indicator above navbar */
+#dashboard-loading {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+  min-width: 280px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+.stat-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.metric-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+.health-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+.health-healthy { background-color: #28a745; }
+.health-warning { background-color: #ffc107; }
+.health-critical { background-color: #dc3545; }
+.health-unavailable { background-color: #6c757d; }
+.quick-action-card {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quick-action-card:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.02);
+}
+.activity-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s;
+}
+.activity-item:hover {
+  background-color: #f8f9fa;
+}
+.activity-item:last-child {
+  border-bottom: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <!-- Loading indicator (hidden when AJAX data is loaded) -->
+  <div id="dashboard-loading" class="alert alert-info d-flex align-items-center mb-4" role="status">
+    <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+    <span>Loading dashboard…</span>
+  </div>
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">
+        <i class="ti ti-dashboard me-2"></i>
+        Admin Dashboard
+      </h4>
+      <p class="text-muted mb-0">Welcome back, {{ current_user.get_full_name() or current_user.username }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary" onclick="refreshDashboard()">
+        <i class="ti ti-refresh me-1"></i>
+        Refresh
+      </button>
+      <a href="{{ url_for('admin.monitoring') }}" class="btn btn-sm btn-primary">
+        <i class="ti ti-activity me-1"></i>
+        System Monitoring
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="row mb-4">
+    <!-- Total Users -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="flex-grow-1">
+              <span class="d-block mb-1 text-muted">Total Users</span>
+              <h3 class="card-title mb-2" data-dashboard-key="summary.users.total">{{ summary.users.total|default(0)|number_format }}</h3>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-label-success metric-badge">
+                  <i class="ti ti-check ti-xs"></i> <span data-dashboard-key="summary.users.active">{{ summary.users.active|default(0) }}</span> active
+                </span>
+                <span class="badge bg-label-secondary metric-badge">
+                  <span data-dashboard-key="summary.users.2fa_percentage">{{ summary.users['2fa_percentage']|default(0) }}</span>% 2FA
+                </span>
+              </div>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="ti ti-users ti-lg"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Sessions -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="flex-grow-1">
+              <span class="d-block mb-1 text-muted">Active Sessions</span>
+              <h3 class="card-title mb-2" data-dashboard-key="summary.sessions.active">{{ summary.sessions.active|default(0)|number_format }}</h3>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-label-info metric-badge">
+                  <span data-dashboard-key="summary.sessions.total">{{ summary.sessions.total|default(0) }}</span> total
+                </span>
+                {% if summary.sessions.by_device %}
+                  <span class="badge bg-label-secondary metric-badge">
+                    <i class="ti ti-device-mobile ti-xs"></i> {{ summary.sessions.by_device.get('mobile', 0) }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <span class="avatar-initial rounded bg-label-success">
+                <i class="ti ti-device-desktop ti-lg"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Signups (30 days) -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="flex-grow-1">
+              <span class="d-block mb-1 text-muted">New Signups (30d)</span>
+              <h3 class="card-title mb-2" data-dashboard-key="summary.signups.total">{{ summary.signups.total|default(0)|number_format }}</h3>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-label-info metric-badge">
+                  <span data-dashboard-key="summary.signups.average_daily">{{ summary.signups.average_daily|default(0) }}</span>/day avg
+                </span>
+                {% if summary.signups.total > 0 %}
+                  <span class="badge bg-label-success metric-badge">
+                    <i class="ti ti-trending-up ti-xs"></i>
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <span class="avatar-initial rounded bg-label-info">
+                <i class="ti ti-user-plus ti-lg"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emails Sent (7 days) -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="flex-grow-1">
+              <span class="d-block mb-1 text-muted">Emails Sent (7d)</span>
+              <h3 class="card-title mb-2" data-dashboard-key="summary.emails.sent">{{ summary.emails.sent|default(0)|number_format }}</h3>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-label-secondary metric-badge" id="dashboard-emails-success-badge">
+                  <span data-dashboard-key="summary.emails.success_rate">{{ summary.emails.success_rate|default(0) }}</span>% success
+                </span>
+                <span class="badge bg-label-danger metric-badge" id="dashboard-emails-failed">
+                  <span data-dashboard-key="summary.emails.failed">{{ summary.emails.failed|default(0) }}</span> failed
+                </span>
+              </div>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <span class="avatar-initial rounded bg-label-warning">
+                <i class="ti ti-mail ti-lg"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Health & RBAC Stats Row -->
+  <div class="row mb-4">
+    <!-- System Health -->
+    <div class="col-xl-8 col-lg-7 mb-4">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">
+            <i class="ti ti-heartbeat me-2"></i>
+            System Health
+          </h5>
+          <span class="badge bg-label-success">All Systems Operational</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <!-- Database -->
+            <div class="col-md-6">
+              <div class="d-flex align-items-center p-3 border rounded">
+                <div class="flex-shrink-0 me-3">
+                  <span class="health-indicator health-unknown" id="health-db-dot"></span>
+                  <i class="ti ti-database ti-lg text-muted" id="health-db-icon"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0">Database</h6>
+                  <small class="text-muted" data-dashboard-key="summary.system_health.database.message">{{ summary.system_health.database.message }}</small>
+                  <div class="mt-1" id="health-db-size">
+                    <span class="badge bg-label-secondary" data-dashboard-key="summary.system_health.database.size_mb"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Redis -->
+            <div class="col-md-6">
+              <div class="d-flex align-items-center p-3 border rounded">
+                <div class="flex-shrink-0 me-3">
+                  <span class="health-indicator health-unknown" id="health-redis-dot"></span>
+                  <i class="ti ti-brand-redis ti-lg text-muted" id="health-redis-icon"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0">Redis</h6>
+                  <small class="text-muted" data-dashboard-key="summary.system_health.redis.message">{{ summary.system_health.redis.message }}</small>
+                  <div class="mt-1"><span class="badge bg-label-secondary" data-dashboard-key="summary.system_health.redis.used_memory_mb"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Celery -->
+            <div class="col-md-6">
+              <div class="d-flex align-items-center p-3 border rounded">
+                <div class="flex-shrink-0 me-3">
+                  <span class="health-indicator health-unknown" id="health-celery-dot"></span>
+                  <i class="ti ti-cpu ti-lg text-muted" id="health-celery-icon"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0">Celery</h6>
+                  <small class="text-muted" data-dashboard-key="summary.system_health.celery.message">{{ summary.system_health.celery.message }}</small>
+                  <div class="mt-1"><span class="badge bg-label-secondary" data-dashboard-key="summary.system_health.celery.workers"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Disk Space -->
+            <div class="col-md-6">
+              <div class="d-flex align-items-center p-3 border rounded">
+                <div class="flex-shrink-0 me-3">
+                  <span class="health-indicator health-unknown" id="health-disk-dot"></span>
+                  <i class="ti ti-device-floppy ti-lg text-muted" id="health-disk-icon"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0">Disk Space</h6>
+                  <small class="text-muted" data-dashboard-key="summary.system_health.disk.message">{{ summary.system_health.disk.message }}</small>
+                  <div class="mt-1"><span class="badge bg-label-secondary" data-dashboard-key="summary.system_health.disk.free_gb"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RBAC Statistics -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="ti ti-shield-check me-2"></i>
+            RBAC Statistics
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-column gap-3">
+            <!-- Permissions -->
+            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+              <div>
+                <h6 class="mb-0">Permissions</h6>
+                <small class="text-muted">Active permissions</small>
+              </div>
+              <h3 class="mb-0 text-primary" data-dashboard-key="rbac_stats.active_permissions">{{ rbac_stats.active_permissions|default(0) }}</h3>
+            </div>
+
+            <!-- Roles -->
+            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+              <div>
+                <h6 class="mb-0">Roles</h6>
+                <small class="text-muted">Active roles</small>
+              </div>
+              <h3 class="mb-0 text-success" data-dashboard-key="rbac_stats.active_roles">{{ rbac_stats.active_roles|default(0) }}</h3>
+            </div>
+
+            <!-- Assignments -->
+            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+              <div>
+                <h6 class="mb-0">Assignments</h6>
+                <small class="text-muted">Active role assignments</small>
+              </div>
+              <h3 class="mb-0 text-info" data-dashboard-key="rbac_stats.active_assignments">{{ rbac_stats.active_assignments|default(0) }}</h3>
+            </div>
+
+            <!-- Expired -->
+            <div class="d-flex align-items-center justify-content-between p-3 border rounded bg-label-warning" id="rbac-expired-row" style="display: none;">
+              <div>
+                <h6 class="mb-0">Expired</h6>
+                <small class="text-muted">Need cleanup</small>
+              </div>
+              <h3 class="mb-0 text-warning" data-dashboard-key="rbac_stats.expired_assignments">0</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions & User Breakdown Row -->
+  <div class="row mb-4">
+    <!-- Quick Actions -->
+    <div class="col-xl-4 col-lg-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="ti ti-bolt me-2"></i>
+            Quick Actions
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('admin.permissions_list') }}" class="btn btn-outline-primary text-start quick-action-card">
+              <i class="ti ti-shield-lock me-2"></i>
+              Manage Permissions
+            </a>
+            <a href="{{ url_for('admin.roles_list') }}" class="btn btn-outline-success text-start quick-action-card">
+              <i class="ti ti-users-group me-2"></i>
+              Manage Roles
+            </a>
+            <a href="{{ url_for('admin.monitoring') }}" class="btn btn-outline-info text-start quick-action-card">
+              <i class="ti ti-activity me-2"></i>
+              System Monitoring
+            </a>
+            <a href="{{ url_for('admin.permission_create') }}" class="btn btn-outline-secondary text-start quick-action-card">
+              <i class="ti ti-plus me-2"></i>
+              Create Permission
+            </a>
+            <a href="{{ url_for('admin.role_create') }}" class="btn btn-outline-secondary text-start quick-action-card">
+              <i class="ti ti-plus me-2"></i>
+              Create Role
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Breakdown -->
+    <div class="col-xl-4 col-lg-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="ti ti-user-check me-2"></i>
+            User Breakdown
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-column gap-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted">Active Users</span>
+              <div>
+                <span class="badge bg-success me-2" data-dashboard-key="summary.users.active">{{ summary.users.active|default(0) }}</span>
+                <small class="text-muted" id="user-active-pct">0%</small>
+              </div>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-success" id="user-active-bar" style="width: 0%"></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted">Email Verified</span>
+              <div>
+                <span class="badge bg-info me-2" data-dashboard-key="summary.users.verified">{{ summary.users.verified|default(0) }}</span>
+                <small class="text-muted" id="user-verified-pct">0%</small>
+              </div>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-info" id="user-verified-bar" style="width: 0%"></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted">2FA Enabled</span>
+              <div>
+                <span class="badge bg-warning me-2" data-dashboard-key="summary.users.with_2fa">{{ summary.users.with_2fa|default(0) }}</span>
+                <small class="text-muted" data-dashboard-key="summary.users.2fa_percentage">0%</small>
+              </div>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-warning" id="user-2fa-bar" style="width: 0%"></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted">Admins</span>
+              <div>
+                <span class="badge bg-danger me-2" data-dashboard-key="summary.users.admins">{{ summary.users.admins|default(0) }}</span>
+                <small class="text-muted" id="user-admins-pct">0%</small>
+              </div>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-danger" id="user-admins-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Breakdown -->
+    <div class="col-xl-4 col-lg-12 mb-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="ti ti-devices me-2"></i>
+            Session Breakdown
+          </h5>
+        </div>
+        <div class="card-body">
+          {% if summary.sessions.by_device %}
+            <div class="d-flex flex-column gap-3">
+              {% for device_type, count in summary.sessions.by_device.items() %}
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center">
+                    <i class="ti ti-device-{{ 'mobile' if device_type == 'mobile' else 'tablet' if device_type == 'tablet' else 'desktop' }} me-2"></i>
+                    <span class="text-muted">{{ device_type|title }}</span>
+                  </div>
+                  <div>
+                    <span class="badge bg-label-primary me-2">{{ count }}</span>
+                    <small class="text-muted">{{ ((count / summary.sessions.active * 100) if summary.sessions.active > 0 else 0)|round(1) }}%</small>
+                  </div>
+                </div>
+                <div class="progress" style="height: 6px;">
+                  <div class="progress-bar" style="width: {{ ((count / summary.sessions.active * 100) if summary.sessions.active > 0 else 0)|round(1) }}%"></div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted mb-0">No active sessions</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Feed Row -->
+  <div class="row">
+    <!-- Recent Logins -->
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="ti ti-login me-2"></i>
+            Recent Logins
+          </h5>
+          <span class="badge bg-label-secondary">Last 10</span>
+        </div>
+        <div class="card-body p-0" id="dashboard-recent-logins">
+          <div class="p-4 text-center text-muted">
+            <i class="ti ti-loader ti-lg mb-2"></i>
+            <p class="mb-0">Loading…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Actions -->
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="ti ti-activity me-2"></i>
+            Recent Actions
+          </h5>
+          <span class="badge bg-label-secondary">Last 10</span>
+        </div>
+        <div class="card-body p-0" id="dashboard-recent-actions">
+          <div class="p-4 text-center text-muted">
+            <i class="ti ti-loader ti-lg mb-2"></i>
+            <p class="mb-0">Loading…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var loadingEl = document.getElementById('dashboard-loading');
+  var apiUrl = "{{ url_for('admin.api_dashboard_data') }}";
+
+  function getNested(obj, path) {
+    return path.split('.').reduce(function(o, k) {
+      return (o && o[k] != null) ? o[k] : null;
+    }, obj);
+  }
+
+  function formatNum(n) {
+    if (n == null || n === '') return '0';
+    return Number(n).toLocaleString();
+  }
+
+  function updateElement(el, value, format) {
+    if (value == null) return;
+    if (format === 'number') {
+      el.textContent = formatNum(value);
+    } else {
+      el.textContent = value;
+    }
+  }
+
+  function renderRecentLogins(container, logins) {
+    if (!logins || !logins.length) {
+      container.innerHTML = '<div class="p-4 text-center text-muted"><i class="ti ti-login ti-lg mb-2"></i><p class="mb-0">No recent logins</p></div>';
+      return;
+    }
+    var html = logins.slice(0, 10).map(function(login) {
+      var device = (login.device || 'Unknown').substring(0, 20);
+      var browser = login.browser || '';
+      var os = login.os || '';
+      var created = login.created_at ? login.created_at.substring(0, 16) : 'N/A';
+      return '<div class="activity-item"><div class="d-flex justify-content-between align-items-start">' +
+        '<div class="d-flex align-items-start"><div class="avatar avatar-sm flex-shrink-0 me-3">' +
+        '<span class="avatar-initial rounded-circle bg-label-primary"><i class="ti ti-user ti-sm"></i></span></div>' +
+        '<div><h6 class="mb-0">' + (login.username || '') + '</h6>' +
+        '<small class="text-muted"><i class="ti ti-device-desktop ti-xs"></i> ' + browser + ' on ' + os + '</small><br>' +
+        '<small class="text-muted"><i class="ti ti-map-pin ti-xs"></i> ' + (login.ip_address || '') + '</small></div></div>' +
+        '<small class="text-muted">' + created + '</small></div></div>';
+    }).join('');
+    container.innerHTML = '<div class="list-group list-group-flush">' + html + '</div>';
+  }
+
+  function renderRecentActions(container, actions) {
+    if (!actions || !actions.length) {
+      container.innerHTML = '<div class="p-4 text-center text-muted"><i class="ti ti-activity ti-lg mb-2"></i><p class="mb-0">No recent actions</p></div>';
+      return;
+    }
+    var html = actions.slice(0, 10).map(function(action) {
+      var ts = action.timestamp ? action.timestamp.substring(0, 16) : 'N/A';
+      var icon = action.type === 'role_assignment' ? 'user-check' : 'activity';
+      return '<div class="activity-item"><div class="d-flex justify-content-between align-items-start">' +
+        '<div class="d-flex align-items-start"><div class="avatar avatar-sm flex-shrink-0 me-3">' +
+        '<span class="avatar-initial rounded-circle bg-label-success"><i class="ti ti-' + icon + ' ti-sm"></i></span></div>' +
+        '<div><h6 class="mb-0">' + (action.user || '') + '</h6><small class="text-muted">' + (action.action || '') + '</small><br>' +
+        '<small class="text-muted"><i class="ti ti-user ti-xs"></i> by ' + (action.by || '') + '</small></div></div>' +
+        '<small class="text-muted">' + ts + '</small></div></div>';
+    }).join('');
+    container.innerHTML = '<div class="list-group list-group-flush">' + html + '</div>';
+  }
+
+  function setHealthEl(idPrefix, status, messageElKey, extraKey) {
+    var dot = document.getElementById(idPrefix + '-dot');
+    var icon = document.getElementById(idPrefix + '-icon');
+    if (dot) {
+      dot.className = 'health-indicator health-' + (status || 'unknown');
+    }
+    if (icon) {
+      icon.className = 'ti ti-database ti-lg ';
+      if (status === 'healthy') icon.classList.add('text-success');
+      else if (status === 'warning') icon.classList.add('text-warning');
+      else if (status === 'unavailable' || status === 'unknown') icon.classList.add('text-muted');
+      else icon.classList.add('text-danger');
+    }
+  }
+
+  function applyDashboardData(data) {
+    var keys = [
+      'summary.users.total', 'summary.users.active', 'summary.users.2fa_percentage',
+      'summary.sessions.active', 'summary.sessions.total',
+      'summary.signups.total', 'summary.signups.average_daily',
+      'summary.emails.sent', 'summary.emails.success_rate', 'summary.emails.failed',
+      'rbac_stats.active_permissions', 'rbac_stats.active_roles', 'rbac_stats.active_assignments', 'rbac_stats.expired_assignments',
+      'summary.system_health.database.message', 'summary.system_health.database.size_mb',
+      'summary.system_health.redis.message', 'summary.system_health.redis.used_memory_mb',
+      'summary.system_health.celery.message', 'summary.system_health.celery.workers',
+      'summary.system_health.disk.message', 'summary.system_health.disk.free_gb',
+      'summary.users.verified', 'summary.users.with_2fa', 'summary.users.admins'
+    ];
+    keys.forEach(function(path) {
+      var el = document.querySelector('[data-dashboard-key="' + path + '"]');
+      if (el) {
+        var v = getNested(data, path);
+        if (v !== undefined && v !== null && v !== '') {
+          el.textContent = (typeof v === 'number' ? formatNum(v) : v);
+          if (path === 'summary.system_health.database.size_mb' && v) el.textContent = v + ' MB';
+          if (path === 'summary.system_health.redis.used_memory_mb' && v) el.textContent = v + ' MB';
+          if (path === 'summary.system_health.disk.free_gb' && v) el.textContent = v + ' GB free';
+          if (path === 'summary.system_health.celery.workers' && v) el.textContent = v + ' workers';
+        }
+      }
+    });
+    var sh = data.summary && data.summary.system_health;
+    if (sh) {
+      ['database', 'redis', 'celery', 'disk'].forEach(function(k) {
+        var s = sh[k] && sh[k].status;
+        var dot = document.getElementById('health-' + (k === 'database' ? 'db' : k === 'disk' ? 'disk' : k) + '-dot');
+        var icon = document.getElementById('health-' + (k === 'database' ? 'db' : k === 'disk' ? 'disk' : k) + '-icon');
+        if (dot) dot.className = 'health-indicator health-' + (s || 'unknown');
+        if (icon) {
+          icon.className = 'ti ti-' + (k === 'database' ? 'database' : k === 'redis' ? 'brand-redis' : k === 'celery' ? 'cpu' : 'device-floppy') + ' ti-lg ';
+          if (s === 'healthy') icon.classList.add('text-success');
+          else if (s === 'warning') icon.classList.add('text-warning');
+          else if (s === 'unavailable' || s === 'unknown') icon.classList.add('text-muted');
+          else icon.classList.add('text-danger');
+        }
+      });
+    }
+    var expired = getNested(data, 'rbac_stats.expired_assignments');
+    var expiredRow = document.getElementById('rbac-expired-row');
+    if (expiredRow) {
+      expiredRow.style.display = (expired && Number(expired) > 0) ? '' : 'none';
+    }
+    var total = getNested(data, 'summary.users.total') || 0;
+    var active = getNested(data, 'summary.users.active') || 0;
+    var verified = getNested(data, 'summary.users.verified') || 0;
+    var admins = getNested(data, 'summary.users.admins') || 0;
+    var pct = total > 0 ? function(n) { return ((n / total) * 100).toFixed(1); } : function() { return '0'; };
+    var bar = function(id) { var el = document.getElementById(id); if (el) return el; return null; };
+    if (bar('user-active-bar')) { bar('user-active-bar').style.width = pct(active) + '%'; }
+    if (bar('user-verified-bar')) { bar('user-verified-bar').style.width = pct(verified) + '%'; }
+    if (bar('user-2fa-bar')) { bar('user-2fa-bar').style.width = (getNested(data, 'summary.users.2fa_percentage') || 0) + '%'; }
+    if (bar('user-admins-bar')) { bar('user-admins-bar').style.width = pct(admins) + '%'; }
+    var pctEl = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v + '%'; };
+    pctEl('user-active-pct', pct(active));
+    pctEl('user-verified-pct', pct(verified));
+    pctEl('user-admins-pct', pct(admins));
+    var emailsBadge = document.getElementById('dashboard-emails-success-badge');
+    if (emailsBadge) {
+      var rate = getNested(data, 'summary.emails.success_rate');
+      emailsBadge.className = 'badge metric-badge ' + (rate >= 95 ? 'bg-label-success' : rate >= 80 ? 'bg-label-warning' : 'bg-label-danger');
+    }
+    var loginsEl = document.getElementById('dashboard-recent-logins');
+    if (loginsEl) renderRecentLogins(loginsEl, data.summary && data.summary.recent_logins);
+    var actionsEl = document.getElementById('dashboard-recent-actions');
+    if (actionsEl) renderRecentActions(actionsEl, data.summary && data.summary.recent_actions);
+    if (loadingEl) loadingEl.classList.add('d-none');
+  }
+
+  function refreshDashboard() {
+    if (loadingEl) loadingEl.classList.remove('d-none');
+    fetch(apiUrl, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { applyDashboardData(data); })
+      .catch(function() {
+        if (loadingEl) { loadingEl.classList.add('d-none'); loadingEl.innerHTML = '<span class="text-danger">Failed to load dashboard.</span>'; }
+      });
+  }
+
+  window.refreshDashboard = refreshDashboard;
+  refreshDashboard();
+  setInterval(refreshDashboard, 300000);
+})();
+</script>
+{% endblock %}

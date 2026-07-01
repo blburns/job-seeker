@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Permission - Admin - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-lg-8 offset-lg-2">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">
+          <i class="ti ti-shield-lock me-2"></i>
+          Edit Permission
+        </h4>
+        <a href="{{ url_for('admin.permissions_list') }}" class="btn btn-label-secondary">
+          <i class="ti ti-arrow-left me-1"></i>
+          Back to Permissions
+        </a>
+      </div>
+
+      <div class="card mb-4">
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.permission_edit', permission_id=permission.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          
+          <div class="mb-3">
+            <label class="form-label">Permission Name</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              value="{{ permission.name }}"
+              disabled>
+            <div class="form-text">Permission name cannot be changed</div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="display_name" class="form-label">Display Name <span class="text-danger">*</span></label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="display_name" 
+                name="display_name" 
+                value="{{ permission.display_name }}"
+                required>
+            </div>
+            <div class="col-md-6">
+              <label for="category" class="form-label">Category</label>
+              <select class="form-select" id="category" name="category">
+                <option value="">None</option>
+                <option value="management" {% if permission.category == 'management' %}selected{% endif %}>Management</option>
+                <option value="operations" {% if permission.category == 'operations' %}selected{% endif %}>Operations</option>
+                <option value="reporting" {% if permission.category == 'reporting' %}selected{% endif %}>Reporting</option>
+                <option value="administration" {% if permission.category == 'administration' %}selected{% endif %}>Administration</option>
+                <option value="configuration" {% if permission.category == 'configuration' %}selected{% endif %}>Configuration</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea 
+              class="form-control" 
+              id="description" 
+              name="description" 
+              rows="3">{{ permission.description or '' }}</textarea>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="priority" class="form-label">Priority</label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="priority" 
+                name="priority" 
+                value="{{ permission.priority }}"
+                min="0"
+                max="100">
+              <div class="form-text">Higher priority permissions appear first (0-100)</div>
+            </div>
+            <div class="col-md-6">
+              <label for="is_active" class="form-label">Status</label>
+              <select class="form-select" id="is_active" name="is_active">
+                <option value="1" {% if permission.is_active %}selected{% endif %}>Active</option>
+                <option value="0" {% if not permission.is_active %}selected{% endif %}>Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          {% if permission.is_system %}
+          <div class="alert alert-warning">
+            <i class="ti ti-alert-triangle me-2"></i>
+            This is a system permission. Some fields cannot be modified.
+          </div>
+          {% endif %}
+
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('admin.permissions_list') }}" class="btn btn-label-secondary">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="ti ti-check me-1"></i>
+              Update Permission
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Roles with this permission</h5>
+        <span class="badge bg-label-primary">{{ roles_with_permission|length }}</span>
+      </div>
+      <div class="card-body {{ 'p-0' if roles_with_permission else '' }}">
+        {% if roles_with_permission %}
+        <div class="table-responsive">
+          <table class="table table-hover table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Role</th>
+                <th>Display name</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in roles_with_permission %}
+              <tr>
+                <td><code>{{ r.name }}</code></td>
+                <td>{{ r.display_name }}</td>
+                <td>
+                  {% if r.is_active %}
+                  <span class="badge bg-success">Active</span>
+                  {% else %}
+                  <span class="badge bg-secondary">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.role_view', role_id=r.id) }}" class="btn btn-sm btn-icon" title="View role">
+                    <i class="ti ti-eye"></i>
+                  </a>
+                  <a href="{{ url_for('admin.role_permissions', role_id=r.id) }}" class="btn btn-sm btn-icon" title="Manage permissions">
+                    <i class="ti ti-shield-lock"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No roles currently have this permission.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

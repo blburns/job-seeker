@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Active Sessions - Account Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    {% set active_tab = 'sessions' %}
+    {% include 'modules/users/settings/includes/settings_nav_pills.html' %}
+
+    <!-- Active Sessions Card -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Active Sessions</h5>
+        {% if sessions|length > 1 %}
+        <form action="{{ url_for('users.revoke_all_sessions') }}" method="POST" class="d-inline"
+              onsubmit="return confirm('Are you sure you want to sign out of all other sessions?');">
+          <button type="submit" class="btn btn-sm btn-outline-danger">
+            <i class="ti ti-logout me-1"></i>
+            Sign Out All Other Sessions
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <p class="mb-4">
+          These are the devices and browsers where you're currently signed in. 
+          If you see a session you don't recognize, you can sign out of it.
+        </p>
+
+        {% if not sessions %}
+        <div class="alert alert-info mb-0">
+          <i class="ti ti-info-circle me-2"></i>
+          No active sessions found.
+        </div>
+        {% else %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>Location</th>
+                <th>Last Activity</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sess in sessions %}
+              <tr {% if sess.is_current %}class="table-active"{% endif %}>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-3">
+                      <span class="avatar-initial rounded bg-label-primary">
+                        <i class="ti {% if sess.device_info and sess.device_info.device_type == 'mobile' %}ti-device-mobile{% elif sess.device_info and sess.device_info.device_type == 'tablet' %}ti-device-tablet{% else %}ti-device-desktop{% endif %} ti-md"></i>
+                      </span>
+                    </div>
+                    <div>
+                      <h6 class="mb-0">{{ sess.device_name }}</h6>
+                      <small class="text-muted">
+                        {% if sess.is_current %}
+                          <span class="badge bg-label-success">Current Session</span>
+                        {% endif %}
+                        {% if sess.remember_me %}
+                          <span class="badge bg-label-info">Remember Me</span>
+                        {% endif %}
+                      </small>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <div class="text-body">{{ sess.ip_address or 'Unknown' }}</div>
+                    <small class="text-muted">{{ sess.location }}</small>
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <div class="text-body">
+                      {% if sess.last_activity %}
+                        {{ sess.last_activity.strftime('%b %d, %Y') }}
+                      {% else %}
+                        Unknown
+                      {% endif %}
+                    </div>
+                    <small class="text-muted">
+                      {% if sess.last_activity %}
+                        {{ sess.last_activity.strftime('%I:%M %p') }}
+                      {% endif %}
+                    </small>
+                  </div>
+                </td>
+                <td>
+                  {% if sess.is_expired() %}
+                    <span class="badge bg-label-danger">Expired</span>
+                  {% elif sess.is_active %}
+                    <span class="badge bg-label-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary">Revoked</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if not sess.is_current and sess.is_active %}
+                  <form action="{{ url_for('users.revoke_session', session_id=sess.id) }}" method="POST" class="d-inline"
+                        onsubmit="return confirm('Are you sure you want to sign out of this session?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Sign Out">
+                      <i class="ti ti-logout"></i>
+                    </button>
+                  </form>
+                  {% elif sess.is_current %}
+                  <span class="text-muted small">Current</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Session Info -->
+        <div class="alert alert-warning mt-4 mb-0">
+          <div class="d-flex">
+            <div class="flex-shrink-0">
+              <i class="ti ti-alert-triangle ti-md"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="alert-heading mb-1">Security Tip</h6>
+              <p class="mb-0">
+                If you see a session you don't recognize, sign out of it immediately and change your password. 
+                Sessions expire after 24 hours of inactivity (or 30 days with "Remember Me").
+              </p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <!-- /Active Sessions Card -->
+
+    <!-- Session Details Card -->
+    <div class="card mt-6">
+      <div class="card-header">
+        <h5 class="mb-0">Session Management</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-4">
+            <h6 class="mb-2">
+              <i class="ti ti-clock me-2"></i>
+              Session Duration
+            </h6>
+            <p class="text-muted mb-0">
+              Standard sessions expire after 24 hours of inactivity. 
+              With "Remember Me" enabled, sessions last for 30 days.
+            </p>
+          </div>
+          <div class="col-md-6 mb-4">
+            <h6 class="mb-2">
+              <i class="ti ti-shield-check me-2"></i>
+              Security
+            </h6>
+            <p class="text-muted mb-0">
+              Each session is tracked with device information and IP address. 
+              Suspicious activity will trigger security alerts.
+            </p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="mb-2">
+              <i class="ti ti-devices me-2"></i>
+              Multiple Devices
+            </h6>
+            <p class="text-muted mb-0">
+              You can be signed in on multiple devices simultaneously. 
+              Each device maintains its own session.
+            </p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="mb-2">
+              <i class="ti ti-logout me-2"></i>
+              Sign Out
+            </h6>
+            <p class="text-muted mb-0">
+              Signing out revokes the session immediately. 
+              You'll need to sign in again to access your account.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Session Details Card -->
+  </div>
+</div>
+{% endblock %}

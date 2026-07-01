@@ -1,0 +1,235 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Account: {{ account.account_name }} - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">{{ account.account_name }}</h1>
+            {% if account.account_number %}
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Account Number: {{ account.account_number }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="flex items-center gap-2.5">
+            <a href="{{ safe_url_for('accounts.list_accounts') }}" class="kt-btn kt-btn-outline">
+                Back to List
+            </a>
+            <a href="{{ safe_url_for('accounts.edit_account', account_uuid=account.account_uuid) }}" class="kt-btn kt-btn-primary">
+                <i class="ki-filled ki-pencil text-lg"></i>
+                Edit Account
+            </a>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Main Information -->
+        <div class="lg:col-span-2 flex flex-col gap-5">
+            <!-- Basic Information -->
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">Basic Information</h3>
+                </div>
+                <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Account Name</span>
+                            <span class="text-sm font-semibold text-foreground">{{ account.account_name }}</span>
+                        </div>
+                        {% if account.legal_name %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Legal Name</span>
+                            <span class="text-sm font-semibold text-foreground">{{ account.legal_name }}</span>
+                        </div>
+                        {% endif %}
+                        {% if account.account_type %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Account Type</span>
+                            <span class="kt-badge kt-badge-sm kt-badge-info kt-badge-outline w-fit">{{ account.account_type.name }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Status</span>
+                            <span class="kt-badge kt-badge-sm {% if account.status == 'active' %}kt-badge-success{% else %}kt-badge-secondary{% endif %} w-fit">{{ account.status }}</span>
+                        </div>
+                        {% if account.primary_email %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Email</span>
+                            <a href="mailto:{{ account.primary_email }}" class="text-sm text-primary hover:underline">{{ account.primary_email }}</a>
+                        </div>
+                        {% endif %}
+                        {% if account.primary_phone %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Phone</span>
+                            <span class="text-sm font-semibold text-foreground">{{ account.primary_phone }}</span>
+                        </div>
+                        {% endif %}
+                        {% if account.website %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Website</span>
+                            <a href="{{ account.website }}" target="_blank" class="text-sm text-primary hover:underline">{{ account.website }}</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Address Information -->
+            {% if account.billing_address_line1 or account.shipping_address_line1 %}
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">Address Information</h3>
+                </div>
+                <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                    {% if account.billing_address_line1 %}
+                    <div class="flex flex-col gap-2">
+                        <span class="text-xs font-medium text-muted-foreground">Billing Address</span>
+                        <div class="text-sm text-foreground">
+                            {{ account.billing_address_line1 }}<br>
+                            {% if account.billing_address_line2 %}{{ account.billing_address_line2 }}<br>{% endif %}
+                            {{ account.billing_city or '' }}{% if account.billing_state_province %}, {{ account.billing_state_province }}{% endif %} {{ account.billing_postal_code or '' }}<br>
+                            {{ account.billing_country or '' }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if account.shipping_address_line1 %}
+                    <div class="flex flex-col gap-2 pt-4 border-t border-border">
+                        <span class="text-xs font-medium text-muted-foreground">Shipping Address</span>
+                        <div class="text-sm text-foreground">
+                            {{ account.shipping_address_line1 }}<br>
+                            {% if account.shipping_address_line2 %}{{ account.shipping_address_line2 }}<br>{% endif %}
+                            {{ account.shipping_city or '' }}{% if account.shipping_state_province %}, {{ account.shipping_state_province }}{% endif %} {{ account.shipping_postal_code or '' }}<br>
+                            {{ account.shipping_country or '' }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Business Information -->
+            {% if account.industry or account.company_size or account.tax_id %}
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">Business Information</h3>
+                </div>
+                <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% if account.industry %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Industry</span>
+                            <span class="text-sm font-semibold text-foreground">{{ account.industry }}</span>
+                        </div>
+                        {% endif %}
+                        {% if account.company_size %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Company Size</span>
+                            <span class="text-sm font-semibold text-foreground">{{ account.company_size }}</span>
+                        </div>
+                        {% endif %}
+                        {% if account.tax_id %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Tax ID</span>
+                            <span class="text-sm font-semibold text-foreground">{{ account.tax_id }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Financial Information -->
+            {% if account.credit_limit or account.payment_terms or account.currency %}
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">Financial Information</h3>
+                </div>
+                <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {% if account.credit_limit %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Credit Limit</span>
+                            <span class="text-sm font-semibold text-foreground">${{ account.credit_limit|string }}</span>
+                        </div>
+                        {% endif %}
+                        {% if account.payment_terms %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Payment Terms</span>
+                            <span class="text-sm font-semibold text-foreground">{{ account.payment_terms }}</span>
+                        </div>
+                        {% endif %}
+                        {% if account.currency %}
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-medium text-muted-foreground">Currency</span>
+                            <span class="text-sm font-semibold text-foreground">{{ account.currency }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Notes -->
+            {% if account.notes %}
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">Notes</h3>
+                </div>
+                <div class="kt-card-content p-5 lg:p-7.5">
+                    <p class="text-sm text-foreground whitespace-pre-wrap">{{ account.notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="flex flex-col gap-5">
+            <!-- Quick Actions -->
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">Quick Actions</h3>
+                </div>
+                <div class="kt-card-content flex flex-col gap-2.5 p-5 lg:p-7.5">
+                    <a href="{{ safe_url_for('accounts.edit_account', account_uuid=account.account_uuid) }}" class="kt-btn kt-btn-outline justify-start">
+                        <i class="ki-filled ki-pencil text-lg"></i>
+                        Edit Account
+                    </a>
+                    <button class="kt-btn kt-btn-outline justify-start text-danger">
+                        <i class="ki-filled ki-trash text-lg"></i>
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Account Details -->
+            <div class="kt-card">
+                <div class="kt-card-header">
+                    <h3 class="kt-card-title">Account Details</h3>
+                </div>
+                <div class="kt-card-content flex flex-col gap-3 p-5 lg:p-7.5">
+                    {% if account.created_at %}
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs font-medium text-muted-foreground">Created</span>
+                        <span class="text-sm font-semibold text-foreground">{{ account.created_at|date('%B %d, %Y') if account.created_at else '-' }}</span>
+                    </div>
+                    {% endif %}
+                    {% if account.updated_at %}
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs font-medium text-muted-foreground">Last Updated</span>
+                        <span class="text-sm font-semibold text-foreground">{{ account.updated_at|date('%B %d, %Y') if account.updated_at else '-' }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

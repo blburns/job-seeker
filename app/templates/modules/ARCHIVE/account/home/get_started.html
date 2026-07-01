@@ -1,0 +1,78 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Get Started - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Get Started</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Complete your account setup
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-content flex flex-col gap-5 p-5 lg:p-7.5">
+            <div class="flex flex-col gap-2">
+                <h3 class="text-lg font-semibold text-mono">Welcome to {{ config.get('APP_NAME', 'Application') }}!</h3>
+                <p class="text-sm text-secondary-foreground">Let's get your account set up. Follow these steps to get started.</p>
+            </div>
+            
+            <!-- Steps -->
+            <div class="flex flex-col gap-4">
+                <!-- Step 1 -->
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span class="text-primary font-semibold">1</span>
+                        </div>
+                        <div class="w-px h-full bg-border mt-2"></div>
+                    </div>
+                    <div class="flex flex-col gap-2 pb-4">
+                        <h4 class="text-sm font-semibold text-mono">Complete Your Profile</h4>
+                        <p class="text-sm text-secondary-foreground">Add your personal information and profile picture</p>
+                        <a href="{{ safe_url_for('account.user_profile') }}" class="kt-btn kt-btn-sm kt-btn-outline w-fit">Get Started</a>
+                    </div>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <span class="text-muted-foreground font-semibold">2</span>
+                        </div>
+                        <div class="w-px h-full bg-border mt-2"></div>
+                    </div>
+                    <div class="flex flex-col gap-2 pb-4">
+                        <h4 class="text-sm font-semibold text-mono">Set Up Security</h4>
+                        <p class="text-sm text-secondary-foreground">Enable two-factor authentication and review security settings</p>
+                        <a href="{{ safe_url_for('account.security_overview') }}" class="kt-btn kt-btn-sm kt-btn-outline w-fit">Configure</a>
+                    </div>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <span class="text-muted-foreground font-semibold">3</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <h4 class="text-sm font-semibold text-mono">Explore Features</h4>
+                        <p class="text-sm text-secondary-foreground">Discover all the features available in your account</p>
+                        <a href="{{ safe_url_for('account.home') }}" class="kt-btn kt-btn-sm kt-btn-outline w-fit">Explore</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

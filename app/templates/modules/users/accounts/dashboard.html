@@ -1,0 +1,162 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Accounts Dashboard - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Accounts Dashboard</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Overview of your account management system
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <a href="{{ safe_url_for('accounts.list_accounts') }}" class="kt-btn kt-btn-outline">
+                View All Accounts
+            </a>
+            <a href="{{ safe_url_for('accounts.create_account') }}" class="kt-btn kt-btn-primary">
+                <i class="ki-filled ki-plus text-lg"></i>
+                Add Account
+            </a>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+        <!-- Total Accounts -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-2.5 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-normal text-secondary-foreground">Total Accounts</span>
+                    <div class="flex items-center justify-center size-12 rounded-lg bg-primary/10">
+                        <i class="ki-filled ki-wallet text-primary text-2xl"></i>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-3xl font-semibold text-mono">{{ analytics.total_accounts or 0 }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Accounts -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-2.5 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-normal text-secondary-foreground">Active Accounts</span>
+                    <div class="flex items-center justify-center size-12 rounded-lg bg-success/10">
+                        <i class="ki-filled ki-check-circle text-success text-2xl"></i>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-3xl font-semibold text-mono">{{ analytics.active_accounts or 0 }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer Accounts -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-2.5 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-normal text-secondary-foreground">Customers</span>
+                    <div class="flex items-center justify-center size-12 rounded-lg bg-info/10">
+                        <i class="ki-filled ki-people text-info text-2xl"></i>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-3xl font-semibold text-mono">{{ analytics.customer_accounts or 0 }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vendor Accounts -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-2.5 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-normal text-secondary-foreground">Vendors</span>
+                    <div class="flex items-center justify-center size-12 rounded-lg bg-warning/10">
+                        <i class="ki-filled ki-abstract-26 text-warning text-2xl"></i>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-3xl font-semibold text-mono">{{ analytics.vendor_accounts or 0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Accounts -->
+    <div class="kt-card">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Recent Accounts</h3>
+            <div class="kt-card-toolbar">
+                <a href="{{ safe_url_for('accounts.list_accounts') }}" class="kt-btn kt-btn-sm kt-btn-outline">View All</a>
+            </div>
+        </div>
+        <div class="kt-card-content p-0">
+            {% if recent_accounts %}
+            <div class="kt-table-responsive">
+                <table class="kt-table kt-table-row-bordered kt-table-row-dashed align-middle gs-0">
+                    <thead>
+                        <tr class="text-start text-muted-foreground fw-bold fs-7 text-uppercase gs-0">
+                            <th class="min-w-150px">Account</th>
+                            <th class="min-w-100px">Type</th>
+                            <th class="min-w-100px">Status</th>
+                            <th class="min-w-100px">Created</th>
+                            <th class="min-w-100px text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in recent_accounts %}
+                        <tr>
+                            <td>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-mono">{{ account.account_name }}</span>
+                                    {% if account.account_number %}
+                                    <span class="text-xs text-secondary-foreground">{{ account.account_number }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if account.account_type %}
+                                <span class="kt-badge kt-badge-sm kt-badge-info kt-badge-outline">{{ account.account_type.name }}</span>
+                                {% else %}
+                                <span class="text-sm text-secondary-foreground">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="kt-badge kt-badge-sm {% if account.status == 'active' %}kt-badge-success{% else %}kt-badge-secondary{% endif %}">{{ account.status }}</span>
+                            </td>
+                            <td>
+                                <span class="text-sm text-secondary-foreground">{{ account.created_at|date('%Y-%m-%d') if account.created_at else '-' }}</span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ safe_url_for('accounts.view_account', account_uuid=account.account_uuid) }}" class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" title="View">
+                                    <i class="ki-filled ki-eye text-lg"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="flex flex-col items-center justify-center gap-4 p-10 text-center">
+                <i class="ki-filled ki-wallet text-4xl text-muted-foreground"></i>
+                <div class="flex flex-col gap-2">
+                    <h4 class="text-sm font-semibold text-mono">No Accounts Yet</h4>
+                    <p class="text-sm text-secondary-foreground">Get started by creating your first account.</p>
+                </div>
+                <a href="{{ safe_url_for('accounts.create_account') }}" class="kt-btn kt-btn-primary">Create Account</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

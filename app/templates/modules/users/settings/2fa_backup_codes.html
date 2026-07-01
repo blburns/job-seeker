@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Backup Codes - Two-Factor Authentication{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 offset-md-2">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0 text-white">
+          <i class="ti ti-check-circle me-2"></i>
+          Two-Factor Authentication Enabled!
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning">
+          <div class="d-flex">
+            <div class="flex-shrink-0">
+              <i class="ti ti-alert-triangle ti-md"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="alert-heading mb-1">Save Your Backup Codes</h6>
+              <p class="mb-0">
+                Store these backup codes in a safe place. You can use them to access your account 
+                if you lose your phone or can't receive verification codes.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <h6 class="mb-3">Your Backup Codes</h6>
+          <p class="text-muted small">
+            Each code can only be used once. You have {{ backup_codes|length }} codes.
+          </p>
+          
+          <div class="bg-light p-4 rounded">
+            <div class="row">
+              {% for code in backup_codes %}
+              <div class="col-md-6 mb-2">
+                <div class="d-flex align-items-center">
+                  <span class="badge bg-label-secondary me-2">{{ loop.index }}</span>
+                  <code class="flex-grow-1 text-center fs-5">{{ code }}</code>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <h6 class="mb-2">How to Use Backup Codes</h6>
+          <ul class="text-muted">
+            <li>Use a backup code when you can't access your authenticator app</li>
+            <li>Each code can only be used once</li>
+            <li>You can regenerate new codes at any time from your security settings</li>
+            <li>Keep these codes in a secure location (password manager, safe, etc.)</li>
+          </ul>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-primary" onclick="printCodes()">
+            <i class="ti ti-printer me-2"></i>
+            Print Codes
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="downloadCodes()">
+            <i class="ti ti-download me-2"></i>
+            Download as Text
+          </button>
+          <button type="button" class="btn btn-outline-secondary" onclick="copyCodes()">
+            <i class="ti ti-copy me-2"></i>
+            Copy to Clipboard
+          </button>
+        </div>
+
+        <hr class="my-4">
+
+        <form method="POST" action="{{ url_for('users.confirm_backup_codes') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="confirm-saved" required>
+            <label class="form-check-label" for="confirm-saved">
+              I have saved my backup codes in a secure location
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-success btn-lg">
+            <i class="ti ti-check me-2"></i>
+            I've Saved My Backup Codes
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const codes = {{ backup_codes|tojson }};
+
+function printCodes() {
+  const printWindow = window.open('', '', 'height=600,width=800');
+  printWindow.document.write('<html><head><title>Backup Codes</title>');
+  printWindow.document.write('<style>body{font-family:monospace;padding:20px;}h1{margin-bottom:20px;}code{display:block;margin:10px 0;font-size:18px;}</style>');
+  printWindow.document.write('</head><body>');
+  printWindow.document.write('<h1>Two-Factor Authentication Backup Codes</h1>');
+  printWindow.document.write('<p>Keep these codes in a safe place. Each can only be used once.</p>');
+  codes.forEach((code, index) => {
+    printWindow.document.write(`<code>${index + 1}. ${code}</code>`);
+  });
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  printWindow.print();
+}
+
+function downloadCodes() {
+  let content = 'Two-Factor Authentication Backup Codes\n';
+  content += '=' .repeat(50) + '\n\n';
+  content += 'Keep these codes in a safe place.\n';
+  content += 'Each code can only be used once.\n\n';
+  codes.forEach((code, index) => {
+    content += `${index + 1}. ${code}\n`;
+  });
+  
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'backup-codes.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
+
+function copyCodes() {
+  const text = codes.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-check me-2"></i>Copied!';
+    btn.classList.add('btn-success');
+    btn.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.classList.remove('btn-success');
+      btn.classList.add('btn-outline-secondary');
+    }, 2000);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+<!-- Radio Button Macro -->
+{% macro radio(field, options=None, class="", required=False, disabled=False, inline=False) %}
+<div class="{% if inline %}flex flex-wrap gap-4{% else %}space-y-2{% endif %}">
+    {% if options %}
+        {% for value, label in options.items() %}
+        <div class="flex items-center">
+            <input 
+                type="radio" 
+                id="{{ field.id }}_{{ loop.index }}" 
+                name="{{ field.name }}"
+                value="{{ value }}"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 {{ class }}"
+                {% if field.data == value %}checked{% endif %}
+                {% if required %}required{% endif %}
+                {% if disabled %}disabled{% endif %}
+                {% if field.errors %}aria-invalid="true"{% endif %}
+            >
+            <label for="{{ field.id }}_{{ loop.index }}" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ label }}
+            </label>
+        </div>
+        {% endfor %}
+    {% else %}
+        {% for choice in field.choices %}
+            {% if choice is iterable and choice is not string %}
+                <div class="flex items-center">
+                    <input 
+                        type="radio" 
+                        id="{{ field.id }}_{{ loop.index }}" 
+                        name="{{ field.name }}"
+                        value="{{ choice[0] }}"
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 {{ class }}"
+                        {% if field.data == choice[0] %}checked{% endif %}
+                        {% if required %}required{% endif %}
+                        {% if disabled %}disabled{% endif %}
+                        {% if field.errors %}aria-invalid="true"{% endif %}
+                    >
+                    <label for="{{ field.id }}_{{ loop.index }}" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ choice[1] }}
+                    </label>
+                </div>
+            {% else %}
+                <div class="flex items-center">
+                    <input 
+                        type="radio" 
+                        id="{{ field.id }}_{{ loop.index }}" 
+                        name="{{ field.name }}"
+                        value="{{ choice }}"
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 {{ class }}"
+                        {% if field.data == choice %}checked{% endif %}
+                        {% if required %}required{% endif %}
+                        {% if disabled %}disabled{% endif %}
+                        {% if field.errors %}aria-invalid="true"{% endif %}
+                    >
+                    <label for="{{ field.id }}_{{ loop.index }}" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ choice }}
+                    </label>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    
+    {% if field.errors %}
+    <div class="mt-1">
+        {% for error in field.errors %}
+        <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}

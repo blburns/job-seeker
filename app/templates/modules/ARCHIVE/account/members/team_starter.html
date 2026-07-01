@@ -1,0 +1,54 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Create Team - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Create Team</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Set up a new team
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card max-w-2xl">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Team Information</h3>
+        </div>
+        <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+            <form class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">Team Name</label>
+                    <input class="kt-input" type="text" placeholder="Enter team name" required/>
+                </div>
+                
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">Description</label>
+                    <textarea class="kt-input" rows="3" placeholder="Describe your team..."></textarea>
+                </div>
+                
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">Team Members</label>
+                    <select class="kt-select" multiple>
+                        <option>Select members</option>
+                    </select>
+                    <span class="text-xs text-secondary-foreground">You can add members after creating the team</span>
+                </div>
+                
+                <div class="flex justify-end gap-2.5 pt-4 border-t border-border">
+                    <a href="{{ safe_url_for('account.members_teams') }}" class="kt-btn kt-btn-outline">Cancel</a>
+                    <button class="kt-btn kt-btn-primary" type="submit">Create Team</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

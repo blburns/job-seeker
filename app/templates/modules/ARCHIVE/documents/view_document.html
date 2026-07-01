@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
+                    {{ document.title }}
+                </h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {{ document.description or 'No description provided' }}
+                </p>
+            </div>
+            <div class="mt-4 flex flex-col sm:flex-row gap-3 md:mt-0 md:ml-4">
+                <a href="{{ url_for('documents.download_document', document_uuid=document.document_uuid) }}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Download
+                </a>
+                <a href="{{ url_for('documents.preview_document', document_uuid=document.document_uuid) }}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Preview
+                </a>
+                <a href="{{ url_for('documents.edit_document', document_uuid=document.document_uuid) }}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Edit
+                </a>
+                <a href="{{ url_for('documents.list_documents') }}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Documents
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Content -->
+            <div class="lg:col-span-2">
+                <!-- Document Information -->
+                <div class="card mb-6">
+                    <div class="card-body">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Document Information</h3>
+                        
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">File Name</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">{{ document.original_filename }}</dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">File Size</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">{{ document.get_file_size_human() }}</dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">File Type</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">{{ document.mime_type }}</dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Version</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">v{{ document.version }}</dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                                <dd class="mt-1">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {% if document.status == 'approved' %}bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
+                                        {% elif document.status == 'review' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
+                                        {% elif document.status == 'archived' %}bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100
+                                        {% else %}bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100{% endif %}">
+                                        {{ document.status.title() }}
+                                    </span>
+                                </dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Access Level</dt>
+                                <dd class="mt-1">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {% if document.access_level == 'public' %}bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
+                                        {% elif document.access_level == 'internal' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
+                                        {% else %}bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100{% endif %}">
+                                        {{ document.access_level.title() }}
+                                    </span>
+                                </dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">
+                                    {% if document.created_at %}
+                                        {% if document.created_at is string %}
+                                            {{ document.created_at[:16] }}
+                                        {% else %}
+                                            {{ document.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                        {% endif %}
+                                    {% else %}
+                                        Unknown
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Modified</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">
+                                    {% if document.updated_at %}
+                                        {% if document.updated_at is string %}
+                                            {{ document.updated_at[:16] }}
+                                        {% else %}
+                                            {{ document.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                        {% endif %}
+                                    {% else %}
+                                        Unknown
+                                    {% endif %}
+                                </dd>
+                            </div>
+                        </dl>
+                        
+                        {% if document.tags %}
+                        <div class="mt-6">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Tags</dt>
+                            <div class="flex flex-wrap gap-2">
+                                {% for tag in document.tags %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100">
+                                    {{ tag }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Document Versions -->
+                {% if versions %}
+                <div class="card mb-6">
+                    <div class="card-body">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Document Versions</h3>
+                        <div class="space-y-4">
+                            {% for version in versions %}
+                            <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                            <span class="text-white text-sm font-medium">v{{ version.version }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ version.original_filename }}</p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                                            {{ version.get('file_size_human', 'Unknown size') if version.get('file_size_human') else 'Unknown size' }} • 
+                                            {% if version.created_at %}
+                                                {% if version.created_at is string %}
+                                                    {{ version.created_at[:10] }}
+                                                {% else %}
+                                                    {{ version.created_at.strftime('%B %d, %Y') }}
+                                                {% endif %}
+                                            {% else %}
+                                                Unknown date
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    {% if version.is_latest_version %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                                        Latest
+                                    </span>
+                                    {% endif %}
+                                    <a href="{{ url_for('documents.download_document', document_uuid=version.document_uuid) }}" 
+                                       class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                                        Download
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <!-- Quick Actions -->
+                <div class="card mb-6">
+                    <div class="card-body">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+                        <div class="space-y-3">
+                            <a href="{{ url_for('documents.download_document', document_uuid=document.document_uuid) }}" 
+                               class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Download Document
+                            </a>
+                            
+                            <a href="{{ url_for('documents.preview_document', document_uuid=document.document_uuid) }}" 
+                               class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                Preview Document
+                            </a>
+                            
+                            <a href="{{ url_for('documents.edit_document', document_uuid=document.document_uuid) }}" 
+                               class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Edit Document
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Access Logs -->
+                {% if access_logs %}
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Recent Access</h3>
+                        <div class="space-y-3">
+                            {% for log in access_logs %}
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ log.access_type.title() }}</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        {% if log.accessed_at %}
+                                            {% if log.accessed_at is string %}
+                                                {{ log.accessed_at[:16] }}
+                                            {% else %}
+                                                {{ log.accessed_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                            {% endif %}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

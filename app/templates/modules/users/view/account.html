@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.get_full_name() or user.username }} - Account{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/pages/page-user-view.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  {% include 'modules/users/view/includes/user_view_sidebar.html' %}
+
+  <!-- User Content -->
+  <div class="col-xl-8 col-lg-7 order-0 order-md-1">
+    {% set active_tab = 'account' %}
+    {% include 'modules/users/view/includes/user_view_nav_pills.html' %}
+
+    <!-- Account (read-only, matches settings/account layout) -->
+    <div class="card mb-6">
+      <div class="card-body">
+        <div class="d-flex align-items-start align-items-sm-center gap-6">
+          {% if user.photo_url %}
+          <img
+            src="{{ user.photo_url }}"
+            alt="user-avatar"
+            class="d-block w-px-100 h-px-100 rounded"
+            style="object-fit: cover; border-radius: 0.375rem;" />
+          {% else %}
+          <div class="w-px-100 h-px-100 rounded flex-shrink-0 d-flex align-items-center justify-content-center bg-label-primary text-primary" style="font-size: 2.5rem; line-height: 1; border-radius: 0.375rem;">
+            {{ (user.get_full_name() or user.username)[0]|upper }}
+          </div>
+          {% endif %}
+          <div class="text-body">Profile photo</div>
+        </div>
+      </div>
+      <div class="card-body pt-4">
+        <div class="row gy-4 gx-6 mb-6">
+          <div class="col-md-6">
+            <label class="form-label text-body-secondary">First Name</label>
+            <p class="mb-0 fw-medium">{{ user.firstname or '—' }}</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-body-secondary">Last Name</label>
+            <p class="mb-0 fw-medium">{{ user.lastname or '—' }}</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-body-secondary">E-mail</label>
+            <p class="mb-0 fw-medium">{{ user.email or '—' }}</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-body-secondary">Username</label>
+            <p class="mb-0 fw-medium">{{ user.username or '—' }}</p>
+          </div>
+        </div>
+        <div class="mt-2">
+          <a href="{{ url_for('users.edit_user', user_id=user.id) }}" class="btn btn-primary me-3">Edit user</a>
+          <a href="{{ url_for('users.dashboard') }}" class="btn btn-label-secondary">Back to list</a>
+        </div>
+      </div>
+    </div>
+    <!-- /Account -->
+
+    <!-- Activity Timeline -->
+    <div class="card mb-6">
+      <h5 class="card-header">User Activity Timeline</h5>
+      <div class="card-body pt-1">
+        <ul class="timeline mb-0">
+          {% if user.created_at %}
+          <li class="timeline-item timeline-item-transparent">
+            <span class="timeline-point timeline-point-primary"></span>
+            <div class="timeline-event">
+              <div class="timeline-header mb-3">
+                <h6 class="mb-0">Account created</h6>
+                <small class="text-body-secondary">{{ user.created_at.strftime('%B %d, %Y') }}</small>
+              </div>
+              <p class="mb-0">User account was created.</p>
+            </div>
+          </li>
+          {% endif %}
+          {% if user.last_login %}
+          <li class="timeline-item timeline-item-transparent">
+            <span class="timeline-point timeline-point-success"></span>
+            <div class="timeline-event">
+              <div class="timeline-header mb-3">
+                <h6 class="mb-0">Last login</h6>
+                <small class="text-body-secondary">{{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}</small>
+              </div>
+              <p class="mb-0">User signed in to their account.</p>
+            </div>
+          </li>
+          {% endif %}
+          {% if user.last_activity and user.last_activity != user.last_login %}
+          <li class="timeline-item timeline-item-transparent">
+            <span class="timeline-point timeline-point-info"></span>
+            <div class="timeline-event">
+              <div class="timeline-header mb-3">
+                <h6 class="mb-0">Last activity</h6>
+                <small class="text-body-secondary">{{ user.last_activity.strftime('%B %d, %Y at %I:%M %p') }}</small>
+              </div>
+              <p class="mb-0">Last recorded activity.</p>
+            </div>
+          </li>
+          {% endif %}
+          {% if not user.created_at and not user.last_login %}
+          <li class="timeline-item timeline-item-transparent">
+            <span class="timeline-point timeline-point-primary"></span>
+            <div class="timeline-event">
+              <div class="timeline-header mb-3">
+                <h6 class="mb-0">No activity yet</h6>
+                <small class="text-body-secondary">—</small>
+              </div>
+              <p class="mb-0">Activity will appear here as the user interacts with the system.</p>
+            </div>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    <!--/ Activity Timeline -->
+  </div>
+  <!--/ User Content -->
+</div>
+{% endblock %}

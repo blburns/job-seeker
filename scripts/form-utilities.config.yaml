@@ -1,0 +1,42 @@
+color_scales:
+  - gray
+  - blue
+  - green
+  - red
+  - orange
+  - yellow
+  - cyan
+  - purple
+  - pink
+  - white
+shades: [100,200,300,400,500,600,700,800,900]
+utilities:
+  input-bg: true
+  input-text: true
+  input-border: true
+  label: true
+  form-text: true
+  input-group-text: true
+  select-bg: true
+  select-text: true
+  check-bg: true
+  check-border: true
+  range-track: true
+  range-thumb: true
+  file-upload-bg: true
+  file-upload-text: true
+  valid-feedback: true
+  invalid-feedback: true
+  legend: true
+  output-bg: true
+  progress-bar-bg: true
+theme_includes:
+  - input-bg-blue-100
+  - input-bg-gray-100
+  - label-gray-700
+  - form-text-red-500
+  - input-group-text-cyan-200
+  - select-bg-green-100
+  - check-border-red-400
+  - valid-feedback-green-500
+  - invalid-feedback-red-500 

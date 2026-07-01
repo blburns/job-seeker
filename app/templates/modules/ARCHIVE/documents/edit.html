@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Document - {{ document.title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
+                    Edit Document
+                </h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Update document metadata and settings
+                </p>
+            </div>
+            <div class="mt-4 flex flex-col sm:flex-row gap-3 md:mt-0 md:ml-4">
+                <a href="{{ url_for('documents.view_document', document_uuid=document.document_uuid) }}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Document
+                </a>
+            </div>
+        </div>
+
+        <!-- Edit Document Form -->
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" class="space-y-6">
+                    <!-- Basic Information -->
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Title <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" 
+                               name="title" 
+                               id="title" 
+                               required
+                               value="{{ document.title }}"
+                               class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                               placeholder="Enter document title">
+                    </div>
+
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Description
+                        </label>
+                        <textarea name="description" 
+                                  id="description" 
+                                  rows="4"
+                                  class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                  placeholder="Enter document description">{{ document.description or '' }}</textarea>
+                    </div>
+
+                    <!-- Category and Status -->
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="category_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Category
+                            </label>
+                            <select name="category_id" 
+                                    id="category_id"
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                                <option value="">No Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if document.category_id == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Status
+                            </label>
+                            <select name="status" 
+                                    id="status"
+                                    class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                                <option value="draft" {% if document.status == 'draft' %}selected{% endif %}>Draft</option>
+                                <option value="review" {% if document.status == 'review' %}selected{% endif %}>Review</option>
+                                <option value="approved" {% if document.status == 'approved' %}selected{% endif %}>Approved</option>
+                                <option value="archived" {% if document.status == 'archived' %}selected{% endif %}>Archived</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Access Control -->
+                    <div>
+                        <label for="access_level" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Access Level
+                        </label>
+                        <select name="access_level" 
+                                id="access_level"
+                                class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                            <option value="private" {% if document.access_level == 'private' %}selected{% endif %}>Private</option>
+                            <option value="internal" {% if document.access_level == 'internal' %}selected{% endif %}>Internal</option>
+                            <option value="public" {% if document.access_level == 'public' %}selected{% endif %}>Public</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Private: Only you can access • Internal: Organization members • Public: Anyone with link
+                        </p>
+                    </div>
+
+                    <!-- Tags -->
+                    <div>
+                        <label for="tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Tags
+                        </label>
+                        <input type="text" 
+                               name="tags" 
+                               id="tags"
+                               value="{% if document.tags %}{{ document.tags | join(', ') }}{% endif %}"
+                               class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                               placeholder="Enter tags separated by commas">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Separate multiple tags with commas
+                        </p>
+                    </div>
+
+                    <!-- File Information (Read-only) -->
+                    <div class="border-t border-gray-200 dark:border-gray-600 pt-6">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                            File Information
+                        </h3>
+                        
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">File Name</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">{{ document.original_filename }}</dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">File Size</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">{{ document.get_file_size_human() }}</dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">File Type</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">{{ document.mime_type }}</dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Version</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-gray-300">v{{ document.version }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-600">
+                        <a href="{{ url_for('documents.view_document', document_uuid=document.document_uuid) }}" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Update Document
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

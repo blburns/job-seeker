@@ -1,0 +1,100 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Company Profile - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Company Profile</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage your company information
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Company Information</h3>
+        </div>
+        <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+            <form class="flex flex-col gap-4">
+                <div class="flex items-center gap-4 pb-4 border-b border-border">
+                    <div class="size-20 rounded-lg bg-muted flex items-center justify-center">
+                        <i class="ki-filled ki-briefcase text-3xl text-muted-foreground"></i>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <h4 class="text-sm font-semibold text-mono">Company Logo</h4>
+                        <p class="text-xs text-secondary-foreground">Upload a logo for your company</p>
+                        <button class="kt-btn kt-btn-sm kt-btn-outline w-fit mt-2">Upload Logo</button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Company Name</label>
+                        <input class="kt-input" type="text" placeholder="Enter company name"/>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Industry</label>
+                        <select class="kt-select">
+                            <option>Select industry</option>
+                            <option>Technology</option>
+                            <option>Finance</option>
+                            <option>Healthcare</option>
+                            <option>Education</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">Company Description</label>
+                    <textarea class="kt-input" rows="4" placeholder="Describe your company..."></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Website</label>
+                        <input class="kt-input" type="url" placeholder="https://example.com"/>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Phone</label>
+                        <input class="kt-input" type="tel" placeholder="+1 (555) 000-0000"/>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">Address</label>
+                    <input class="kt-input" type="text" placeholder="Street address"/>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">City</label>
+                        <input class="kt-input" type="text" placeholder="City"/>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">State</label>
+                        <input class="kt-input" type="text" placeholder="State"/>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">ZIP Code</label>
+                        <input class="kt-input" type="text" placeholder="ZIP"/>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end gap-2.5 pt-4 border-t border-border">
+                    <button class="kt-btn kt-btn-outline" type="button">Cancel</button>
+                    <button class="kt-btn kt-btn-primary" type="submit">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

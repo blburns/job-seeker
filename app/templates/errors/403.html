@@ -1,0 +1,20 @@
+{% extends "base_misc.html" %}
+
+{% block title %}Access Denied - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block misc_code %}403{% endblock %}
+{% block misc_heading %}You are not authorized! 🔐{% endblock %}
+{% block misc_description %}You don't have permission to access this page. Go Home!{% endblock %}
+{% block misc_actions %}
+  <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to home</a>
+  <button type="button" class="btn btn-label-secondary" onclick="window.history.back()">Go Back</button>
+{% endblock %}
+{% block misc_image %}
+<div class="mt-12">
+  <img
+    src="{{ url_for('static', filename='assets/img/illustrations/page-misc-you-are-not-authorized.png') }}"
+    alt="page-misc-not-authorized"
+    width="170"
+    class="img-fluid" />
+</div>
+{% endblock %}

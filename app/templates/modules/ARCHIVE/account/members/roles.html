@@ -1,0 +1,82 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Roles - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Roles</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage team roles and permissions
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <button class="kt-btn kt-btn-primary">
+                <i class="ki-filled ki-plus text-lg"></i>
+                Create Role
+            </button>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Role Card -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-mono">Owner</h3>
+                    <span class="kt-badge kt-badge-sm kt-badge-primary">Default</span>
+                </div>
+                <p class="text-sm text-secondary-foreground">Full access to all team resources and settings</p>
+                <div class="flex flex-col gap-1 text-xs">
+                    <span class="text-muted-foreground">Permissions:</span>
+                    <span>• Manage team settings</span>
+                    <span>• Add/remove members</span>
+                    <span>• Manage billing</span>
+                </div>
+                <button class="kt-btn kt-btn-outline kt-btn-sm">Edit Role</button>
+            </div>
+        </div>
+        
+        <!-- Role Card -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-mono">Admin</h3>
+                </div>
+                <p class="text-sm text-secondary-foreground">Manage team members and projects</p>
+                <div class="flex flex-col gap-1 text-xs">
+                    <span class="text-muted-foreground">Permissions:</span>
+                    <span>• Manage projects</span>
+                    <span>• Add/remove members</span>
+                    <span>• View billing</span>
+                </div>
+                <button class="kt-btn kt-btn-outline kt-btn-sm">Edit Role</button>
+            </div>
+        </div>
+        
+        <!-- Role Card -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-mono">Member</h3>
+                </div>
+                <p class="text-sm text-secondary-foreground">Standard team member access</p>
+                <div class="flex flex-col gap-1 text-xs">
+                    <span class="text-muted-foreground">Permissions:</span>
+                    <span>• View projects</span>
+                    <span>• Create content</span>
+                    <span>• Comment</span>
+                </div>
+                <button class="kt-btn kt-btn-outline kt-btn-sm">Edit Role</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

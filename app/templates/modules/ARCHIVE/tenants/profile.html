@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Tenant Profile{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Tenant Profile</h2>
+            <p class="mt-1 text-sm text-gray-500">View complete tenant profile</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="card">
+                    <div class="card-header"><h3>Basic Information</h3></div>
+                    <div class="card-body space-y-4">
+                        <div><dt>Name</dt><dd>{{ tenant.name }}</dd></div>
+                        <div><dt>Domain</dt><dd>{{ tenant.domain }}</dd></div>
+                        <div><dt>Status</dt><dd>{{ tenant.status }}</dd></div>
+                        <div><dt>Created</dt><dd>{{ tenant.created_at.strftime('%Y-%m-%d') if tenant.created_at else 'N/A' }}</dd></div>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-6">
+                <div class="card">
+                    <div class="card-header"><h3>Quick Info</h3></div>
+                    <div class="card-body">
+                        <p class="text-sm text-gray-500 mb-2">Tenant ID</p>
+                        <p class="text-lg font-mono">{{ tenant.id }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

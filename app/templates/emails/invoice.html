@@ -1,0 +1,171 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<tr>
+  <td style="padding: 40px 30px;">
+    <h1 style="margin: 0 0 20px; font-size: 28px; font-weight: 600; color: #1a1a1a;">
+      Invoice #{{ invoice.invoice_number }}
+    </h1>
+    
+    <p style="margin: 0 0 20px; font-size: 16px; line-height: 24px; color: #4a5568;">
+      Hi {{ user.username }},
+    </p>
+    
+    <p style="margin: 0 0 20px; font-size: 16px; line-height: 24px; color: #4a5568;">
+      Thank you for your business! Please find your invoice details below.
+    </p>
+    
+    <!-- Invoice Header -->
+    <table style="width: 100%; margin: 30px 0;">
+      <tr>
+        <td style="width: 50%;">
+          <h3 style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #718096; text-transform: uppercase;">
+            Invoice Date
+          </h3>
+          <p style="margin: 0; font-size: 16px; color: #1a1a1a;">
+            {{ invoice.created_at.strftime('%B %d, %Y') }}
+          </p>
+        </td>
+        <td style="width: 50%; text-align: right;">
+          <h3 style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #718096; text-transform: uppercase;">
+            Due Date
+          </h3>
+          <p style="margin: 0; font-size: 16px; color: #1a1a1a;">
+            {{ invoice.due_date.strftime('%B %d, %Y') }}
+          </p>
+        </td>
+      </tr>
+    </table>
+    
+    <!-- Bill To / From -->
+    <table style="width: 100%; margin: 30px 0;">
+      <tr>
+        <td style="width: 50%; vertical-align: top;">
+          <h3 style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #718096; text-transform: uppercase;">
+            Bill To
+          </h3>
+          <div style="padding: 15px; background-color: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <p style="margin: 0; line-height: 24px; color: #4a5568;">
+              <strong>{{ user.username }}</strong><br>
+              {{ user.email }}<br>
+              {% if invoice.billing_address %}
+              {{ invoice.billing_address.line1 }}<br>
+              {% if invoice.billing_address.line2 %}{{ invoice.billing_address.line2 }}<br>{% endif %}
+              {{ invoice.billing_address.city }}, {{ invoice.billing_address.state }} {{ invoice.billing_address.zip }}
+              {% endif %}
+            </p>
+          </div>
+        </td>
+        <td style="width: 50%; vertical-align: top; padding-left: 20px;">
+          <h3 style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #718096; text-transform: uppercase;">
+            From
+          </h3>
+          <div style="padding: 15px; background-color: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <p style="margin: 0; line-height: 24px; color: #4a5568;">
+              <strong>{{ config.get('COMPANY_NAME', 'Your Company') }}</strong><br>
+              {{ config.get('COMPANY_ADDRESS', 'Company Address') }}<br>
+              {{ config.get('COMPANY_EMAIL', 'support@example.com') }}
+            </p>
+          </div>
+        </td>
+      </tr>
+    </table>
+    
+    <!-- Invoice Items -->
+    <h3 style="margin: 30px 0 15px; font-size: 18px; font-weight: 600; color: #1a1a1a;">
+      Invoice Items
+    </h3>
+    
+    <table style="width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+      <thead>
+        <tr style="background-color: #f7fafc;">
+          <th style="padding: 12px 15px; text-align: left; font-weight: 600; color: #4a5568; border-bottom: 1px solid #e2e8f0;">Description</th>
+          <th style="padding: 12px 15px; text-align: center; font-weight: 600; color: #4a5568; border-bottom: 1px solid #e2e8f0;">Qty</th>
+          <th style="padding: 12px 15px; text-align: right; font-weight: 600; color: #4a5568; border-bottom: 1px solid #e2e8f0;">Unit Price</th>
+          <th style="padding: 12px 15px; text-align: right; font-weight: 600; color: #4a5568; border-bottom: 1px solid #e2e8f0;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in invoice.items %}
+        <tr>
+          <td style="padding: 12px 15px; border-bottom: 1px solid #e2e8f0;">
+            <strong>{{ item.name }}</strong>
+            {% if item.description %}
+            <br><span style="font-size: 14px; color: #718096;">{{ item.description }}</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px 15px; text-align: center; border-bottom: 1px solid #e2e8f0;">{{ item.quantity }}</td>
+          <td style="padding: 12px 15px; text-align: right; border-bottom: 1px solid #e2e8f0;">${{ "%.2f"|format(item.unit_price) }}</td>
+          <td style="padding: 12px 15px; text-align: right; border-bottom: 1px solid #e2e8f0;">${{ "%.2f"|format(item.quantity * item.unit_price) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" style="padding: 12px 15px; text-align: right; border-bottom: 1px solid #e2e8f0;">
+            <strong>Subtotal:</strong>
+          </td>
+          <td style="padding: 12px 15px; text-align: right; border-bottom: 1px solid #e2e8f0;">
+            ${{ "%.2f"|format(invoice.subtotal) }}
+          </td>
+        </tr>
+        {% if invoice.tax %}
+        <tr>
+          <td colspan="3" style="padding: 12px 15px; text-align: right; border-bottom: 1px solid #e2e8f0;">
+            <strong>Tax ({{ invoice.tax_rate }}%):</strong>
+          </td>
+          <td style="padding: 12px 15px; text-align: right; border-bottom: 1px solid #e2e8f0;">
+            ${{ "%.2f"|format(invoice.tax) }}
+          </td>
+        </tr>
+        {% endif %}
+        {% if invoice.discount %}
+        <tr>
+          <td colspan="3" style="padding: 12px 15px; text-align: right; border-bottom: 1px solid #e2e8f0;">
+            <strong>Discount:</strong>
+          </td>
+          <td style="padding: 12px 15px; text-align: right; border-bottom: 1px solid #e2e8f0; color: #10b981;">
+            -${{ "%.2f"|format(invoice.discount) }}
+          </td>
+        </tr>
+        {% endif %}
+        <tr style="background-color: #f7fafc;">
+          <td colspan="3" style="padding: 15px; text-align: right;">
+            <strong style="font-size: 18px;">Total:</strong>
+          </td>
+          <td style="padding: 15px; text-align: right;">
+            <strong style="font-size: 20px; color: #3b82f6;">${{ "%.2f"|format(invoice.total) }}</strong>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+    
+    <!-- Payment Status -->
+    <div style="margin: 30px 0; padding: 15px 20px; background-color: {% if invoice.status == 'paid' %}#d1fae5{% else %}#fef3c7{% endif %}; border-radius: 8px; border: 1px solid {% if invoice.status == 'paid' %}#10b981{% else %}#f59e0b{% endif %};">
+      <p style="margin: 0; color: {% if invoice.status == 'paid' %}#065f46{% else %}#92400e{% endif %};">
+        <strong>Status:</strong> {{ invoice.status|title }}
+        {% if invoice.paid_at %}
+        <br><strong>Paid on:</strong> {{ invoice.paid_at.strftime('%B %d, %Y') }}
+        {% endif %}
+      </p>
+    </div>
+    
+    <!-- View Invoice Button -->
+    {% if invoice_url %}
+    <table style="width: 100%; margin: 30px 0;">
+      <tr>
+        <td align="center">
+          <a href="{{ invoice_url }}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+            View Full Invoice
+          </a>
+        </td>
+      </tr>
+    </table>
+    {% endif %}
+    
+    <p style="margin: 30px 0 0; font-size: 14px; line-height: 22px; color: #718096;">
+      If you have any questions about this invoice, please contact our billing department at {{ config.get('BILLING_EMAIL', 'billing@example.com') }}.
+    </p>
+  </td>
+</tr>
+{% endblock %}

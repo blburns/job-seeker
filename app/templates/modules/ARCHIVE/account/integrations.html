@@ -1,0 +1,75 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Integrations - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Integrations</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Connect your favorite apps and services
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Integration Card -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex items-center gap-3">
+                    <div class="size-12 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <i class="ki-filled ki-abstract-26 text-blue-600 dark:text-blue-400 text-2xl"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h4 class="text-sm font-semibold text-mono">Google</h4>
+                        <span class="text-xs text-secondary-foreground">Connected</span>
+                    </div>
+                </div>
+                <p class="text-sm text-secondary-foreground">Sync your Google account data</p>
+                <button class="kt-btn kt-btn-outline kt-btn-sm">Disconnect</button>
+            </div>
+        </div>
+        
+        <!-- Integration Card -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex items-center gap-3">
+                    <div class="size-12 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                        <i class="ki-filled ki-abstract-26 text-gray-600 dark:text-gray-400 text-2xl"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h4 class="text-sm font-semibold text-mono">GitHub</h4>
+                        <span class="text-xs text-secondary-foreground">Not connected</span>
+                    </div>
+                </div>
+                <p class="text-sm text-secondary-foreground">Connect your GitHub account</p>
+                <button class="kt-btn kt-btn-primary kt-btn-sm">Connect</button>
+            </div>
+        </div>
+        
+        <!-- Integration Card -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex items-center gap-3">
+                    <div class="size-12 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                        <i class="ki-filled ki-abstract-26 text-blue-600 dark:text-blue-400 text-2xl"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <h4 class="text-sm font-semibold text-mono">Slack</h4>
+                        <span class="text-xs text-secondary-foreground">Not connected</span>
+                    </div>
+                </div>
+                <p class="text-sm text-secondary-foreground">Get notifications in Slack</p>
+                <button class="kt-btn kt-btn-primary kt-btn-sm">Connect</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings - Security - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    {% set active_tab = 'security' %}
+    {% include 'modules/users/settings/includes/settings_nav_pills.html' %}
+
+    <!-- Change Password -->
+    <div class="card mb-6">
+      <h5 class="card-header">Change Password</h5>
+      <div class="card-body pt-1">
+        <p class="text-body mb-4">Secure your account by updating your password regularly.</p>
+        <a href="{{ url_for('users.change_password') }}" class="btn btn-primary">Change Password</a>
+      </div>
+    </div>
+    <!--/ Change Password -->
+
+    <!-- Two-Factor Authentication -->
+    <div class="card mb-6">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Two-Factor Authentication (2FA)</h5>
+        {% if user.totp_enabled %}
+        <span class="badge bg-success">
+          <i class="ti ti-check me-1"></i>
+          Enabled
+        </span>
+        {% else %}
+        <span class="badge bg-label-secondary">Disabled</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if user.totp_enabled %}
+        <!-- 2FA Enabled -->
+        <div class="alert alert-success">
+          <div class="d-flex">
+            <div class="flex-shrink-0">
+              <i class="ti ti-shield-check ti-md"></i>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <h6 class="alert-heading mb-1">Your Account is Protected</h6>
+              <p class="mb-0">
+                Two-factor authentication is enabled. You'll need your password and a verification code to sign in.
+              </p>
+              {% if user.totp_enabled_at %}
+              <p class="mb-0 mt-2 small">
+                <strong>Enabled on:</strong> {{ user.totp_enabled_at.strftime('%B %d, %Y at %I:%M %p') }}
+              </p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h6 class="mb-2">
+              <i class="ti ti-key me-2"></i>
+              Backup Codes
+            </h6>
+            <p class="text-muted mb-3">
+              {% if user.backup_codes %}
+              You have {{ user.backup_codes|length }} backup codes remaining.
+              {% else %}
+              No backup codes available.
+              {% endif %}
+            </p>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#regenerateBackupCodesModal">
+              <i class="ti ti-refresh me-1"></i>
+              Regenerate Backup Codes
+            </button>
+          </div>
+          <div class="col-md-6">
+            <h6 class="mb-2">
+              <i class="ti ti-device-mobile me-2"></i>
+              Authenticator App
+            </h6>
+            <p class="text-muted mb-3">
+              Using TOTP (Time-based One-Time Password) with your authenticator app.
+            </p>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <h6 class="mb-1">Disable Two-Factor Authentication</h6>
+            <p class="text-muted mb-0 small">This will make your account less secure</p>
+          </div>
+          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#disable2FAModal">
+            <i class="ti ti-shield-off me-1"></i>
+            Disable 2FA
+          </button>
+        </div>
+
+        {% else %}
+        <!-- 2FA Disabled -->
+        <div class="mb-4">
+          <h6 class="mb-3">Protect Your Account</h6>
+          <p class="text-muted">
+            Two-factor authentication adds an extra layer of security to your account. 
+            When enabled, you'll need both your password and a verification code from your phone to sign in.
+          </p>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-4 mb-3">
+            <div class="d-flex align-items-start">
+              <div class="flex-shrink-0">
+                <span class="avatar avatar-sm bg-label-primary">
+                  <i class="ti ti-shield-check"></i>
+                </span>
+              </div>
+              <div class="flex-grow-1 ms-3">
+                <h6 class="mb-1">Extra Security</h6>
+                <p class="text-muted small mb-0">Protect against unauthorized access</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="d-flex align-items-start">
+              <div class="flex-shrink-0">
+                <span class="avatar avatar-sm bg-label-primary">
+                  <i class="ti ti-device-mobile"></i>
+                </span>
+              </div>
+              <div class="flex-grow-1 ms-3">
+                <h6 class="mb-1">Easy to Use</h6>
+                <p class="text-muted small mb-0">Works with popular authenticator apps</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="d-flex align-items-start">
+              <div class="flex-shrink-0">
+                <span class="avatar avatar-sm bg-label-primary">
+                  <i class="ti ti-key"></i>
+                </span>
+              </div>
+              <div class="flex-grow-1 ms-3">
+                <h6 class="mb-1">Backup Codes</h6>
+                <p class="text-muted small mb-0">Access your account if you lose your phone</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% if setup_in_progress %}
+        <div class="alert alert-info">
+          <i class="ti ti-info-circle me-2"></i>
+          2FA setup is in progress. <a href="{{ url_for('users.setup_2fa') }}" class="alert-link">Continue setup</a>
+        </div>
+        {% endif %}
+
+        <a href="{{ url_for('users.setup_2fa') }}" class="btn btn-primary">
+          <i class="ti ti-shield-lock me-2"></i>
+          Enable Two-Factor Authentication
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    <!--/ Two-Factor Authentication -->
+
+    <!-- Modals -->
+    {% if user.totp_enabled %}
+    <!-- Disable 2FA Modal -->
+    <div class="modal fade" id="disable2FAModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Disable Two-Factor Authentication</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="{{ url_for('users.disable_2fa') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="modal-body">
+              <div class="alert alert-warning">
+                <i class="ti ti-alert-triangle me-2"></i>
+                <strong>Warning:</strong> Disabling 2FA will make your account less secure.
+              </div>
+              <p>To confirm, please enter your password:</p>
+              <div class="mb-3">
+                <label for="disable-password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="disable-password" name="password" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-danger">Disable 2FA</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regenerate Backup Codes Modal -->
+    <div class="modal fade" id="regenerateBackupCodesModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Regenerate Backup Codes</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form method="POST" action="{{ url_for('users.regenerate_backup_codes') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="modal-body">
+              <div class="alert alert-info">
+                <i class="ti ti-info-circle me-2"></i>
+                This will generate new backup codes and invalidate all existing ones.
+              </div>
+              <p>To confirm, please enter your password:</p>
+              <div class="mb-3">
+                <label for="regenerate-password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="regenerate-password" name="password" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Regenerate Codes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent devices (placeholder) -->
+    <div class="card">
+      <h5 class="card-header">Recent Devices</h5>
+      <div class="card-body">
+        <p class="text-body mb-0">You have not logged in from any other devices recently.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

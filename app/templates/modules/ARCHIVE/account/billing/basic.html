@@ -1,0 +1,100 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Billing - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Billing</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage your billing information and payment methods
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Payment Methods -->
+        <div class="kt-card lg:col-span-2">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Payment Methods</h3>
+                <div class="kt-card-toolbar">
+                    <button class="kt-btn kt-btn-sm kt-btn-primary">Add Payment Method</button>
+                </div>
+            </div>
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <!-- Payment Card -->
+                <div class="flex items-center justify-between p-4 border border-border rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="ki-filled ki-credit-cart text-2xl text-primary"></i>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-semibold text-mono">•••• •••• •••• 4242</span>
+                            <span class="text-xs text-secondary-foreground">Expires 12/25</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="kt-badge kt-badge-sm kt-badge-success">Default</span>
+                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
+                            <i class="ki-filled ki-pencil text-lg"></i>
+                        </button>
+                        <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
+                            <i class="ki-filled ki-trash text-lg text-danger"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Billing Summary -->
+        <div class="kt-card">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Current Plan</h3>
+            </div>
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex flex-col gap-2">
+                    <span class="text-2xl font-semibold text-mono">Free</span>
+                    <span class="text-sm text-secondary-foreground">$0/month</span>
+                </div>
+                <a href="{{ safe_url_for('account.billing_plans') }}" class="kt-btn kt-btn-primary kt-btn-sm">Upgrade Plan</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Billing Address -->
+    <div class="kt-card mt-5">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Billing Address</h3>
+        </div>
+        <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+            <form class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">Street Address</label>
+                    <input class="kt-input" type="text" placeholder="123 Main St"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">City</label>
+                    <input class="kt-input" type="text" placeholder="City"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">State</label>
+                    <input class="kt-input" type="text" placeholder="State"/>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">ZIP Code</label>
+                    <input class="kt-input" type="text" placeholder="12345"/>
+                </div>
+                <div class="flex justify-end gap-2.5 md:col-span-2 pt-4 border-t border-border">
+                    <button class="kt-btn kt-btn-outline" type="button">Cancel</button>
+                    <button class="kt-btn kt-btn-primary" type="submit">Save Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

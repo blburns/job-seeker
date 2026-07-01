@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Roles - Admin - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h4 class="mb-0">
+          <i class="ti ti-users-group me-2"></i>
+          Roles
+        </h4>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('admin.dashboard') }}" class="btn btn-label-secondary">
+            <i class="ti ti-arrow-left me-1"></i>
+            Back to Dashboard
+          </a>
+          <a href="{{ url_for('admin.role_create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            Create Role
+          </a>
+        </div>
+      </div>
+
+      {% if rbac_stats %}
+      <div class="row mb-4">
+        <div class="col-md-4 mb-2">
+          <div class="card border h-100">
+            <div class="card-body py-3 d-flex align-items-center">
+              <div class="avatar avatar-md me-3">
+                <span class="avatar-initial rounded bg-label-primary"><i class="ti ti-users-group"></i></span>
+              </div>
+              <div>
+                <small class="d-block text-muted">Total roles</small>
+                <span class="fw-semibold">{{ rbac_stats.total_roles|default(0)|int }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="card border h-100">
+            <div class="card-body py-3 d-flex align-items-center">
+              <div class="avatar avatar-md me-3">
+                <span class="avatar-initial rounded bg-label-success"><i class="ti ti-check"></i></span>
+              </div>
+              <div>
+                <small class="d-block text-muted">Active roles</small>
+                <span class="fw-semibold">{{ rbac_stats.active_roles|default(0)|int }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="card border h-100">
+            <div class="card-body py-3 d-flex align-items-center">
+              <div class="avatar avatar-md me-3">
+                <span class="avatar-initial rounded bg-label-info"><i class="ti ti-user-check"></i></span>
+              </div>
+              <div>
+                <small class="d-block text-muted">User assignments</small>
+                <span class="fw-semibold">{{ rbac_stats.active_assignments|default(0)|int }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">All roles</h5>
+          <span class="badge bg-label-secondary">{{ roles|length }} role(s)</span>
+        </div>
+        <div class="card-body p-0">
+          {% if roles %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Display name</th>
+                  <th>Description</th>
+                  <th>Priority</th>
+                  <th>Assignments</th>
+                  <th>Status</th>
+                  <th style="width: 100px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for role in roles %}
+                <tr>
+                  <td>
+                    <code>{{ role.name }}</code>
+                    {% if role.is_system_role %}
+                    <span class="badge bg-label-info ms-1">System</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ role.display_name }}</td>
+                  <td>
+                    {% if role.description %}
+                    <small>{{ role.description[:60] }}{% if role.description|length > 60 %}…{% endif %}</small>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ role.priority }}</td>
+                  <td>
+                    <span class="badge bg-label-primary">{{ role_assignment_counts.get(role.id|string, 0) }}</span>
+                  </td>
+                  <td>
+                    {% if role.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="dropdown">
+                      <button type="button" class="btn btn-sm btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ti ti-dots-vertical"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="{{ url_for('admin.role_view', role_id=role.id) }}">
+                          <i class="ti ti-eye me-1"></i> View
+                        </a>
+                        <a class="dropdown-item" href="{{ url_for('admin.role_edit', role_id=role.id) }}">
+                          <i class="ti ti-edit me-1"></i> Edit
+                        </a>
+                        <a class="dropdown-item" href="{{ url_for('admin.role_permissions', role_id=role.id) }}">
+                          <i class="ti ti-shield-lock me-1"></i> Permissions
+                        </a>
+                        {% if not role.is_system_role %}
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="#" onclick="deleteRole('{{ role.id }}', '{{ role.display_name|e }}'); return false;">
+                          <i class="ti ti-trash me-1"></i> Delete
+                        </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="card-body text-center py-5">
+            <i class="ti ti-users-group ti-xl text-muted mb-3"></i>
+            <p class="text-muted mb-0">No roles found</p>
+            <a href="{{ url_for('admin.role_create') }}" class="btn btn-primary mt-3">
+              <i class="ti ti-plus me-1"></i>
+              Create first role
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Form -->
+<form id="deleteRoleForm" method="POST" style="display: none;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+</form>
+
+<script>
+function deleteRole(roleId, roleName) {
+  if (confirm('Are you sure you want to delete the role "' + roleName + '"?\n\nThis action cannot be undone.')) {
+    const form = document.getElementById('deleteRoleForm');
+    form.action = `/admin/roles/${roleId}/delete`;
+    form.submit();
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base_misc.html" %}
+
+{% block title %}Too Many Requests - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block misc_code %}429{% endblock %}
+{% block misc_heading %}Too Many Requests ⚠️{% endblock %}
+{% block misc_description %}You've made too many requests. Please wait a moment and try again.{% endblock %}
+{% block misc_actions %}
+  <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to home</a>
+  <button type="button" class="btn btn-label-secondary" onclick="location.reload()">Try Again</button>
+{% endblock %}

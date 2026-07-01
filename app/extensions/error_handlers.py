@@ -1,0 +1,51 @@
+"""
+Error Handlers
+Handles application error pages and error handling
+"""
+
+from flask import Flask, render_template, request, jsonify
+from werkzeug.exceptions import HTTPException
+
+
+def register_error_handlers(app: Flask) -> None:
+    """
+    Register error handlers
+    
+    Args:
+        app: Flask application instance
+    """
+    
+    @app.errorhandler(404)
+    def not_found_error(error):
+        """Handle 404 errors"""
+        if request.is_json:
+            return jsonify({'error': 'Not found'}), 404
+        return render_template('errors/404.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        """Handle 500 errors"""
+        if request.is_json:
+            return jsonify({'error': 'Internal server error'}), 500
+        return render_template('errors/500.html'), 500
+    
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        """Handle 403 errors"""
+        if request.is_json:
+            return jsonify({'error': 'Forbidden'}), 403
+        return render_template('errors/403.html'), 403
+    
+    @app.errorhandler(429)
+    def rate_limit_error(error):
+        """Handle 429 rate limit errors"""
+        if request.is_json:
+            return jsonify({'error': 'Rate limit exceeded'}), 429
+        return render_template('errors/429.html'), 429
+    
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(error):
+        """Handle HTTP exceptions"""
+        if request.is_json:
+            return jsonify({'error': error.description}), error.code
+        return render_template(f'errors/{error.code}.html'), error.code

@@ -1,0 +1,86 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Billing History - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Billing History</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                View your past invoices and payments
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Invoices</h3>
+            <div class="kt-card-toolbar">
+                <button class="kt-btn kt-btn-sm kt-btn-outline">Export</button>
+            </div>
+        </div>
+        <div class="kt-card-content p-0">
+            <div class="kt-table-responsive">
+                <table class="kt-table kt-table-row-bordered kt-table-row-dashed align-middle gs-0">
+                    <thead>
+                        <tr class="text-start text-muted-foreground fw-bold fs-7 text-uppercase gs-0">
+                            <th class="min-w-150px">Invoice #</th>
+                            <th class="min-w-100px">Date</th>
+                            <th class="min-w-100px">Amount</th>
+                            <th class="min-w-100px">Status</th>
+                            <th class="min-w-100px text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="text-mono font-semibold">INV-2024-001</span>
+                            </td>
+                            <td>
+                                <span class="text-sm text-secondary-foreground">Jan 15, 2024</span>
+                            </td>
+                            <td>
+                                <span class="text-sm font-semibold text-foreground">$29.00</span>
+                            </td>
+                            <td>
+                                <span class="kt-badge kt-badge-sm kt-badge-success">Paid</span>
+                            </td>
+                            <td class="text-end">
+                                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" title="Download">
+                                    <i class="ki-filled ki-file-down text-lg"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="text-mono font-semibold">INV-2023-012</span>
+                            </td>
+                            <td>
+                                <span class="text-sm text-secondary-foreground">Dec 15, 2023</span>
+                            </td>
+                            <td>
+                                <span class="text-sm font-semibold text-foreground">$29.00</span>
+                            </td>
+                            <td>
+                                <span class="kt-badge kt-badge-sm kt-badge-success">Paid</span>
+                            </td>
+                            <td class="text-end">
+                                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" title="Download">
+                                    <i class="ki-filled ki-file-down text-lg"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

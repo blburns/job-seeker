@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% set active_page = "settings" %}
+
+{% block title %}Settings Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Settings Dashboard</h1>
+            <p class="mt-2 text-gray-600">Manage your application settings across all categories and permission levels.</p>
+        </div>
+
+        <!-- Settings Type Tabs -->
+        <div class="mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <a href="{{ url_for('settings_web.global_settings') }}" 
+                       class="{% if request.endpoint == 'settings_web.global_settings' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        🌍 Global Settings
+                        <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ global_count }}</span>
+                    </a>
+                    {% if current_user.has_role('admin') or current_user.has_role('super_admin') %}
+                    <a href="{{ url_for('settings_web.admin_settings') }}" 
+                       class="{% if request.endpoint == 'settings_web.admin_settings' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        👑 Admin Settings
+                        <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ admin_count }}</span>
+                    </a>
+                    {% endif %}
+                    {% if current_user.has_role('super_admin') %}
+                    <a href="{{ url_for('settings_web.super_admin_settings') }}" 
+                       class="{% if request.endpoint == 'settings_web.super_admin_settings' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        🔒 Super Admin Settings
+                        <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ super_admin_count }}</span>
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('settings_web.user_settings') }}" 
+                       class="{% if request.endpoint == 'settings_web.user_settings' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        👤 User Settings
+                        <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">{{ user_count }}</span>
+                    </a>
+                    {% if current_user.has_role('admin') or current_user.has_role('super_admin') %}
+                    <a href="{{ url_for('settings_web.permissions') }}" 
+                       class="{% if request.endpoint == 'settings_web.permissions' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        🔐 Permissions
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                <span class="text-white text-sm font-medium">🌍</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Global Settings</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ global_count }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                <span class="text-white text-sm font-medium">👑</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Admin Settings</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ admin_count }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                            <span class="text-white text-sm font-medium">🔒</span>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Super Admin Settings</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ super_admin_count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                <span class="text-white text-sm font-medium">👤</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">User Settings</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ user_count }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module Settings -->
+        {% if current_user.has_role('admin') or current_user.has_role('super_admin') %}
+        <div class="bg-white shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Module Settings</h3>
+                <p class="text-sm text-gray-500 mb-6">Configure individual module settings and permissions</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for module in modules %}
+                    <a href="{{ url_for('settings_web.module_settings', module_name=module.name) }}" 
+                       class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 {{ module.color_class }} rounded-lg flex items-center justify-center transition-colors">
+                                <i class="{{ module.icon }}"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-medium text-gray-900">{{ module.display_name }} Module</h4>
+                            <p class="text-xs text-gray-500">{{ module.description }}</p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recent Changes -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Recent Changes</h3>
+                <div class="flow-root">
+                    <ul class="-mb-8">
+                        {% for change in recent_changes %}
+                        <li>
+                            <div class="relative pb-8">
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                                            <span class="text-white text-xs">⚙️</span>
+                                        </span>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500">
+                                                <span class="font-medium text-gray-900">{{ change.setting_name }}</span> was updated
+                                                {% if change.changed_by %}
+                                                by <span class="font-medium">{{ change.changed_by }}</span>
+                                                {% endif %}
+                                            </p>
+                                            {% if change.change_reason %}
+                                            <p class="text-xs text-gray-400">{{ change.change_reason }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                            <time datetime="{{ change.updated_at }}">{{ change.updated_at.strftime('%b %d, %Y at %I:%M %p') }}</time>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li>
+                            <div class="text-center py-8">
+                                <p class="text-gray-500">No recent changes</p>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                                <span class="text-white text-sm font-medium">🔄</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Sync from Environment</dt>
+                                <dd class="text-sm text-gray-900">Update settings from environment variables</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="{{ url_for('settings_web.sync_env') }}" 
+                           class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Sync Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                <span class="text-white text-sm font-medium">📊</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Export Settings</dt>
+                                <dd class="text-sm text-gray-900">Download settings as JSON or CSV</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="{{ url_for('settings_web.export_settings') }}" 
+                           class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Export
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                <span class="text-white text-sm font-medium">📥</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Import Settings</dt>
+                                <dd class="text-sm text-gray-900">Upload settings from file</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="{{ url_for('settings_web.import_settings') }}" 
+                           class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                            Import
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

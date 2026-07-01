@@ -1,0 +1,31 @@
+<!-- User Pills -->
+<div class="nav-align-top">
+  <ul class="nav nav-pills flex-column flex-md-row mb-6 gap-md-0 gap-2">
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == 'account' %}active{% endif %}" href="{{ url_for('users.view_user_account', user_id=user.id) }}">
+        <i class="icon-base ti tabler-user-check icon-sm me-1_5"></i>Account
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == 'security' %}active{% endif %}" href="{{ url_for('users.view_user_security', user_id=user.id) }}">
+        <i class="icon-base ti tabler-lock icon-sm me-1_5"></i>Security
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == 'billing' %}active{% endif %}" href="{{ url_for('users.view_user_billing', user_id=user.id) }}">
+        <i class="icon-base ti tabler-bookmark icon-sm me-1_5"></i>Billing & Plans
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == 'notifications' %}active{% endif %}" href="{{ url_for('users.view_user_notifications', user_id=user.id) }}">
+        <i class="icon-base ti tabler-bell icon-sm me-1_5"></i>Notifications
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if active_tab == 'connections' %}active{% endif %}" href="{{ url_for('users.view_user_connections', user_id=user.id) }}">
+        <i class="icon-base ti tabler-link icon-sm me-1_5"></i>Connections
+      </a>
+    </li>
+  </ul>
+</div>
+<!--/ User Pills -->

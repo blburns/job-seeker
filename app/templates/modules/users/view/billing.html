@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.get_full_name() or user.username }} - Billing & Plans{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/pages/page-user-view.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  {% include 'modules/users/view/includes/user_view_sidebar.html' %}
+
+  <!-- User Content -->
+  <div class="col-xl-8 col-lg-7 order-0 order-md-1">
+    {% set active_tab = 'billing' %}
+    {% include 'modules/users/view/includes/user_view_nav_pills.html' %}
+
+    <!-- Current Plan -->
+    <div class="card mb-6">
+      <h5 class="card-header">Current Plan</h5>
+      <div class="card-body">
+        <div class="row row-gap-4 row-gap-xl-0">
+          <div class="col-xl-6 order-1 order-xl-0">
+            <div class="mb-4">
+              <h6 class="mb-1">Your Current Plan is Basic</h6>
+              <p>A simple start for everyone</p>
+            </div>
+            <div class="mb-4">
+              <h6 class="mb-1">Active until Dec 09, 2021</h6>
+              <p>We will send you a notification upon Subscription expiration</p>
+            </div>
+            <div class="mb-xl-6">
+              <h6 class="mb-1">
+                <span class="me-1">$199 Per Month</span>
+                <span class="badge bg-label-primary rounded-pill">Popular</span>
+              </h6>
+              <p class="mb-0">Standard plan for small to medium businesses</p>
+            </div>
+          </div>
+          <div class="col-xl-6 order-0 order-xl-0">
+            <div class="alert alert-warning" role="alert">
+              <h5 class="alert-heading mb-2">We need your attention!</h5>
+              <span>Your plan requires update</span>
+            </div>
+            <div class="plan-statistics">
+              <div class="d-flex justify-content-between">
+                <h6 class="mb-1">Days</h6>
+                <h6 class="mb-1">26 of 30 Days</h6>
+              </div>
+              <div class="progress mb-1 bg-label-primary" style="height: 10px;">
+                <div class="progress-bar w-75" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <small>Your plan requires update</small>
+            </div>
+          </div>
+          <div class="col-12 order-2 order-xl-0 d-flex flex-wrap row-gap-4">
+            <button class="btn btn-primary me-4" data-bs-toggle="modal" data-bs-target="#upgradePlanModal">Upgrade Plan</button>
+            <button class="btn btn-label-danger cancel-subscription">Cancel Subscription</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Current Plan -->
+
+    <!-- Payment Methods -->
+    <div class="card card-action mb-6">
+      <div class="card-header align-items-center">
+        <h5 class="card-action-title mb-0">Payment Methods</h5>
+        <div class="card-action-element">
+          <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#addNewCCModal">
+            <i class="icon-base ti tabler-plus icon-14px me-1_5"></i>Add Card
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="added-cards">
+          <div class="cardMaster border p-6 rounded mb-4">
+            <div class="d-flex justify-content-between flex-sm-row flex-column">
+              <div class="card-information">
+                <img class="mb-2 img-fluid" src="{{ url_for('static', filename='assets/img/icons/payments/mastercard.png') }}" alt="Master Card" />
+                <div class="d-flex align-items-center mb-2">
+                  <h6 class="mb-0 me-2">Kaith Morrison</h6>
+                  <span class="badge bg-label-primary me-1">Popular</span>
+                </div>
+                <span class="card-number">**** **** **** 9856</span>
+              </div>
+              <div class="d-flex flex-column text-start text-lg-end">
+                <div class="d-flex order-sm-0 order-1">
+                  <button class="btn btn-sm btn-label-primary me-4" data-bs-toggle="modal" data-bs-target="#editCCModal">Edit</button>
+                  <button class="btn btn-sm btn-label-danger">Delete</button>
+                </div>
+                <small class="mt-sm-4 mt-2 order-sm-1 order-0 text-sm-end mb-2">Card expires at 12/24</small>
+              </div>
+            </div>
+          </div>
+          <div class="cardMaster border p-6 rounded mb-4">
+            <div class="d-flex justify-content-between flex-sm-row flex-column">
+              <div class="card-information">
+                <img class="mb-2 img-fluid" src="{{ url_for('static', filename='assets/img/icons/payments/visa.png') }}" alt="Visa Card" />
+                <h6 class="mb-2 me-2">Tom McBride</h6>
+                <span class="card-number">**** **** **** 6542</span>
+              </div>
+              <div class="d-flex flex-column text-start text-lg-end">
+                <div class="d-flex order-sm-0 order-1">
+                  <button class="btn btn-sm btn-label-primary me-4" data-bs-toggle="modal" data-bs-target="#editCCModal">Edit</button>
+                  <button class="btn btn-sm btn-label-danger">Delete</button>
+                </div>
+                <small class="mt-sm-4 mt-2 order-sm-1 order-0 text-sm-end mb-2">Card expires at 02/24</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--/ Payment Methods -->
+
+    <!-- Billing Address -->
+    <div class="card card-action mb-4">
+      <div class="card-header align-items-center flex-wrap gap-2">
+        <h5 class="card-action-title mb-0">Billing Address</h5>
+        <div class="card-action-element">
+          <button class="btn btn-sm btn-primary edit-address" type="button" data-bs-toggle="modal" data-bs-target="#addNewAddress">
+            <i class="icon-base ti tabler-plus icon-14px me-1_5"></i>Edit address
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-xl-7 col-12">
+            <dl class="row mb-0 gx-2">
+              <dt class="col-sm-4 mb-sm-2 text-nowrap fw-medium text-heading">Company Name:</dt>
+              <dd class="col-sm-8">Kelly Group</dd>
+              <dt class="col-sm-4 mb-sm-2 text-nowrap fw-medium text-heading">Billing Email:</dt>
+              <dd class="col-sm-8">{{ user.email }}</dd>
+              <dt class="col-sm-4 mb-sm-2 text-nowrap fw-medium text-heading">Tax ID:</dt>
+              <dd class="col-sm-8">TAX-357378</dd>
+              <dt class="col-sm-4 mb-sm-2 text-nowrap fw-medium text-heading">VAT Number:</dt>
+              <dd class="col-sm-8">SDF754K77</dd>
+              <dt class="col-sm-4 mb-sm-2 text-nowrap fw-medium text-heading mb-0">Billing Address:</dt>
+              <dd class="col-sm-8 mb-0">100 Water Plant <br />Avenue, Building 1303<br />Wake Island</dd>
+            </dl>
+          </div>
+          <div class="col-xl-5 col-12">
+            <dl class="row mb-0 gx-2">
+              <dt class="col-sm-4 mb-sm-2 text-nowrap fw-medium text-heading">Contact:</dt>
+              <dd class="col-sm-8">+1 (605) 977-32-65</dd>
+              <dt class="col-sm-4 mb-sm-2 text-nowrap fw-medium text-heading">Country:</dt>
+              <dd class="col-sm-8">Wake Island</dd>
+              <dt class="col-sm-4 mb-sm-2 text-nowrap fw-medium text-heading">State:</dt>
+              <dd class="col-sm-8">Capholim</dd>
+              <dt class="col-sm-4 mb-sm-2 text-nowrap fw-medium text-heading">Zipcode:</dt>
+              <dd class="col-sm-8">403114</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--/ Billing Address -->
+  </div>
+  <!--/ User Content -->
+</div>
+{% endblock %}

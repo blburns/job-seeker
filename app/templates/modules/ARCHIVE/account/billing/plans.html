@@ -1,0 +1,118 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Billing Plans - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Billing Plans</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Choose the plan that's right for you
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Free Plan -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex flex-col gap-2">
+                    <h3 class="text-lg font-semibold text-mono">Free</h3>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-3xl font-semibold text-mono">$0</span>
+                        <span class="text-sm text-secondary-foreground">/month</span>
+                    </div>
+                </div>
+                <ul class="flex flex-col gap-2 text-sm">
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>5 Projects</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>10GB Storage</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>Basic Support</span>
+                    </li>
+                </ul>
+                <button class="kt-btn kt-btn-outline w-full">Current Plan</button>
+            </div>
+        </div>
+        
+        <!-- Pro Plan -->
+        <div class="kt-card border-2 border-primary">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <span class="kt-badge kt-badge-primary">Popular</span>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <h3 class="text-lg font-semibold text-mono">Pro</h3>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-3xl font-semibold text-mono">$29</span>
+                        <span class="text-sm text-secondary-foreground">/month</span>
+                    </div>
+                </div>
+                <ul class="flex flex-col gap-2 text-sm">
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>Unlimited Projects</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>100GB Storage</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>Priority Support</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>Advanced Features</span>
+                    </li>
+                </ul>
+                <button class="kt-btn kt-btn-primary w-full">Upgrade to Pro</button>
+            </div>
+        </div>
+        
+        <!-- Enterprise Plan -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex flex-col gap-2">
+                    <h3 class="text-lg font-semibold text-mono">Enterprise</h3>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-3xl font-semibold text-mono">Custom</span>
+                    </div>
+                </div>
+                <ul class="flex flex-col gap-2 text-sm">
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>Everything in Pro</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>Unlimited Storage</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>Dedicated Support</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="ki-filled ki-check-circle text-success"></i>
+                        <span>Custom Solutions</span>
+                    </li>
+                </ul>
+                <button class="kt-btn kt-btn-outline w-full">Contact Sales</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

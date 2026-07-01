@@ -1,0 +1,140 @@
+<!-- User Sidebar -->
+<div class="col-xl-4 col-lg-5 order-1 order-md-0">
+  <!-- User Card -->
+  <div class="card mb-6">
+    <div class="card-body pt-12">
+      <div class="user-avatar-section">
+        <div class="d-flex align-items-center flex-column">
+          <div class="avatar avatar-xl mb-4 overflow-hidden rounded" style="width: 120px; height: 120px; border-radius: 0.375rem;">
+            {% if user.photo_url %}
+            <img src="{{ user.photo_url }}" alt="Avatar" class="d-block w-100 h-100" style="object-fit: cover; width: 100%; height: 100%;" />
+            {% else %}
+            <span class="avatar-initial rounded bg-label-primary d-flex align-items-center justify-content-center w-100 h-100" style="font-size: 3rem; border-radius: 0.375rem;">
+              {{ (user.get_full_name() or user.username)[0]|upper }}
+            </span>
+            {% endif %}
+          </div>
+          <div class="user-info text-center">
+            <h5>{{ user.get_full_name() or user.username }}</h5>
+            <span class="badge bg-label-secondary">
+              {% if user.roles %}
+                {{ user.roles[0].display_name or user.roles[0].name }}
+              {% else %}
+                User
+              {% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-around flex-wrap my-6 gap-0 gap-md-3 gap-lg-4">
+        <div class="d-flex align-items-center me-5 gap-4">
+          <div class="avatar">
+            <div class="avatar-initial bg-label-primary rounded">
+              <i class="icon-base ti tabler-checkbox icon-lg"></i>
+            </div>
+          </div>
+          <div>
+            <h5 class="mb-0">1.23k</h5>
+            <span>Task Done</span>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-4">
+          <div class="avatar">
+            <div class="avatar-initial bg-label-primary rounded">
+              <i class="icon-base ti tabler-briefcase icon-lg"></i>
+            </div>
+          </div>
+          <div>
+            <h5 class="mb-0">568</h5>
+            <span>Project Done</span>
+          </div>
+        </div>
+      </div>
+      <h5 class="pb-4 border-bottom mb-4">Details</h5>
+      <div class="info-container">
+        <ul class="list-unstyled mb-6">
+          <li class="mb-2">
+            <span class="h6">Username:</span>
+            <span>@{{ user.username }}</span>
+          </li>
+          <li class="mb-2">
+            <span class="h6">Email:</span>
+            <span>{{ user.email }}</span>
+          </li>
+          <li class="mb-2">
+            <span class="h6">Status:</span>
+            {% if user.is_active %}
+            <span class="badge bg-label-success">Active</span>
+            {% else %}
+            <span class="badge bg-label-danger">Inactive</span>
+            <small class="d-block text-body-secondary mt-1">Account is suspended. Use Activate below to re-enable.</small>
+            {% endif %}
+          </li>
+          <li class="mb-2">
+            <span class="h6">Role:</span>
+            <span>
+              {% if user.roles %}
+                {{ user.roles[0].display_name or user.roles[0].name }}
+              {% else %}
+                User
+              {% endif %}
+            </span>
+          </li>
+          <li class="mb-2">
+            <span class="h6">Member since:</span>
+            <span>{{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}</span>
+          </li>
+        </ul>
+        <div class="d-flex justify-content-center">
+          <a href="{{ url_for('users.edit_user', user_id=user.id) }}" class="btn btn-primary me-4">Edit</a>
+          {% if user.id != current_user.id %}
+          <a href="{{ url_for('users.toggle_user_status', user_id=user.id) }}" class="btn {% if user.is_active %}btn-label-danger{% else %}btn-label-success{% endif %}">
+            {% if user.is_active %}Suspend{% else %}Activate (re-enable account){% endif %}
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /User Card -->
+  <!-- Plan Card -->
+  <div class="card mb-6 border border-2 border-primary rounded primary-shadow">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start">
+        <span class="badge bg-label-primary">Standard</span>
+        <div class="d-flex justify-content-center">
+          <sub class="h5 pricing-currency mb-auto mt-1 text-primary">$</sub>
+          <h1 class="mb-0 text-primary">99</h1>
+          <sub class="h6 pricing-duration mt-auto mb-3 fw-normal">month</sub>
+        </div>
+      </div>
+      <ul class="list-unstyled g-2 my-6">
+        <li class="mb-2 d-flex align-items-center">
+          <i class="icon-base ti tabler-circle-filled icon-10px text-secondary me-2"></i>
+          <span>10 Users</span>
+        </li>
+        <li class="mb-2 d-flex align-items-center">
+          <i class="icon-base ti tabler-circle-filled icon-10px text-secondary me-2"></i>
+          <span>Up to 10 GB storage</span>
+        </li>
+        <li class="mb-2 d-flex align-items-center">
+          <i class="icon-base ti tabler-circle-filled icon-10px text-secondary me-2"></i>
+          <span>Basic Support</span>
+        </li>
+      </ul>
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="h6 mb-0">Days</span>
+        <span class="h6 mb-0">26 of 30 Days</span>
+      </div>
+      <div class="progress mb-1 bg-label-primary" style="height: 6px;">
+        <div class="progress-bar" role="progressbar" style="width: 65%;" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <small>4 days remaining</small>
+      <div class="d-grid w-100 mt-6">
+        <button class="btn btn-primary" data-bs-target="#upgradePlanModal" data-bs-toggle="modal">Upgrade Plan</button>
+      </div>
+    </div>
+  </div>
+  <!-- /Plan Card -->
+</div>
+<!--/ User Sidebar -->

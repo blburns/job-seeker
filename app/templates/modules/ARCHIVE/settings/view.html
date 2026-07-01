@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}{{ setting.name }} - Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">{{ setting.name }}</h1>
+                <div>
+                    {% if not setting.is_readonly %}
+                    <a href="{{ url_for('settings_web.edit_setting', key=setting.key) }}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Setting
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Setting Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-3">Key:</dt>
+                                <dd class="col-sm-9"><code>{{ setting.key }}</code></dd>
+                                
+                                <dt class="col-sm-3">Name:</dt>
+                                <dd class="col-sm-9">{{ setting.name }}</dd>
+                                
+                                <dt class="col-sm-3">Description:</dt>
+                                <dd class="col-sm-9">{{ setting.description or 'No description provided' }}</dd>
+                                
+                                <dt class="col-sm-3">Category:</dt>
+                                <dd class="col-sm-9">
+                                    {% if setting.category %}
+                                        {{ setting.category.display_name }}
+                                    {% else %}
+                                        <span class="text-muted">Uncategorized</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-3">Data Type:</dt>
+                                <dd class="col-sm-9">
+                                    <span class="badge bg-info">{{ setting.data_type }}</span>
+                                </dd>
+                                
+                                <dt class="col-sm-3">Current Value:</dt>
+                                <dd class="col-sm-9">
+                                    {% if setting.is_encrypted %}
+                                        <span class="text-muted">••••••••</span>
+                                        <small class="text-muted">(Encrypted)</small>
+                                    {% else %}
+                                        <code>{{ setting.get_typed_value() or 'Not set' }}</code>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-3">Default Value:</dt>
+                                <dd class="col-sm-9">
+                                    <code>{{ setting.get_typed_default() or 'Not set' }}</code>
+                                </dd>
+                                
+                                <dt class="col-sm-3">Required:</dt>
+                                <dd class="col-sm-9">
+                                    {% if setting.is_required %}
+                                        <span class="badge bg-warning">Yes</span>
+                                    {% else %}
+                                        <span class="text-muted">No</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-3">Read Only:</dt>
+                                <dd class="col-sm-9">
+                                    {% if setting.is_readonly %}
+                                        <span class="badge bg-danger">Yes</span>
+                                    {% else %}
+                                        <span class="text-muted">No</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-3">Encrypted:</dt>
+                                <dd class="col-sm-9">
+                                    {% if setting.is_encrypted %}
+                                        <span class="badge bg-warning">Yes</span>
+                                    {% else %}
+                                        <span class="text-muted">No</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-3">Status:</dt>
+                                <dd class="col-sm-9">
+                                    {% if setting.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-3">Created:</dt>
+                                <dd class="col-sm-9">{{ setting.created_at.strftime('%Y-%m-%d %H:%M:%S') if setting.created_at else 'Unknown' }}</dd>
+                                
+                                <dt class="col-sm-3">Updated:</dt>
+                                <dd class="col-sm-9">{{ setting.updated_at.strftime('%Y-%m-%d %H:%M:%S') if setting.updated_at else 'Never' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Change History -->
+                    {% if history %}
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Change History</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Changed By</th>
+                                            <th>Previous Value</th>
+                                            <th>New Value</th>
+                                            <th>Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for entry in history %}
+                                        <tr>
+                                            <td>{{ entry.created_at.strftime('%Y-%m-%d %H:%M:%S') if entry.created_at else 'Unknown' }}</td>
+                                            <td>{{ entry.changed_by or 'System' }}</td>
+                                            <td>
+                                                {% if entry.previous_value %}
+                                                    <code>{{ entry.previous_value }}</code>
+                                                {% else %}
+                                                    <span class="text-muted">Not set</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if entry.value %}
+                                                    <code>{{ entry.value }}</code>
+                                                {% else %}
+                                                    <span class="text-muted">Not set</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ entry.change_reason or '-' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    {% if setting.validation_rules %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Validation Rules</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                {% for rule, value in setting.validation_rules.items() %}
+                                <li><strong>{{ rule }}:</strong> {{ value }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Quick Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                {% if not setting.is_readonly %}
+                                <a href="{{ url_for('settings_web.edit_setting', key=setting.key) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i> Edit Setting
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('settings_web.index') }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-list"></i> All Settings
+                                </a>
+                                {% if setting.category %}
+                                <a href="{{ url_for('settings_web.category_settings', category_name=setting.category.name) }}" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-folder"></i> View Category
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

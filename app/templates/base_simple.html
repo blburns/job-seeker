@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{# 
+  Generic simple page layout (errors, empty states, confirmations, etc.)
+  Usage:
+    {% extends "base_simple.html" %}
+    {% block title %}Page Title - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+    {% block simple_icon %}...optional icon/number...{% endblock %}
+    {% block simple_heading %}Heading text{% endblock %}
+    {% block simple_description %}Supporting description text{% endblock %}
+    {% block simple_actions %}Primary/secondary buttons{% endblock %}
+#}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-md-10">
+    <div class="card text-center">
+      <div class="card-body py-6">
+        {% block simple_icon %}{% endblock %}
+
+        <h1 class="mb-2">
+          {% block simple_heading %}{% endblock %}
+        </h1>
+
+        <p class="mb-4 text-muted">
+          {% block simple_description %}{% endblock %}
+        </p>
+
+        <div class="d-flex justify-content-center flex-wrap gap-2">
+          {% block simple_actions %}
+          <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+            Back to home
+          </a>
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

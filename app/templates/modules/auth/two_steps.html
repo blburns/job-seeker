@@ -1,0 +1,67 @@
+{% extends "base_vuexy_auth.html" %}
+
+{% block title %}Two-step Verification - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6 col-xl-5">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <div class="mb-3">
+            <span class="avatar avatar-lg bg-label-primary rounded-circle d-inline-flex align-items-center justify-content-center">
+              <i class="ti tabler-shield-check icon-28px"></i>
+            </span>
+          </div>
+          <h4 class="mb-1">Two-step verification 🛡️</h4>
+          <p class="mb-0 text-muted">
+            We sent a verification code to<br />
+            <strong>{{ masked_email if masked_email is defined else 'your email address' }}</strong>
+          </p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category in ['danger','error'] else 'warning' if category == 'warning' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form id="two_steps_form" method="POST" action="{{ url_for('auth.two_steps') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <p class="mb-2 text-center">Enter 6-digit security code</p>
+          <div class="d-flex justify-content-between flex-wrap mb-3">
+            {% for i in range(6) %}
+            <input
+              type="tel"
+              name="code_{{ i }}"
+              class="form-control auth-input text-center mx-sm-1 my-2"
+              style="width: 3rem; height: 3rem;"
+              maxlength="1"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              required
+            />
+            {% endfor %}
+          </div>
+
+          <div class="mb-3 d-grid">
+            <button class="btn btn-primary" type="submit">Verify my account</button>
+          </div>
+
+          <div class="text-center">
+            <span class="text-muted">Didn't get the code?</span>
+            <a href="javascript:void(0);">Resend</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

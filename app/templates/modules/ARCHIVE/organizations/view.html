@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ item.name if item else organization.name }} - Organization Details{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between">
+            <div class="flex-1 min-w-0">
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-4">
+                        <li><a href="{{ url_for('organizations.list_items') }}" class="text-gray-400 hover:text-gray-500">Organizations</a></li>
+                        <li class="flex items-center"><span class="text-gray-300 mx-2">/</span><span class="text-gray-500">{{ item.name if item else organization.name }}</span></li>
+                    </ol>
+                </nav>
+                <h2 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ item.name if item else organization.name }}</h2>
+            </div>
+            <div class="mt-4 flex space-x-3">
+                <a href="{{ url_for('organizations.edit', item_id=organization.id) }}" class="btn btn-primary">Edit Organization</a>
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Organization Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div><dt>Name</dt><dd>{{ item.name if item else organization.name }}</dd></div>
+                            <div><dt>Domain</dt><dd>{{ item.domain }}</dd></div>
+                            <div><dt>Status</dt><dd><span class="badge badge-{{ 'success' if organization.is_active else 'danger' }}">{{ item.status or 'Active' }}</span></dd></div>
+                            <div><dt>Plan</dt><dd>{{ item.plan or 'Standard' }}</dd></div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-6">
+                <div class="card">
+                    <div class="card-header"><h3>Quick Actions</h3></div>
+                    <div class="card-body space-y-2">
+                        <a href="{{ url_for('organizations.settings', item_id=organization.id) }}" class="btn btn-outline w-full">Settings</a>
+                        <a href="{{ url_for('organizations.analytics', item_id=organization.id) }}" class="btn btn-outline w-full">Analytics</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

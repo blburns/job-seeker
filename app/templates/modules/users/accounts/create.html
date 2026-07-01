@@ -1,0 +1,199 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Create Account - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Create New Account</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Add a new account to your system
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <a href="{{ safe_url_for('accounts.list_accounts') }}" class="kt-btn kt-btn-outline">
+                Back to Accounts
+            </a>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Account Information</h3>
+        </div>
+        <div class="kt-card-content flex flex-col gap-5 p-5 lg:p-7.5">
+            <form method="POST" class="flex flex-col gap-5">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
+                <!-- Basic Information -->
+                <div class="flex flex-col gap-4">
+                    <h4 class="text-sm font-semibold text-mono">Basic Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Account Name *</label>
+                            <input class="kt-input" type="text" name="account_name" id="account_name" required/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Account Number</label>
+                            <input class="kt-input" type="text" name="account_number" id="account_number"/>
+                            <span class="text-xs text-secondary-foreground">Leave blank to auto-generate</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Legal Name</label>
+                            <input class="kt-input" type="text" name="legal_name" id="legal_name"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Status</label>
+                            <select class="kt-select" name="status" id="status">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="prospect">Prospect</option>
+                                <option value="customer">Customer</option>
+                                <option value="vendor">Vendor</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Account Type</label>
+                            <select class="kt-select" name="account_type_id" id="account_type_id">
+                                <option value="">Select account type</option>
+                                {% for at in account_types %}
+                                <option value="{{ at.id }}">{{ at.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Category</label>
+                            <select class="kt-select" name="category_id" id="category_id">
+                                <option value="">Select category</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="flex flex-col gap-4 pt-4 border-t border-border">
+                    <h4 class="text-sm font-semibold text-mono">Contact Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Primary Email</label>
+                            <input class="kt-input" type="email" name="primary_email" id="primary_email"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Primary Phone</label>
+                            <input class="kt-input" type="tel" name="primary_phone" id="primary_phone"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Website</label>
+                        <input class="kt-input" type="url" name="website" id="website"/>
+                    </div>
+                </div>
+                
+                <!-- Billing Address -->
+                <div class="flex flex-col gap-4 pt-4 border-t border-border">
+                    <h4 class="text-sm font-semibold text-mono">Billing Address</h4>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Address Line 1</label>
+                            <input class="kt-input" type="text" name="billing_address_line1" id="billing_address_line1"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Address Line 2</label>
+                            <input class="kt-input" type="text" name="billing_address_line2" id="billing_address_line2"/>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="flex flex-col gap-1">
+                                <label class="kt-form-label">City</label>
+                                <input class="kt-input" type="text" name="billing_city" id="billing_city"/>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="kt-form-label">State/Province</label>
+                                <input class="kt-input" type="text" name="billing_state_province" id="billing_state_province"/>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="kt-form-label">Postal Code</label>
+                                <input class="kt-input" type="text" name="billing_postal_code" id="billing_postal_code"/>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Country</label>
+                            <input class="kt-input" type="text" name="billing_country" id="billing_country"/>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Business Information -->
+                <div class="flex flex-col gap-4 pt-4 border-t border-border">
+                    <h4 class="text-sm font-semibold text-mono">Business Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Industry</label>
+                            <input class="kt-input" type="text" name="industry" id="industry"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Company Size</label>
+                            <input class="kt-input" type="text" name="company_size" id="company_size"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Tax ID</label>
+                            <input class="kt-input" type="text" name="tax_id" id="tax_id"/>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Financial Information -->
+                <div class="flex flex-col gap-4 pt-4 border-t border-border">
+                    <h4 class="text-sm font-semibold text-mono">Financial Information</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Credit Limit</label>
+                            <input class="kt-input" type="number" step="0.01" name="credit_limit" id="credit_limit"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Payment Terms</label>
+                            <input class="kt-input" type="text" name="payment_terms" id="payment_terms" placeholder="e.g., Net 30"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Currency</label>
+                            <select class="kt-select" name="currency" id="currency">
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="CAD">CAD</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notes -->
+                <div class="flex flex-col gap-1 pt-4 border-t border-border">
+                    <label class="kt-form-label">Notes</label>
+                    <textarea class="kt-input" name="notes" id="notes" rows="4"></textarea>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="flex justify-end gap-2.5 pt-4 border-t border-border">
+                    <a href="{{ safe_url_for('accounts.list_accounts') }}" class="kt-btn kt-btn-outline">Cancel</a>
+                    <button type="submit" class="kt-btn kt-btn-primary">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

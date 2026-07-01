@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Contacts Settings{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="md:flex md:items-center md:justify-between">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
+                    Contacts Settings
+                </h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Configure defaults and preferences for the Contacts module
+                </p>
+            </div>
+        </div>
+
+        <form method="post" action="{{ url_for('contacts.settings') }}" class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">General</h3>
+                    <div class="mt-4 space-y-4">
+                        <div>
+                            <label for="default_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Default Status</label>
+                            <select id="default_status" name="default_status" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                <option value="active" {{ 'selected' if settings_context.default_status == 'active' else '' }}>Active</option>
+                                <option value="inactive" {{ 'selected' if settings_context.default_status == 'inactive' else '' }}>Inactive</option>
+                                <option value="prospect" {{ 'selected' if settings_context.default_status == 'prospect' else '' }}>Prospect</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="default_category_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Default Category</label>
+                            <select id="default_category_id" name="default_category_id" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                <option value="">None</option>
+                                {% for category in settings_context.categories %}
+                                <option value="{{ category.id }}" {{ 'selected' if settings_context.default_category_id == (category.id|string) else '' }}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input id="allow_duplicates" name="allow_duplicates" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" {{ 'checked' if settings_context.allow_duplicates else '' }}>
+                            <label for="allow_duplicates" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Allow potential duplicates</label>
+                        </div>
+
+                        <div>
+                            <label for="duplicate_sensitivity" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duplicate Detection Sensitivity</label>
+                            <select id="duplicate_sensitivity" name="duplicate_sensitivity" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                <option value="low" {{ 'selected' if settings_context.duplicate_sensitivity == 'low' else '' }}>Low</option>
+                                <option value="medium" {{ 'selected' if settings_context.duplicate_sensitivity == 'medium' else '' }}>Medium</option>
+                                <option value="high" {{ 'selected' if settings_context.duplicate_sensitivity == 'high' else '' }}>High</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Categories</h3>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Manage contact categories</p>
+
+                    <div class="mt-4">
+                        <form method="post" action="{{ url_for('contacts.create_category') }}" class="flex gap-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="text" name="name" placeholder="New category name" class="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                            <input type="text" name="description" placeholder="Description (optional)" class="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                            <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">Add</button>
+                        </form>
+                    </div>
+
+                    <ul class="mt-4 space-y-2">
+                        {% for category in settings_context.categories %}
+                        <li class="p-2 rounded border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between gap-2">
+                                <form method="post" action="{{ url_for('contacts.rename_category', category_id=category.id) }}" class="flex-1 flex items-center gap-2">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="text" name="name" value="{{ category.name }}" class="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                    <button type="submit" class="px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">Rename</button>
+                                </form>
+                                <form method="post" action="{{ url_for('contacts.toggle_category', category_id=category.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="px-2 py-1 text-xs rounded-md {{ 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' if category.is_active else 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' }}">{{ 'Active' if category.is_active else 'Inactive' }}</button>
+                                </form>
+                                <form method="post" action="{{ url_for('contacts.delete_category', category_id=category.id) }}" onsubmit="return confirm('Delete this category? This cannot be undone.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="px-2 py-1 text-xs rounded-md bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Delete</button>
+                                </form>
+                            </div>
+                            {% if category.description %}
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ category.description }}</p>
+                            {% endif %}
+                        </li>
+                        {% else %}
+                        <li class="text-sm text-gray-500 dark:text-gray-400">No categories found.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 flex justify-end">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Save Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+

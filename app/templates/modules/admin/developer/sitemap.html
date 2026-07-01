@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Developer Sitemap - Admin - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h4 class="mb-0">
+          <i class="ti ti-map-2 me-2"></i>
+          Developer Sitemap
+        </h4>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-label-secondary">
+          <i class="ti ti-arrow-left me-1"></i>
+          Back to Dashboard
+        </a>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="card-title mb-0">
+            <i class="ti ti-route me-2"></i>
+            Registered routes
+          </h5>
+          <span class="badge bg-label-primary">{{ grouped_routes|length }} blueprints</span>
+          <span class="badge bg-label-secondary">{{ total_routes|default(0) }} routes</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 28%;">URL pattern</th>
+                  <th style="width: 12%;">Methods</th>
+                  <th style="width: 22%;">Endpoint</th>
+                  <th style="width: 38%;">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for blueprint, routes in grouped_routes.items() %}
+                <tr class="table-secondary">
+                  <td colspan="4" class="fw-bold text-uppercase small py-2">
+                    <i class="ti ti-package me-1"></i>
+                    {{ blueprint }}
+                    <span class="badge bg-label-dark ms-2">{{ routes|length }}</span>
+                  </td>
+                </tr>
+                {% for route in routes %}
+                <tr>
+                  <td class="align-middle">
+                    <code class="text-primary">{{ route.rule }}</code>
+                    {% if '<' in route.rule %}
+                    <i class="ti ti-variable text-muted ms-1" title="Has parameters"></i>
+                    {% else %}
+                    <a href="{{ route.rule }}" target="_blank" rel="noopener noreferrer" class="ms-1 text-muted" title="Open URL">
+                      <i class="ti ti-external-link" style="font-size: 0.8rem;"></i>
+                    </a>
+                    {% endif %}
+                  </td>
+                  <td class="align-middle">
+                    {% for method in route.methods.split(', ') %}
+                    {% if method == 'GET' %}
+                    <span class="badge bg-label-success">GET</span>
+                    {% elif method == 'POST' %}
+                    <span class="badge bg-label-primary">POST</span>
+                    {% elif method == 'PUT' %}
+                    <span class="badge bg-label-warning">PUT</span>
+                    {% elif method == 'DELETE' %}
+                    <span class="badge bg-label-danger">DELETE</span>
+                    {% else %}
+                    <span class="badge bg-label-secondary">{{ method }}</span>
+                    {% endif %}
+                    {% endfor %}
+                  </td>
+                  <td class="align-middle"><small class="text-muted">{{ route.endpoint }}</small></td>
+                  <td class="align-middle"><small>{{ route.description }}</small></td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

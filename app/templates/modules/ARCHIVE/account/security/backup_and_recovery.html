@@ -1,0 +1,75 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Backup & Recovery - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Backup & Recovery</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Set up backup and recovery options
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Recovery Codes -->
+        <div class="kt-card">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Recovery Codes</h3>
+            </div>
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <p class="text-sm text-secondary-foreground">Save these recovery codes in a safe place. You can use them to access your account if you lose your device.</p>
+                <div class="grid grid-cols-2 gap-2 p-4 bg-muted rounded-lg">
+                    <code class="text-xs">abc123-def456</code>
+                    <code class="text-xs">ghi789-jkl012</code>
+                    <code class="text-xs">mno345-pqr678</code>
+                    <code class="text-xs">stu901-vwx234</code>
+                </div>
+                <div class="flex gap-2.5">
+                    <button class="kt-btn kt-btn-outline kt-btn-sm">Download</button>
+                    <button class="kt-btn kt-btn-outline kt-btn-sm">Print</button>
+                    <button class="kt-btn kt-btn-primary kt-btn-sm">Generate New Codes</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Backup Options -->
+        <div class="kt-card">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Backup Options</h3>
+            </div>
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex flex-col gap-2">
+                    <label class="kt-label">
+                        <input class="kt-checkbox" type="checkbox" checked/>
+                        <span class="kt-checkbox-label">
+                            <span class="text-sm font-semibold text-mono">Automatic Backups</span>
+                            <span class="text-xs text-secondary-foreground block">Automatically backup your data daily</span>
+                        </span>
+                    </label>
+                    
+                    <label class="kt-label">
+                        <input class="kt-checkbox" type="checkbox"/>
+                        <span class="kt-checkbox-label">
+                            <span class="text-sm font-semibold text-mono">Email Backup</span>
+                            <span class="text-xs text-secondary-foreground block">Send backup copies to your email</span>
+                        </span>
+                    </label>
+                </div>
+                
+                <div class="pt-4 border-t border-border">
+                    <button class="kt-btn kt-btn-primary w-full">Create Manual Backup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

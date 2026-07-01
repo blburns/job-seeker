@@ -1,0 +1,101 @@
+{#
+    Macro for checking if user has permission to view any module
+    and dynamically checking which modules are enabled for their role
+#}
+{% macro has_any_module_access() %}
+    {% set has_access = False %}
+    
+    {# Check if user has admin/super_admin roles - they see all modules #}
+    {% if current_user.has_role('admin') or current_user.has_role('super_admin') %}
+        {% set has_access = True %}
+    {# Otherwise, check if user has view permission on any module #}
+    {% elif current_user.has_permission('contact.view') or
+           current_user.has_permission('document.view') or
+           current_user.has_permission('user.view') or
+           current_user.has_permission('email.view') %}
+        {% set has_access = True %}
+    {% endif %}
+    
+    {{ has_access }}
+{% endmacro %}
+
+
+{#
+    Macro for checking if a specific module should be shown to the user
+    Considers both role-level access and permission-based access
+#}
+{% macro should_show_module(module_name, permission_check) %}
+    {% set show_module = False %}
+    
+    {# Admin and Super Admin see everything #}
+    {% if current_user.has_role('admin') or current_user.has_role('super_admin') %}
+        {% set show_module = True %}
+    {# For regular users, check the specific permission #}
+    {% elif current_user.has_permission(permission_check) %}
+        {% set show_module = True %}
+    {% endif %}
+    
+    {{ show_module }}
+{% endmacro %}
+
+
+{#
+    Macro for getting all available modules for the current user
+    Returns a list of modules the user can access
+#}
+{% macro get_user_modules() %}
+    {% set modules = [] %}
+    
+    {# Build list of available modules based on permissions #}
+    {% if current_user.has_role('admin') or current_user.has_role('super_admin') or current_user.has_permission('contact.view') %}
+        {% set _ = modules.append({
+            'name': 'Contacts',
+            'url': url_for('contacts.dashboard'),
+            'icon': 'contacts',
+            'color': 'green',
+            'description': 'Manage contacts'
+        }) %}
+    {% endif %}
+    
+    {% if current_user.has_role('admin') or current_user.has_role('super_admin') or current_user.has_permission('document.view') %}
+        {% set _ = modules.append({
+            'name': 'Documents',
+            'url': url_for('documents.dashboard'),
+            'icon': 'documents',
+            'color': 'blue',
+            'description': 'File management'
+        }) %}
+    {% endif %}
+    
+    {% if current_user.has_role('admin') or current_user.has_role('super_admin') or current_user.has_permission('user.view') %}
+        {% set _ = modules.append({
+            'name': 'Users',
+            'url': url_for('users.dashboard'),
+            'icon': 'users',
+            'color': 'purple',
+            'description': 'User management'
+        }) %}
+    {% endif %}
+    
+    {% if current_user.has_role('admin') or current_user.has_role('super_admin') or current_user.has_permission('email.view') %}
+        {% set _ = modules.append({
+            'name': 'Email Relay',
+            'url': url_for('email_relay.dashboard'),
+            'icon': 'email',
+            'color': 'orange',
+            'description': 'Email services'
+        }) %}
+    {% endif %}
+    
+    {# Always add dashboard #}
+    {% set _ = modules.append({
+        'name': 'Dashboard',
+        'url': url_for('dashboard.index'),
+        'icon': 'dashboard',
+        'color': 'gray',
+        'description': 'Overview'
+    }) %}
+    
+    {{ modules }}
+{% endmacro %}
+

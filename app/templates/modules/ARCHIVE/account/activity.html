@@ -1,0 +1,106 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Account Activity - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Account Activity</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                View your account activity and recent actions
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Recent Activity</h3>
+            <div class="kt-card-toolbar">
+                <button class="kt-btn kt-btn-sm kt-btn-outline">Filter</button>
+            </div>
+        </div>
+        <div class="kt-card-content p-0">
+            <div class="flex flex-col">
+                <!-- Activity Item -->
+                <div class="flex gap-4 p-5 border-b border-border hover:bg-accent/30 transition-colors">
+                    <div class="kt-avatar size-10 shrink-0">
+                        <div class="kt-avatar-image">
+                            <img alt="avatar" src="{{ url_for('static', filename='assets/media/avatars/300-1.png') }}"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 grow">
+                        <div class="text-sm font-medium">
+                            <span class="text-mono font-semibold">{{ get_user_display_name() }}</span>
+                            <span class="text-secondary-foreground">logged in to your account</span>
+                        </div>
+                        <span class="text-xs font-medium text-muted-foreground">
+                            {{ current_user.last_login|date('%B %d, %Y at %I:%M %p') if current_user.last_login else 'Never' }}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Activity Item -->
+                <div class="flex gap-4 p-5 border-b border-border hover:bg-accent/30 transition-colors">
+                    <div class="kt-avatar size-10 shrink-0">
+                        <div class="kt-avatar-image bg-primary/10 flex items-center justify-center">
+                            <i class="ki-filled ki-shield-check text-primary text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 grow">
+                        <div class="text-sm font-medium">
+                            <span class="text-mono font-semibold">Security</span>
+                            <span class="text-secondary-foreground">settings updated</span>
+                        </div>
+                        <span class="text-xs font-medium text-muted-foreground">
+                            2 days ago
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Activity Item -->
+                <div class="flex gap-4 p-5 border-b border-border hover:bg-accent/30 transition-colors">
+                    <div class="kt-avatar size-10 shrink-0">
+                        <div class="kt-avatar-image bg-success/10 flex items-center justify-center">
+                            <i class="ki-filled ki-profile-circle text-success text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 grow">
+                        <div class="text-sm font-medium">
+                            <span class="text-mono font-semibold">Profile</span>
+                            <span class="text-secondary-foreground">information updated</span>
+                        </div>
+                        <span class="text-xs font-medium text-muted-foreground">
+                            5 days ago
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Activity Item -->
+                <div class="flex gap-4 p-5 hover:bg-accent/30 transition-colors">
+                    <div class="kt-avatar size-10 shrink-0">
+                        <div class="kt-avatar-image bg-info/10 flex items-center justify-center">
+                            <i class="ki-filled ki-wallet text-info text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1 grow">
+                        <div class="text-sm font-medium">
+                            <span class="text-mono font-semibold">Billing</span>
+                            <span class="text-secondary-foreground">payment method updated</span>
+                        </div>
+                        <span class="text-xs font-medium text-muted-foreground">
+                            1 week ago
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Account Settings - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Account Settings</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Configure default settings for the Accounts module
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <a href="{{ safe_url_for('accounts.dashboard') }}" class="kt-btn kt-btn-outline">
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Configuration Settings</h3>
+        </div>
+        <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+            <form method="POST" class="flex flex-col gap-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Default Status</label>
+                        <select class="kt-select" name="default_status" id="default_status">
+                            <option value="active" {% if settings_context.default_status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if settings_context.default_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            <option value="prospect" {% if settings_context.default_status == 'prospect' %}selected{% endif %}>Prospect</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Default Account Type</label>
+                        <select class="kt-select" name="default_account_type_id" id="default_account_type_id">
+                            <option value="">None</option>
+                            {% for at in settings_context.account_types %}
+                            <option value="{{ at.id }}" {% if settings_context.default_account_type_id == at.id|string %}selected{% endif %}>{{ at.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Default Currency</label>
+                        <select class="kt-select" name="default_currency" id="default_currency">
+                            <option value="USD" {% if settings_context.default_currency == 'USD' %}selected{% endif %}>USD</option>
+                            <option value="EUR" {% if settings_context.default_currency == 'EUR' %}selected{% endif %}>EUR</option>
+                            <option value="GBP" {% if settings_context.default_currency == 'GBP' %}selected{% endif %}>GBP</option>
+                            <option value="CAD" {% if settings_context.default_currency == 'CAD' %}selected{% endif %}>CAD</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-center pt-6">
+                        <label class="kt-label">
+                            <input class="kt-checkbox" type="checkbox" name="auto_generate_account_number" id="auto_generate_account_number" {% if settings_context.auto_generate_account_number %}checked{% endif %}/>
+                            <span class="kt-checkbox-label">Auto-generate account numbers</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end gap-2.5 pt-4 border-t border-border">
+                    <a href="{{ safe_url_for('accounts.dashboard') }}" class="kt-btn kt-btn-outline">Cancel</a>
+                    <button type="submit" class="kt-btn kt-btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

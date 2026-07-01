@@ -1,0 +1,55 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Current Sessions - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Current Sessions</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage devices logged into your account
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Active Sessions</h3>
+        </div>
+        <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+            <!-- Current Session -->
+            <div class="flex items-center justify-between p-4 border border-primary rounded-lg bg-primary/5">
+                <div class="flex items-center gap-3">
+                    <i class="ki-filled ki-monitor text-2xl text-primary"></i>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-semibold text-mono">Current Session</span>
+                        <span class="text-xs text-secondary-foreground">Chrome on Windows • New York, US</span>
+                        <span class="text-xs text-muted-foreground">192.168.1.1 • Active now</span>
+                    </div>
+                </div>
+                <span class="kt-badge kt-badge-sm kt-badge-primary">Current</span>
+            </div>
+            
+            <!-- Other Sessions -->
+            <div class="flex items-center justify-between p-4 border border-border rounded-lg">
+                <div class="flex items-center gap-3">
+                    <i class="ki-filled ki-smartphone text-2xl text-muted-foreground"></i>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-semibold text-mono">Mobile Device</span>
+                        <span class="text-xs text-secondary-foreground">Safari on iOS • New York, US</span>
+                        <span class="text-xs text-muted-foreground">192.168.1.2 • 2 hours ago</span>
+                    </div>
+                </div>
+                <button class="kt-btn kt-btn-sm kt-btn-outline text-danger">Revoke</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

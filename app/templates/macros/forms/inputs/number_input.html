@@ -1,0 +1,33 @@
+<!-- Number Input Macro -->
+{% macro number_input(field, placeholder="", min=None, max=None, step=None, class="", required=False, disabled=False) %}
+<div class="relative">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+        </svg>
+    </div>
+    
+    <input 
+        type="number" 
+        id="{{ field.id }}" 
+        name="{{ field.name }}"
+        value="{{ field.data or '' }}"
+        placeholder="{{ placeholder }}"
+        {% if min is not none %}min="{{ min }}"{% endif %}
+        {% if max is not none %}max="{{ max }}"{% endif %}
+        {% if step is not none %}step="{{ step }}"{% endif %}
+        class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm {{ class }}"
+        {% if required %}required{% endif %}
+        {% if disabled %}disabled{% endif %}
+        {% if field.errors %}aria-invalid="true"{% endif %}
+    >
+    
+    {% if field.errors %}
+    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}

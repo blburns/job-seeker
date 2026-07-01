@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Email Preferences - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    {% include 'modules/users/settings/includes/settings_nav_pills.html' %}
+    
+    <div class="card mt-4">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="ti ti-mail-cog me-2"></i>
+          Email Preferences
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('users.email_preferences') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          
+          <p class="text-muted mb-4">
+            Manage which emails you receive from us. You can always change these settings later.
+          </p>
+          
+          <!-- Email Categories -->
+          <h6 class="mb-3">Email Categories</h6>
+          
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="marketing_emails" 
+                name="marketing_emails"
+                {% if preferences.marketing_emails %}checked{% endif %}>
+              <label class="form-check-label" for="marketing_emails">
+                <strong>Marketing Emails</strong>
+                <br>
+                <small class="text-muted">Promotions, special offers, and product announcements</small>
+              </label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="product_updates" 
+                name="product_updates"
+                {% if preferences.product_updates %}checked{% endif %}>
+              <label class="form-check-label" for="product_updates">
+                <strong>Product Updates</strong>
+                <br>
+                <small class="text-muted">New features, improvements, and product news</small>
+              </label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="newsletter" 
+                name="newsletter"
+                {% if preferences.newsletter %}checked{% endif %}>
+              <label class="form-check-label" for="newsletter">
+                <strong>Newsletter</strong>
+                <br>
+                <small class="text-muted">Weekly or monthly newsletter with tips and updates</small>
+              </label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="order_notifications" 
+                name="order_notifications"
+                {% if preferences.order_notifications %}checked{% endif %}>
+              <label class="form-check-label" for="order_notifications">
+                <strong>Order Notifications</strong>
+                <br>
+                <small class="text-muted">Order confirmations, shipping updates, and delivery notifications</small>
+              </label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="account_notifications" 
+                name="account_notifications"
+                {% if preferences.account_notifications %}checked{% endif %}>
+              <label class="form-check-label" for="account_notifications">
+                <strong>Account Notifications</strong>
+                <br>
+                <small class="text-muted">Account activity, profile changes, and important updates</small>
+              </label>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="security_alerts" 
+                name="security_alerts"
+                checked
+                disabled>
+              <label class="form-check-label" for="security_alerts">
+                <strong>Security Alerts</strong>
+                <span class="badge bg-label-warning ms-2">Required</span>
+                <br>
+                <small class="text-muted">Important security notifications and alerts (cannot be disabled)</small>
+              </label>
+            </div>
+          </div>
+          
+          <hr class="my-4">
+          
+          <!-- Email Frequency -->
+          <h6 class="mb-3">Email Frequency</h6>
+          
+          <div class="mb-4">
+            <label for="email_frequency" class="form-label">How often would you like to receive emails?</label>
+            <select class="form-select" id="email_frequency" name="email_frequency">
+              <option value="immediate" {% if preferences.email_frequency == 'immediate' %}selected{% endif %}>
+                Immediate - Send emails as events occur
+              </option>
+              <option value="daily" {% if preferences.email_frequency == 'daily' %}selected{% endif %}>
+                Daily Digest - Once per day summary
+              </option>
+              <option value="weekly" {% if preferences.email_frequency == 'weekly' %}selected{% endif %}>
+                Weekly Digest - Once per week summary
+              </option>
+            </select>
+            <div class="form-text">
+              Note: Security alerts and order notifications are always sent immediately
+            </div>
+          </div>
+          
+          <hr class="my-4">
+          
+          <!-- Unsubscribe Info -->
+          {% if preferences.unsubscribed_all %}
+          <div class="alert alert-warning">
+            <i class="ti ti-alert-triangle me-2"></i>
+            <strong>You are currently unsubscribed from all emails.</strong>
+            <br>
+            <small>Unsubscribed on: {{ preferences.unsubscribed_at.strftime('%B %d, %Y') }}</small>
+            <br>
+            <a href="{{ url_for('users.resubscribe', token=preferences.unsubscribe_token) }}" class="alert-link">
+              Click here to resubscribe
+            </a>
+          </div>
+          {% else %}
+          <div class="alert alert-info">
+            <i class="ti ti-info-circle me-2"></i>
+            You can unsubscribe from all emails at any time using the unsubscribe link in any email we send you.
+          </div>
+          {% endif %}
+          
+          <!-- Submit Button -->
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('users.settings') }}" class="btn btn-label-secondary">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="ti ti-check me-1"></i>
+              Save Preferences
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

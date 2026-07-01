@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Details - {{ contact.first_name }} {{ contact.last_name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
+                    {{ contact.first_name }} {{ contact.last_name }}
+                </h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Contact Details
+                </p>
+            </div>
+            <div class="mt-4 flex space-x-3 md:mt-0 md:ml-4">
+                <a href="{{ url_for('contacts.edit_contact', contact_uuid=contact.contact_uuid) }}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Edit Contact
+                </a>
+                <a href="{{ url_for('contacts.list_contacts') }}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Contacts
+                </a>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <!-- Main Information -->
+            <div class="lg:col-span-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                            Contact Information
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Full Name</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.first_name }} {{ contact.last_name }}</dd>
+                            </div>
+                            {% if contact.company %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Company</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.company }}</dd>
+                            </div>
+                            {% endif %}
+                            {% if contact.job_title %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Job Title</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.job_title }}</dd>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Category</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                                    {% if contact.category %}
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                            {{ contact.category.name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-gray-400">No category</span>
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                        {% if contact.status == 'active' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                        {% elif contact.status == 'customer' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                        {% elif contact.status == 'lead' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                        {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200{% endif %}">
+                                        {{ contact.status.title() }}
+                                    </span>
+                                </dd>
+                            </div>
+                            {% if contact.email %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                                    <a href="mailto:{{ contact.email }}" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                                        {{ contact.email }}
+                                    </a>
+                                </dd>
+                            </div>
+                            {% endif %}
+                            {% if contact.phone %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Phone</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                                    <a href="tel:{{ contact.phone }}" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                                        {{ contact.phone }}
+                                    </a>
+                                </dd>
+                            </div>
+                            {% endif %}
+                            {% if contact.mobile %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Mobile</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                                    <a href="tel:{{ contact.mobile }}" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                                        {{ contact.mobile }}
+                                    </a>
+                                </dd>
+                            </div>
+                            {% endif %}
+                            {% if contact.website %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Website</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                                    <a href="{{ contact.website }}" target="_blank" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                                        {{ contact.website }}
+                                    </a>
+                                </dd>
+                            </div>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Address Information -->
+                {% if contact.address_line1 or contact.city %}
+                <div class="mt-6 card">
+                    <div class="card-header">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                            Address Information
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-sm text-gray-900 dark:text-white">
+                            {% if contact.address_line1 %}{{ contact.address_line1 }}<br>{% endif %}
+                            {% if contact.address_line2 %}{{ contact.address_line2 }}<br>{% endif %}
+                            {% if contact.city %}{{ contact.city }}{% endif %}
+                            {% if contact.state_province %}, {{ contact.state_province }}{% endif %}
+                            {% if contact.postal_code %} {{ contact.postal_code }}{% endif %}
+                            {% if contact.country %}<br>{{ contact.country }}{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Notes -->
+                {% if contact.notes %}
+                <div class="mt-6 card">
+                    <div class="card-header">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                            Notes
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ contact.notes }}</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <!-- Business Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                            Business Information
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="space-y-4">
+                            {% if contact.industry %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Industry</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.industry }}</dd>
+                            </div>
+                            {% endif %}
+                            {% if contact.company_size %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Company Size</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.company_size }}</dd>
+                            </div>
+                            {% endif %}
+                            {% if contact.annual_revenue %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Annual Revenue</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.annual_revenue }}</dd>
+                            </div>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Contact Metadata -->
+                <div class="mt-6 card">
+                    <div class="card-header">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                            Contact Details
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="space-y-4">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                                <dd class="mt-1">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                        {{ contact.status|title }}
+                                    </span>
+                                </dd>
+                            </div>
+                            {% if contact.source %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Source</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.source }}</dd>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.created_at.strftime('%Y-%m-%d') if contact.created_at else 'N/A' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.updated_at.strftime('%Y-%m-%d') if contact.updated_at else 'N/A' }}</dd>
+                            </div>
+                            {% if contact.last_contacted %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Contacted</dt>
+                                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ contact.last_contacted.strftime('%Y-%m-%d') if contact.last_contacted else 'Never' }}</dd>
+                            </div>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

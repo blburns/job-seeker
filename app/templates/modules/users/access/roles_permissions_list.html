@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}Roles & Permissions{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <h4 class="mb-1">Roles List</h4>
+  <p class="mb-6">
+    A role provided access to predefined menus and features so that depending on <br />
+    assigned role an administrator can have access to what user needs.
+  </p>
+
+  <!-- Role cards -->
+  <div class="row g-6">
+    {% for role in roles.items %}
+    <div class="col-xl-4 col-lg-6 col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h6 class="fw-normal mb-0 text-body">Total {{ role.users|length if role.users else 0 }} user{% if role.users|length != 1 %}s{% endif %}</h6>
+            <ul class="list-unstyled d-flex align-items-center avatar-group mb-0">
+              {% if role.users %}
+                {% for user in role.users[:4] %}
+                <li
+                  data-bs-toggle="tooltip"
+                  data-popup="tooltip-custom"
+                  data-bs-placement="top"
+                  title="{{ user.get_full_name() or user.username }}"
+                  class="avatar pull-up">
+                  <span class="avatar-initial rounded-circle bg-label-primary">
+                    {{ (user.get_full_name() or user.username)[0]|upper }}
+                  </span>
+                </li>
+                {% endfor %}
+                {% if role.users|length > 4 %}
+                <li class="avatar">
+                  <span
+                    class="avatar-initial rounded-circle pull-up bg-label-secondary"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="bottom"
+                    title="{{ role.users|length - 4 }} more">+{{ role.users|length - 4 }}</span>
+                </li>
+                {% endif %}
+              {% else %}
+                <li class="avatar">
+                  <span class="avatar-initial rounded-circle bg-label-secondary">0</span>
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+          <div class="d-flex justify-content-between align-items-end">
+            <div class="role-heading">
+              <h5 class="mb-1">{{ role.display_name or role.name }}</h5>
+              <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#addRoleModal" class="role-edit-modal" data-role-id="{{ role.id }}" data-role-name="{{ role.name }}" data-role-display="{{ role.display_name or '' }}">
+                <span>Edit Role</span>
+              </a>
+            </div>
+            <a href="javascript:void(0);" class="copy-role" data-role-id="{{ role.id }}" title="Copy Role">
+              <i class="icon-base ti tabler-copy icon-md text-heading"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Add New Role Card -->
+    <div class="col-xl-4 col-lg-6 col-md-6">
+      <div class="card h-100">
+        <div class="row h-100">
+          <div class="col-sm-5">
+            <div class="d-flex align-items-end h-100 justify-content-center mt-sm-0 mt-4">
+              <div class="avatar avatar-xl">
+                <span class="avatar-initial rounded bg-label-primary">
+                  <i class="icon-base ti tabler-plus icon-26px"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-7">
+            <div class="card-body text-sm-end text-center ps-sm-0">
+              <button
+                data-bs-target="#addRoleModal"
+                data-bs-toggle="modal"
+                class="btn btn-sm btn-primary mb-4 text-nowrap add-new-role">
+                Add New Role
+              </button>
+              <p class="mb-0">
+                Add new role, <br />
+                if it doesn't exist.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/ Role cards -->
+
+  <!-- Users Table -->
+  <div class="row mt-6">
+    <div class="col-12">
+      <h4 class="mb-1">Total users with their roles</h4>
+      <p class="mb-0">Find all of your company's administrator accounts and their associate roles.</p>
+    </div>
+    <div class="col-12">
+      <div class="card">
+        <div class="card-datatable">
+          <table class="datatables-users table border-top">
+            <thead>
+              <tr>
+                <th></th>
+                <th></th>
+                <th>User</th>
+                <th>Role</th>
+                <th>Plan</th>
+                <th>Billing</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <td></td>
+                <td>
+                  <div class="avatar avatar-sm">
+                    <span class="avatar-initial rounded bg-label-primary">
+                      {{ (user.get_full_name() or user.username)[0]|upper }}
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex flex-column">
+                    <h6 class="mb-0">{{ user.get_full_name() or user.username }}</h6>
+                    <small class="text-muted">{{ user.email }}</small>
+                  </div>
+                </td>
+                <td>
+                  {% if user.roles %}
+                    {% for role in user.roles %}
+                    <span class="badge bg-label-primary me-1">{{ role.display_name or role.name }}</span>
+                    {% endfor %}
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge bg-label-primary">Standard</span>
+                </td>
+                <td>
+                  <span class="text-muted">Current</span>
+                </td>
+                <td>
+                  {% if user.is_active %}
+                  <span class="badge bg-label-success">Active</span>
+                  {% else %}
+                  <span class="badge bg-label-danger">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="d-inline-block">
+                    <a href="{{ url_for('users.view_user', user_id=user.id) }}" class="btn btn-sm btn-icon btn-label-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="View">
+                      <i class="icon-base ti tabler-eye"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">No users found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/ Users Table -->
+</div>
+
+<!-- Add Role Modal -->
+<div class="modal fade" id="addRoleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-simple modal-dialog-centered modal-add-new-role">
+    <div class="modal-content">
+      <div class="modal-body">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="text-center mb-6">
+          <h4 class="role-title">Add New Role</h4>
+          <p class="text-body-secondary">Set role permissions</p>
+        </div>
+        <!-- Add role form -->
+        <form id="addRoleForm" class="row g-3" method="POST" action="{{ url_for('users.list_roles') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="col-12 form-control-validation mb-3">
+            <label class="form-label" for="modalRoleName">Role Name</label>
+            <input
+              type="text"
+              id="modalRoleName"
+              name="role_name"
+              class="form-control"
+              placeholder="Enter a role name"
+              required />
+          </div>
+          <div class="col-12 form-control-validation mb-3">
+            <label class="form-label" for="modalRoleDisplayName">Display Name</label>
+            <input
+              type="text"
+              id="modalRoleDisplayName"
+              name="display_name"
+              class="form-control"
+              placeholder="Enter a display name" />
+          </div>
+          <div class="col-12">
+            <h5 class="mb-6">Role Permissions</h5>
+            <!-- Permission table -->
+            <div class="table-responsive">
+              <table class="table table-flush-spacing">
+                <tbody>
+                  <tr>
+                    <td class="text-nowrap fw-medium">
+                      Administrator Access
+                      <i
+                        class="icon-base ti tabler-info-circle icon-xs"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Allows a full access to the system"></i>
+                    </td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="selectAll" />
+                          <label class="form-check-label" for="selectAll"> Select All </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-nowrap fw-medium text-heading">User Management</td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="userManagementRead" name="permissions[]" value="user.read" />
+                          <label class="form-check-label" for="userManagementRead"> Read </label>
+                        </div>
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="userManagementWrite" name="permissions[]" value="user.write" />
+                          <label class="form-check-label" for="userManagementWrite"> Write </label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="userManagementCreate" name="permissions[]" value="user.create" />
+                          <label class="form-check-label" for="userManagementCreate"> Create </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-nowrap fw-medium text-heading">Content Management</td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="contentManagementRead" name="permissions[]" value="content.read" />
+                          <label class="form-check-label" for="contentManagementRead"> Read </label>
+                        </div>
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="contentManagementWrite" name="permissions[]" value="content.write" />
+                          <label class="form-check-label" for="contentManagementWrite"> Write </label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="contentManagementCreate" name="permissions[]" value="content.create" />
+                          <label class="form-check-label" for="contentManagementCreate"> Create </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-nowrap fw-medium text-heading">Disputes Management</td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="dispManagementRead" name="permissions[]" value="disputes.read" />
+                          <label class="form-check-label" for="dispManagementRead"> Read </label>
+                        </div>
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="dispManagementWrite" name="permissions[]" value="disputes.write" />
+                          <label class="form-check-label" for="dispManagementWrite"> Write </label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="dispManagementCreate" name="permissions[]" value="disputes.create" />
+                          <label class="form-check-label" for="dispManagementCreate"> Create </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-nowrap fw-medium text-heading">Database Management</td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="dbManagementRead" name="permissions[]" value="database.read" />
+                          <label class="form-check-label" for="dbManagementRead"> Read </label>
+                        </div>
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="dbManagementWrite" name="permissions[]" value="database.write" />
+                          <label class="form-check-label" for="dbManagementWrite"> Write </label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="dbManagementCreate" name="permissions[]" value="database.create" />
+                          <label class="form-check-label" for="dbManagementCreate"> Create </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-nowrap fw-medium text-heading">Financial Management</td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="finManagementRead" name="permissions[]" value="financial.read" />
+                          <label class="form-check-label" for="finManagementRead"> Read </label>
+                        </div>
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="finManagementWrite" name="permissions[]" value="financial.write" />
+                          <label class="form-check-label" for="finManagementWrite"> Write </label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="finManagementCreate" name="permissions[]" value="financial.create" />
+                          <label class="form-check-label" for="finManagementCreate"> Create </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-nowrap fw-medium text-heading">Reporting</td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="reportingRead" name="permissions[]" value="reporting.read" />
+                          <label class="form-check-label" for="reportingRead"> Read </label>
+                        </div>
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="reportingWrite" name="permissions[]" value="reporting.write" />
+                          <label class="form-check-label" for="reportingWrite"> Write </label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="reportingCreate" name="permissions[]" value="reporting.create" />
+                          <label class="form-check-label" for="reportingCreate"> Create </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-nowrap fw-medium text-heading">API Control</td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="apiRead" name="permissions[]" value="api.read" />
+                          <label class="form-check-label" for="apiRead"> Read </label>
+                        </div>
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="apiWrite" name="permissions[]" value="api.write" />
+                          <label class="form-check-label" for="apiWrite"> Write </label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="apiCreate" name="permissions[]" value="api.create" />
+                          <label class="form-check-label" for="apiCreate"> Create </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-nowrap fw-medium text-heading">Repository Management</td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="repoRead" name="permissions[]" value="repository.read" />
+                          <label class="form-check-label" for="repoRead"> Read </label>
+                        </div>
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="repoWrite" name="permissions[]" value="repository.write" />
+                          <label class="form-check-label" for="repoWrite"> Write </label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="repoCreate" name="permissions[]" value="repository.create" />
+                          <label class="form-check-label" for="repoCreate"> Create </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="text-nowrap fw-medium text-heading">Payroll</td>
+                    <td>
+                      <div class="d-flex justify-content-end">
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="payrollRead" name="permissions[]" value="payroll.read" />
+                          <label class="form-check-label" for="payrollRead"> Read </label>
+                        </div>
+                        <div class="form-check mb-0 me-4 me-lg-12">
+                          <input class="form-check-input" type="checkbox" id="payrollWrite" name="permissions[]" value="payroll.write" />
+                          <label class="form-check-label" for="payrollWrite"> Write </label>
+                        </div>
+                        <div class="form-check mb-0">
+                          <input class="form-check-input" type="checkbox" id="payrollCreate" name="permissions[]" value="payroll.create" />
+                          <label class="form-check-label" for="payrollCreate"> Create </label>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary me-sm-4 me-1">Submit</button>
+            <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!--/ Add Role Modal -->
+{% endblock %}

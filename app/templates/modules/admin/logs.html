@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}System Logs - Admin - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+#logs-viewer {
+  max-height: 70vh;
+  overflow-y: auto;
+  font-size: 0.8125rem;
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+}
+#logs-viewer pre {
+  margin: 0;
+  padding: 1rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.log-line { padding: 0.15rem 0; border-bottom: 1px solid var(--bs-border-color-translucent); }
+.log-line:last-child { border-bottom: none; }
+.log-level-DEBUG { color: var(--bs-secondary); }
+.log-level-INFO { color: var(--bs-body-color); }
+.log-level-WARNING { color: var(--bs-warning); }
+.log-level-ERROR, .log-level-CRITICAL { color: var(--bs-danger); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h4 class="mb-0">
+          <i class="ti ti-file-text me-2"></i>
+          System Logs
+        </h4>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-label-secondary">
+          <i class="ti ti-arrow-left me-1"></i>
+          Back to Dashboard
+        </a>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <form method="get" action="{{ url_for('admin.system_logs') }}" class="row g-3 align-items-end flex-wrap" id="logs-form">
+            <div class="col-auto">
+              <label class="form-label mb-0">Log file</label>
+              <select name="file" class="form-select form-select-sm" style="width: auto;">
+                {% for value, label in allowed_log_files %}
+                <option value="{{ value }}" {{ 'selected' if log_file_name == value else '' }}>{{ label }}.log</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-auto">
+              <label class="form-label mb-0">Lines</label>
+              <select name="lines" class="form-select form-select-sm" style="width: auto;">
+                <option value="100" {{ 'selected' if lines_param == 100 else '' }}>100</option>
+                <option value="200" {{ 'selected' if lines_param == 200 else '' }}>200</option>
+                <option value="500" {{ 'selected' if lines_param == 500 else '' }}>500</option>
+                <option value="1000" {{ 'selected' if lines_param == 1000 else '' }}>1000</option>
+                <option value="2000" {{ 'selected' if lines_param == 2000 else '' }}>2000</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <label class="form-label mb-0">Level</label>
+              <select name="level" class="form-select form-select-sm" style="width: auto;">
+                <option value="">All</option>
+                <option value="DEBUG" {{ 'selected' if level_filter == 'DEBUG' else '' }}>DEBUG</option>
+                <option value="INFO" {{ 'selected' if level_filter == 'INFO' else '' }}>INFO</option>
+                <option value="WARNING" {{ 'selected' if level_filter == 'WARNING' else '' }}>WARNING</option>
+                <option value="ERROR" {{ 'selected' if level_filter == 'ERROR' else '' }}>ERROR</option>
+                <option value="CRITICAL" {{ 'selected' if level_filter == 'CRITICAL' else '' }}>CRITICAL</option>
+              </select>
+            </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="ti ti-refresh me-1"></i>
+                Refresh
+              </button>
+            </div>
+            <div class="col-auto ms-auto">
+              <label class="form-check form-check-inline mb-0">
+                <input type="checkbox" class="form-check-input" id="logs-auto-refresh" />
+                <span class="form-check-label">Auto-refresh (10s)</span>
+              </label>
+            </div>
+          </form>
+          {% if log_file %}
+          <p class="text-muted small mb-0 mt-2">
+            <i class="ti ti-file me-1"></i>
+            <code>{{ log_file }}</code>
+            {% if total_read is defined %}
+            <span class="ms-2">Showing {{ entries|length }} line(s)</span>
+            {% endif %}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if log_error %}
+      <div class="alert alert-warning" role="alert">
+        <i class="ti ti-alert-triangle me-2"></i>
+        {{ log_error }}
+      </div>
+      {% endif %}
+
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Log output</h5>
+        </div>
+        <div class="card-body p-0">
+          <div id="logs-viewer">
+            {% if entries %}
+            <pre class="mb-0"><code>{% for e in entries %}<span class="log-line log-level-{{ e.level }}">{{ e.raw|e }}</span>
+{% endfor %}</code></pre>
+            {% elif not log_error %}
+            <pre class="mb-0 text-muted"><code>No log entries (file empty or filter returned no lines).</code></pre>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var form = document.getElementById('logs-form');
+  var autoRefresh = document.getElementById('logs-auto-refresh');
+  var intervalId = null;
+
+  function fetchLogs() {
+    var file = form ? (form.querySelector('select[name="file"]') || {}).value : 'app';
+    var lines = form ? (form.querySelector('select[name="lines"]') || {}).value : '200';
+    var level = form ? (form.querySelector('select[name="level"]') || {}).value : '';
+    var url = '{{ url_for("admin.api_logs") }}?file=' + encodeURIComponent(file) + '&lines=' + encodeURIComponent(lines) + '&level=' + encodeURIComponent(level);
+    fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.ok ? r.json() : Promise.reject(r); })
+      .then(function(data) {
+        var viewer = document.getElementById('logs-viewer');
+        if (!viewer) return;
+        if (data.error) {
+          viewer.innerHTML = '<pre class="mb-0 text-danger"><code>' + (data.error || 'Failed to load logs') + '</code></pre>';
+          return;
+        }
+        var entries = data.entries || [];
+        if (entries.length === 0) {
+          viewer.innerHTML = '<pre class="mb-0 text-muted"><code>No log entries.</code></pre>';
+          return;
+        }
+        var html = '<pre class="mb-0"><code>';
+        entries.forEach(function(e) {
+          var level = (e.level || 'INFO').toUpperCase();
+          var raw = (e.raw || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+          html += '<span class="log-line log-level-' + level + '">' + raw + '</span>\n';
+        });
+        html += '</code></pre>';
+        viewer.innerHTML = html;
+      })
+      .catch(function() {
+        var viewer = document.getElementById('logs-viewer');
+        if (viewer) viewer.innerHTML = '<pre class="mb-0 text-danger"><code>Failed to load logs.</code></pre>';
+      });
+  }
+
+  if (autoRefresh) {
+    autoRefresh.addEventListener('change', function() {
+      if (autoRefresh.checked) {
+        intervalId = setInterval(fetchLogs, 10000);
+      } else {
+        if (intervalId) clearInterval(intervalId);
+        intervalId = null;
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

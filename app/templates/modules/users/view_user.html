@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.get_full_name() or user.username }} - Account{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- User Sidebar -->
+  <div class="col-xl-4 col-lg-5 order-1 order-md-0">
+    <div class="card mb-4">
+      <div class="card-body pt-4 text-center">
+        <div class="d-flex flex-column align-items-center">
+          <div class="mb-3">
+            {% if user.photo_url %}
+            <img
+              src="{{ user.photo_url }}"
+              alt="{{ user.get_full_name() or user.username }}"
+              class="img-fluid rounded-circle"
+              height="120"
+              width="120" />
+            {% else %}
+            <div class="avatar avatar-xl mb-2">
+              <span class="avatar-initial rounded-circle bg-label-primary fs-2">
+                {{ (user.get_full_name() or user.username)[0].upper() }}
+              </span>
+            </div>
+            {% endif %}
+          </div>
+          <div class="user-info text-center">
+            <h5 class="mb-1">{{ user.get_full_name() or user.username }}</h5>
+            <span class="badge bg-label-secondary">
+              {% if user.roles %}
+                {{ user.roles[0].display_name or user.roles[0].name }}
+              {% else %}
+                User
+              {% endif %}
+            </span>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-around flex-wrap my-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="avatar">
+              <div class="avatar-initial bg-label-primary rounded">
+                <i class="icon-base ti tabler-checkbox"></i>
+              </div>
+            </div>
+            <div>
+              <h6 class="mb-0">1.23k</h6>
+              <small class="text-muted">Task Done</small>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-3 mt-3 mt-md-0">
+            <div class="avatar">
+              <div class="avatar-initial bg-label-primary rounded">
+                <i class="icon-base ti tabler-briefcase"></i>
+              </div>
+            </div>
+            <div>
+              <h6 class="mb-0">568</h6>
+              <small class="text-muted">Project Done</small>
+            </div>
+          </div>
+        </div>
+
+        <h6 class="pb-3 border-bottom text-start">Details</h6>
+        <div class="info-container text-start mt-3">
+          <ul class="list-unstyled mb-3">
+            <li class="mb-2">
+              <span class="fw-semibold">Username:</span>
+              <span>@{{ user.username }}</span>
+            </li>
+            <li class="mb-2">
+              <span class="fw-semibold">Email:</span>
+              <span>{{ user.email }}</span>
+            </li>
+            <li class="mb-2">
+              <span class="fw-semibold">Status:</span>
+              {% if user.is_active %}
+              <span class="badge bg-label-success">Active</span>
+              {% else %}
+              <span class="badge bg-label-danger">Inactive</span>
+              {% endif %}
+            </li>
+            <li class="mb-2">
+              <span class="fw-semibold">Role:</span>
+              {% if user.roles %}
+              <span>{{ user.roles[0].display_name or user.roles[0].name }}</span>
+              {% else %}
+              <span>User</span>
+              {% endif %}
+            </li>
+            <li class="mb-2">
+              <span class="fw-semibold">Member since:</span>
+              <span>
+                {{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}
+              </span>
+            </li>
+          </ul>
+
+          <div class="d-flex justify-content-center gap-2">
+            <a
+              href="{{ url_for('users.edit_user', user_id=user.id) }}"
+              class="btn btn-primary">
+              <i class="icon-base ti tabler-edit me-1"></i>
+              Edit
+            </a>
+            {% if user.id != current_user.id %}
+            <a
+              href="{{ url_for('users.toggle_user_status', user_id=user.id) }}"
+              class="btn {% if user.is_active %}btn-label-danger{% else %}btn-label-success{% endif %}">
+              <i class="icon-base ti {% if user.is_active %}tabler-user-x{% else %}tabler-user-check{% endif %} me-1"></i>
+              {% if user.is_active %}Suspend{% else %}Activate (re-enable){% endif %}
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Content -->
+  <div class="col-xl-8 col-lg-7 order-0 order-md-1">
+    <!-- Nav pills -->
+    <div class="nav-align-top mb-4">
+      <ul class="nav nav-pills flex-column flex-md-row flex-wrap row-gap-2">
+        <li class="nav-item">
+          <a class="nav-link active" href="javascript:void(0);">
+            <i class="icon-base ti tabler-user-check me-1_5"></i>
+            Account
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            href="{{ url_for('users.view_user_security', user_id=user.id) }}">
+            <i class="icon-base ti tabler-lock me-1_5"></i>
+            Security
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Basic account info (read-only) -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Account Details</h5>
+      </div>
+      <div class="card-body">
+        <div class="row gy-3">
+          <div class="col-md-6">
+            <small class="text-muted text-uppercase d-block mb-1">Full name</small>
+            <p class="mb-0">{{ user.get_full_name() }}</p>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted text-uppercase d-block mb-1">Email</small>
+            <p class="mb-0">{{ user.email }}</p>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted text-uppercase d-block mb-1">Last login</small>
+            <p class="mb-0">
+              {% if user.last_login %}
+                {{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}
+              {% else %}
+                Never
+              {% endif %}
+            </p>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted text-uppercase d-block mb-1">Last activity</small>
+            <p class="mb-0">
+              {% if user.last_activity %}
+                {{ user.last_activity.strftime('%B %d, %Y at %I:%M %p') }}
+              {% else %}
+                Never
+              {% endif %}
+            </p>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted text-uppercase d-block mb-1">Email verified</small>
+            {% if user.email_verified %}
+            <span class="badge bg-label-success">Verified</span>
+            {% else %}
+            <span class="badge bg-label-warning">Not verified</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Roles & groups -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Roles &amp; Groups</h5>
+      </div>
+      <div class="card-body">
+        <div class="row gy-4">
+          <div class="col-md-6">
+            <h6 class="mb-3">Roles</h6>
+            {% if user.roles %}
+            <div class="list-group">
+              {% for role in user.roles %}
+              <div class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">
+                    {{ role.display_name or role.name }}
+                  </div>
+                  <small class="text-muted d-block">
+                    {{ role.description or 'No description' }}
+                  </small>
+                </div>
+                {% if role.priority is not none %}
+                <span class="badge bg-label-primary">Priority {{ role.priority }}</span>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="mb-0 text-muted">No roles assigned.</p>
+            {% endif %}
+          </div>
+          <div class="col-md-6">
+            <h6 class="mb-3">Groups</h6>
+            {% if user.groups %}
+            <div class="list-group">
+              {% for group in user.groups %}
+              <div class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">
+                    {{ group.display_name or group.name }}
+                  </div>
+                  <small class="text-muted d-block">
+                    {{ group.description or 'No description' }}
+                  </small>
+                </div>
+                {% if group.is_system_group %}
+                <span class="badge bg-label-info">System</span>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="mb-0 text-muted">No groups assigned.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account activity summary -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Account Activity</h5>
+      </div>
+      <div class="card-body">
+        <div class="row gy-3">
+          <div class="col-md-6">
+            <small class="text-muted text-uppercase d-block mb-1">Member since</small>
+            <p class="mb-0">
+              {{ user.created_at.strftime('%B %d, %Y at %I:%M %p') if user.created_at else 'N/A' }}
+            </p>
+          </div>
+          <div class="col-md-6">
+            <small class="text-muted text-uppercase d-block mb-1">Failed login attempts</small>
+            <p class="mb-0">{{ user.failed_login_attempts or 0 }}</p>
+          </div>
+          {% if user.lockout_until %}
+          <div class="col-md-6">
+            <small class="text-muted text-uppercase d-block mb-1">Account locked until</small>
+            <span class="badge bg-label-danger">
+              {{ user.lockout_until.strftime('%B %d, %Y at %I:%M %p') }}
+            </span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

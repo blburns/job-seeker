@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.get_full_name() or user.username }} - Connections{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/pages/page-user-view.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  {% include 'modules/users/view/includes/user_view_sidebar.html' %}
+
+  <!-- User Content -->
+  <div class="col-xl-8 col-lg-7 order-0 order-md-1">
+    {% set active_tab = 'connections' %}
+    {% include 'modules/users/view/includes/user_view_nav_pills.html' %}
+
+    <!-- Connected Accounts -->
+    <div class="card mb-6">
+      <div class="card-header">
+        <h5 class="mb-0">Connected Accounts</h5>
+        <p class="my-0 card-subtitle">Display content from your connected accounts on your site</p>
+      </div>
+      <div class="card-body pt-0">
+        <div class="d-flex mb-4">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/google.png') }}" alt="google" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+            <div class="mb-sm-0 mb-2">
+              <h6 class="mb-50">Google</h6>
+              <span class="small">Calendar and contacts</span>
+            </div>
+            <div>
+              <div class="form-check form-switch mb-0">
+                <input type="checkbox" class="form-check-input" checked />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex mb-4 align-items-center">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/slack.png') }}" alt="slack" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+            <div class="mb-sm-0 mb-2">
+              <h6 class="mb-50">Slack</h6>
+              <span class="small">Communication</span>
+            </div>
+            <div>
+              <div class="form-check form-switch mb-0">
+                <input type="checkbox" class="form-check-input" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex mb-4 align-items-center">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/github.png') }}" alt="github" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+            <div class="mb-sm-0 mb-2">
+              <h6 class="mb-50">Github</h6>
+              <span class="small">Manage your Git repositories</span>
+            </div>
+            <div>
+              <div class="form-check form-switch mb-0">
+                <input type="checkbox" class="form-check-input" checked />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex mb-4 align-items-center">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/mailchimp.png') }}" alt="mailchimp" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+            <div class="mb-sm-0 mb-2">
+              <h6 class="mb-50">Mailchimp</h6>
+              <span class="small">Email marketing service</span>
+            </div>
+            <div>
+              <div class="form-check form-switch mb-0">
+                <input type="checkbox" class="form-check-input" checked />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/asana.png') }}" alt="asana" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+            <div class="mb-sm-0 mb-2">
+              <h6 class="mb-50">Asana</h6>
+              <span class="small">Communication</span>
+            </div>
+            <div>
+              <div class="form-check form-switch mb-0">
+                <input type="checkbox" class="form-check-input" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Connected Accounts -->
+
+    <!-- Social Accounts -->
+    <div class="card mb-6">
+      <div class="card-header">
+        <h5 class="mb-0">Social Accounts</h5>
+        <p class="my-0 card-subtitle">Display content from social accounts on your site</p>
+      </div>
+      <div class="card-body pt-0">
+        <div class="d-flex mb-4 align-items-center">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/facebook.png') }}" alt="facebook" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 row align-items-center me-n1">
+            <div class="col-7 mb-sm-0 mb-2">
+              <h6 class="mb-50">Facebook</h6>
+              <span class="small">Not Connected</span>
+            </div>
+            <div class="col-5 text-end">
+              <button class="btn btn-label-secondary btn-icon">
+                <i class="icon-base ti tabler-link icon-22px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex mb-4 align-items-center">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/twitter-light.png') }}" alt="twitter" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 row align-items-center me-n1">
+            <div class="col-7 mb-sm-0 mb-2">
+              <h6 class="mb-1">Twitter</h6>
+              <a href="https://x.com/pixinvents" class="small" target="_blank">@Pixinvent</a>
+            </div>
+            <div class="col-5 text-end">
+              <button class="btn btn-label-danger btn-icon">
+                <i class="icon-base ti tabler-trash icon-22px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex mb-4 align-items-center">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/linkedin.png') }}" alt="linkedin" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 row align-items-center me-n1">
+            <div class="col-7 mb-sm-0 mb-2">
+              <h6 class="mb-1">LinkedIn</h6>
+              <a href="https://www.linkedin.com/company/pixinvent" class="small" target="_blank">@Pixinvent</a>
+            </div>
+            <div class="col-5 text-end">
+              <button class="btn btn-label-danger btn-icon">
+                <i class="icon-base ti tabler-trash icon-22px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex mb-4 align-items-center">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/dribbble.png') }}" alt="dribbble" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 row align-items-center me-n1">
+            <div class="col-7 mb-sm-0 mb-2">
+              <h6 class="mb-50">Dribbble</h6>
+              <span class="small">Not Connected</span>
+            </div>
+            <div class="col-5 text-end">
+              <button class="btn btn-label-secondary btn-icon">
+                <i class="icon-base ti tabler-link icon-22px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0">
+            <img src="{{ url_for('static', filename='assets/img/icons/brands/behance.png') }}" alt="behance" class="me-4" height="36" />
+          </div>
+          <div class="flex-grow-1 row align-items-center me-n1">
+            <div class="col-7 mb-sm-0 mb-2">
+              <h6 class="mb-50">Behance</h6>
+              <span class="small">Not Connected</span>
+            </div>
+            <div class="col-5 text-end">
+              <button class="btn btn-label-secondary btn-icon">
+                <i class="icon-base ti tabler-link icon-22px"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Social Accounts -->
+  </div>
+  <!--/ User Content -->
+</div>
+{% endblock %}

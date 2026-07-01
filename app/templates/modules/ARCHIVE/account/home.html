@@ -1,0 +1,81 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Account Home - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Account Home</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage your account settings and preferences
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Quick Actions Card -->
+        <div class="kt-card">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Quick Actions</h3>
+            </div>
+            <div class="kt-card-content flex flex-col gap-3 p-5 lg:p-7.5">
+                <a class="kt-btn kt-btn-outline justify-start" href="{{ safe_url_for('account.user_profile') }}">
+                    <i class="ki-filled ki-user text-lg"></i>
+                    User Profile
+                </a>
+                <a class="kt-btn kt-btn-outline justify-start" href="{{ safe_url_for('account.company_profile') }}">
+                    <i class="ki-filled ki-briefcase text-lg"></i>
+                    Company Profile
+                </a>
+                <a class="kt-btn kt-btn-outline justify-start" href="{{ safe_url_for('account.billing_basic') }}">
+                    <i class="ki-filled ki-wallet text-lg"></i>
+                    Billing
+                </a>
+                <a class="kt-btn kt-btn-outline justify-start" href="{{ safe_url_for('account.security_overview') }}">
+                    <i class="ki-filled ki-shield-check text-lg"></i>
+                    Security
+                </a>
+            </div>
+        </div>
+        
+        <!-- Account Overview Card -->
+        <div class="kt-card lg:col-span-2">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Account Overview</h3>
+            </div>
+            <div class="kt-card-content flex flex-col gap-5 p-5 lg:p-7.5">
+                <div class="flex items-center gap-4">
+                    <div class="kt-avatar size-16">
+                        <div class="kt-avatar-image">
+                            <img alt="avatar" src="{{ url_for('static', filename='assets/media/avatars/300-1.png') }}"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <h4 class="text-lg font-semibold text-mono">{{ get_user_display_name() }}</h4>
+                        <p class="text-sm text-secondary-foreground">{{ get_user_email() }}</p>
+                        <span class="kt-badge kt-badge-sm kt-badge-success">Active</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs font-medium text-muted-foreground">Member Since</span>
+                        <span class="text-sm font-semibold text-foreground">{{ current_user.created_at|date('%B %d, %Y') if current_user.created_at else 'N/A' }}</span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs font-medium text-muted-foreground">Last Login</span>
+                        <span class="text-sm font-semibold text-foreground">{{ current_user.last_login|date('%B %d, %Y %I:%M %p') if current_user.last_login else 'Never' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Settings - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Settings</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage your account settings
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <button class="kt-btn kt-btn-primary" data-kt-modal-toggle="#settings_modal">
+                Open Settings
+            </button>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Settings Modal -->
+<div class="kt-modal" data-kt-modal="true" id="settings_modal">
+    <div class="kt-modal-content max-w-[600px]">
+        <div class="kt-modal-header">
+            <h3 class="kt-modal-title">Account Settings</h3>
+            <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost shrink-0" data-kt-modal-dismiss="true">
+                <i class="ki-filled ki-cross"></i>
+            </button>
+        </div>
+        <div class="kt-modal-body">
+            <form class="flex flex-col gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">First Name</label>
+                        <input class="kt-input" type="text" value="{{ current_user.first_name if current_user.first_name else '' }}"/>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Last Name</label>
+                        <input class="kt-input" type="text" value="{{ current_user.last_name if current_user.last_name else '' }}"/>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col gap-1">
+                    <label class="kt-form-label">Email</label>
+                    <input class="kt-input" type="email" value="{{ get_user_email() }}" readonly/>
+                </div>
+            </form>
+        </div>
+        <div class="kt-modal-footer">
+            <button class="kt-btn kt-btn-outline" data-kt-modal-dismiss="true">Cancel</button>
+            <button class="kt-btn kt-btn-primary">Save Changes</button>
+        </div>
+    </div>
+</div>
+<!-- End of Settings Modal -->
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Documentation
+            </h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300">
+                Learn how to use and extend this Flask boilerplate application
+            </p>
+        </div>
+        
+        <!-- Documentation Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <nav class="space-y-2">
+                    <a href="#getting-started" class="block px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md">
+                        Getting Started
+                    </a>
+                    <a href="#configuration" class="block px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md">
+                        Configuration
+                    </a>
+                    <a href="#development" class="block px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md">
+                        Development
+                    </a>
+                    <a href="#deployment" class="block px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md">
+                        Deployment
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="lg:col-span-2">
+                <div class="prose prose-lg dark:prose-invert max-w-none">
+                    <section id="getting-started">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Getting Started</h2>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">
+                            This Flask boilerplate provides a solid foundation for building modern web applications.
+                        </p>
+                        
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Prerequisites</h3>
+                        <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 mb-4">
+                            <li>Python 3.9+</li>
+                            <li>PostgreSQL 14+ (or SQLite for development)</li>
+                            <li>Node.js 18+ (for Tailwind CSS)</li>
+                        </ul>
+                        
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Installation</h3>
+                        <div class="bg-gray-900 dark:bg-gray-800 rounded-lg p-4 mb-4">
+                            <pre class="text-green-400 text-sm"><code># Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+npm install
+
+# Set up environment
+cp env.example .env
+# Edit .env with your configuration
+
+# Initialize database
+flask db upgrade
+
+# Build frontend assets
+npm run build
+
+# Start development server
+python run.py</code></pre>
+                        </div>
+                    </section>
+                    
+                    <section id="configuration">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Configuration</h2>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">
+                            The application uses environment variables for configuration. Copy <code>env.example</code> to <code>.env</code> and modify as needed.
+                        </p>
+                        
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Key Settings</h3>
+                        <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 mb-4">
+                            <li><code>FLASK_ENV</code> - Environment (development, production)</li>
+                            <li><code>DATABASE_URL</code> - Database connection string</li>
+                            <li><code>SECRET_KEY</code> - Flask secret key</li>
+                            <li><code>JWT_SECRET_KEY</code> - JWT signing key</li>
+                        </ul>
+                    </section>
+                    
+                    <section id="development">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Development</h2>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">
+                            The boilerplate includes comprehensive development tools and testing setup.
+                        </p>
+                        
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Available Commands</h3>
+                        <div class="bg-gray-900 dark:bg-gray-800 rounded-lg p-4 mb-4">
+                            <pre class="text-green-400 text-sm"><code># Run tests
+pytest
+
+# Run tests with coverage
+pytest --cov=app
+
+# Format code
+black .
+isort .
+
+# Database migrations
+flask db migrate -m "Description"
+flask db upgrade
+
+# Frontend development
+npm run dev  # Watch mode
+npm run build  # Production build</code></pre>
+                        </div>
+                    </section>
+                    
+                    <section id="deployment">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Deployment</h2>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">
+                            The application is production-ready with proper configuration for deployment.
+                        </p>
+                        
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Production Settings</h3>
+                        <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 mb-4">
+                            <li>Set <code>FLASK_ENV=production</code></li>
+                            <li>Use a production database (PostgreSQL recommended)</li>
+                            <li>Set secure secret keys</li>
+                            <li>Configure proper logging</li>
+                            <li>Use a production WSGI server (Gunicorn)</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.get_full_name() or user.username }} - Security{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/pages/page-user-view.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  {% include 'modules/users/view/includes/user_view_sidebar.html' %}
+
+  <!-- User Content -->
+  <div class="col-xl-8 col-lg-7 order-0 order-md-1">
+    {% set active_tab = 'security' %}
+    {% include 'modules/users/view/includes/user_view_nav_pills.html' %}
+
+    <!-- Change Password -->
+    <div class="card mb-6">
+      <h5 class="card-header">Change Password</h5>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('users.view_user_security', user_id=user.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="change_password" value="1" />
+          <div class="alert alert-warning alert-dismissible" role="alert">
+            <h5 class="alert-heading mb-1">Ensure that these requirements are met</h5>
+            <span>Minimum 8 characters long, uppercase & symbol</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          <div class="row gx-6">
+            <div class="mb-4 col-12 col-sm-6 form-password-toggle">
+              <label class="form-label" for="newPassword">New Password</label>
+              <div class="input-group input-group-merge">
+                <input class="form-control" type="password" id="newPassword" name="new_password" placeholder="············" />
+                <span class="input-group-text cursor-pointer"><i class="icon-base ti tabler-eye-off"></i></span>
+              </div>
+            </div>
+            <div class="mb-4 col-12 col-sm-6 form-password-toggle">
+              <label class="form-label" for="confirmPassword">Confirm New Password</label>
+              <div class="input-group input-group-merge">
+                <input class="form-control" type="password" name="confirm_password" id="confirmPassword" placeholder="············" />
+                <span class="input-group-text cursor-pointer"><i class="icon-base ti tabler-eye-off"></i></span>
+              </div>
+            </div>
+            <div>
+              <button type="submit" class="btn btn-primary me-2">Change Password</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!--/ Change Password -->
+
+    <!-- Two-steps verification -->
+    <div class="card mb-6">
+      <div class="card-header">
+        <h5 class="mb-0">Two-steps verification</h5>
+        <span class="card-subtitle mt-0">Keep your account secure with authentication step.</span>
+      </div>
+      <div class="card-body pt-0">
+        <h6 class="mb-1">SMS</h6>
+        <div class="mb-4">
+          <div class="d-flex w-100 action-icons">
+            <input id="defaultInput" class="form-control me-4" type="text" placeholder="+1(968) 945-8832" />
+            <a href="javascript:void(0);" class="btn btn-icon btn-text-secondary" data-bs-target="#enableOTP" data-bs-toggle="modal">
+              <i class="icon-base ti tabler-edit icon-22px"></i>
+            </a>
+            <a href="javascript:void(0);" class="btn btn-icon btn-text-secondary">
+              <i class="icon-base ti tabler-trash icon-22px"></i>
+            </a>
+          </div>
+        </div>
+        <p class="mb-0">
+          Two-factor authentication adds an additional layer of security to your account by requiring more than just a password to log in.
+          <a href="javascript:void(0);" class="text-primary">Learn more.</a>
+        </p>
+      </div>
+    </div>
+    <!--/ Two-steps verification -->
+
+    <!-- Recent Devices -->
+    <div class="card mb-6">
+      <h5 class="card-header">Recent Devices</h5>
+      <div class="table-responsive table-border-bottom-0">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="text-truncate">Browser</th>
+              <th class="text-truncate">Device</th>
+              <th class="text-truncate">Location</th>
+              <th class="text-truncate">Recent Activities</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if recent_devices %}
+              {% for device in recent_devices %}
+              <tr>
+                <td class="text-truncate">
+                  {% if 'Windows' in device.browser %}
+                  <i class="icon-base ti tabler-brand-windows icon-md text-info me-4"></i>
+                  {% elif 'iPhone' in device.browser or 'MacOS' in device.browser %}
+                  <i class="icon-base ti tabler-brand-apple icon-md me-4"></i>
+                  {% elif 'Android' in device.browser %}
+                  <i class="icon-base ti tabler-brand-android icon-md text-success me-4"></i>
+                  {% else %}
+                  <i class="icon-base ti tabler-device-mobile icon-md text-danger me-4"></i>
+                  {% endif %}
+                  <span class="text-heading">{{ device.browser }}</span>
+                </td>
+                <td class="text-truncate">{{ device.device }}</td>
+                <td class="text-truncate">{{ device.location }}</td>
+                <td class="text-truncate">
+                  {% if device.last_activity %}
+                    {{ device.last_activity.strftime('%d, %B %Y %H:%M') }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-body-secondary">No recent devices found</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!--/ Recent Devices -->
+  </div>
+  <!--/ User Content -->
+</div>
+{% endblock %}

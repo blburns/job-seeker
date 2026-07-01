@@ -1,0 +1,20 @@
+{% extends "base_misc.html" %}
+
+{% block title %}CSRF Error - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block misc_code %}419{% endblock %}
+{% block misc_heading %}CSRF Token Error 🔐{% endblock %}
+{% block misc_description %}Your session has expired or the form token is invalid. Please go back and try again.{% endblock %}
+{% block misc_actions %}
+  <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to home</a>
+  <button type="button" class="btn btn-label-secondary" onclick="window.history.back()">Go Back</button>
+{% endblock %}
+{% block misc_image %}
+<div class="mt-12">
+  <img
+    src="{{ url_for('static', filename='assets/img/illustrations/page-misc-you-are-not-authorized.png') }}"
+    alt="page-misc-csrf-error"
+    width="170"
+    class="img-fluid" />
+</div>
+{% endblock %}

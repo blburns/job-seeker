@@ -1,0 +1,93 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Teams - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Teams</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage your teams and members
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <button class="kt-btn kt-btn-primary" data-kt-modal-toggle="#create_team_modal">
+                <i class="ki-filled ki-plus text-lg"></i>
+                Create Team
+            </button>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Team Card -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-mono">Development</h3>
+                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
+                        <i class="ki-filled ki-dots-vertical text-lg"></i>
+                    </button>
+                </div>
+                <p class="text-sm text-secondary-foreground">Software development team</p>
+                <div class="flex items-center gap-2">
+                    <div class="flex -space-x-2">
+                        <div class="kt-avatar size-8 border-2 border-background">
+                            <div class="kt-avatar-image">
+                                <img alt="avatar" src="{{ url_for('static', filename='assets/media/avatars/300-1.png') }}"/>
+                            </div>
+                        </div>
+                        <div class="kt-avatar size-8 border-2 border-background">
+                            <div class="kt-avatar-image">
+                                <img alt="avatar" src="{{ url_for('static', filename='assets/media/avatars/300-2.png') }}"/>
+                            </div>
+                        </div>
+                        <div class="kt-avatar size-8 border-2 border-background">
+                            <div class="kt-avatar-image">
+                                <img alt="avatar" src="{{ url_for('static', filename='assets/media/avatars/300-3.png') }}"/>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="text-xs text-secondary-foreground">+5 members</span>
+                </div>
+                <a href="{{ safe_url_for('account.members_team_info') }}" class="kt-btn kt-btn-outline kt-btn-sm">View Team</a>
+            </div>
+        </div>
+        
+        <!-- Team Card -->
+        <div class="kt-card">
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-mono">Design</h3>
+                    <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost">
+                        <i class="ki-filled ki-dots-vertical text-lg"></i>
+                    </button>
+                </div>
+                <p class="text-sm text-secondary-foreground">Design and UX team</p>
+                <div class="flex items-center gap-2">
+                    <div class="flex -space-x-2">
+                        <div class="kt-avatar size-8 border-2 border-background">
+                            <div class="kt-avatar-image">
+                                <img alt="avatar" src="{{ url_for('static', filename='assets/media/avatars/300-4.png') }}"/>
+                            </div>
+                        </div>
+                        <div class="kt-avatar size-8 border-2 border-background">
+                            <div class="kt-avatar-image">
+                                <img alt="avatar" src="{{ url_for('static', filename='assets/media/avatars/300-5.png') }}"/>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="text-xs text-secondary-foreground">+3 members</span>
+                </div>
+                <a href="{{ safe_url_for('account.members_team_info') }}" class="kt-btn kt-btn-outline kt-btn-sm">View Team</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

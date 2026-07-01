@@ -1,0 +1,173 @@
+{% extends "base_vuexy_auth.html" %}
+
+{% block title %}Register - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6 col-xl-5">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <h4 class="mb-1">Adventure starts here 🚀</h4>
+          <p class="mb-0 text-muted">Make your app management easy and fun!</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category in ['danger','error'] else 'warning' if category == 'warning' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form id="sign_up_form" method="POST" action="{{ url_for('auth.register') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <div class="mb-3">
+            <label for="register-username" class="form-label">Username</label>
+            <input
+              type="text"
+              class="form-control"
+              id="register-username"
+              name="username"
+              placeholder="johndoe"
+              value="{{ username or request.form.username or '' }}"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="register-email" class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-control"
+              id="register-email"
+              name="email"
+              placeholder="john.doe@example.com"
+              value="{{ email or request.form.email or '' }}"
+              required
+            />
+          </div>
+
+          <div class="row">
+            <div class="mb-3 col-sm-6">
+              <label for="register-firstname" class="form-label">First Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="register-firstname"
+                name="firstname"
+                placeholder="John"
+                value="{{ firstname or request.form.firstname or '' }}"
+              />
+            </div>
+            <div class="mb-3 col-sm-6">
+              <label for="register-lastname" class="form-label">Last Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="register-lastname"
+                name="lastname"
+                placeholder="Doe"
+                value="{{ lastname or request.form.lastname or '' }}"
+              />
+            </div>
+          </div>
+
+          <div class="mb-3 form-password-toggle">
+            <label class="form-label" for="register-password">Password</label>
+            <div class="input-group input-group-merge">
+              <input
+                type="password"
+                id="register-password"
+                class="form-control"
+                name="password"
+                placeholder="••••••••"
+                aria-describedby="register-password-toggle"
+                required
+              />
+              <span class="input-group-text cursor-pointer" id="register-password-toggle"
+                    onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'">
+                <i class="ti tabler-eye"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="mb-3 form-password-toggle">
+            <label class="form-label" for="register-confirm-password">Confirm Password</label>
+            <div class="input-group input-group-merge">
+              <input
+                type="password"
+                id="register-confirm-password"
+                class="form-control"
+                name="confirm_password"
+                placeholder="••••••••"
+                aria-describedby="register-confirm-password-toggle"
+                required
+              />
+              <span class="input-group-text cursor-pointer" id="register-confirm-password-toggle"
+                    onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'">
+                <i class="ti tabler-eye"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="register-terms"
+                name="agree_terms"
+                value="1"
+                required
+              />
+              <label class="form-check-label" for="register-terms">
+                I agree to the
+                <a href="{{ safe_url_for('main.terms_and_services') }}">terms &amp; conditions</a>
+              </label>
+            </div>
+          </div>
+
+          <button class="btn btn-primary d-grid w-100" type="submit">Sign up</button>
+        </form>
+
+        <p class="text-center mt-3 mb-0">
+          <span class="me-1">Already have an account?</span>
+          <a href="{{ url_for('auth.login') }}"><span>Sign in instead</span></a>
+        </p>
+
+        <div class="divider my-4">
+          <div class="divider-text">or sign up with</div>
+        </div>
+
+        <div class="d-grid gap-2">
+          {% if config.get('GOOGLE_CLIENT_ID') %}
+          <a href="{{ url_for('auth.oauth_login', provider='google') }}" class="btn btn-outline-secondary">
+            <i class="ti ti-brand-google me-2"></i>
+            Sign up with Google
+          </a>
+          {% endif %}
+          
+          {% if config.get('MICROSOFT_CLIENT_ID') %}
+          <a href="{{ url_for('auth.oauth_login', provider='microsoft') }}" class="btn btn-outline-secondary">
+            <i class="ti ti-brand-windows me-2"></i>
+            Sign up with Microsoft
+          </a>
+          {% endif %}
+          
+          {% if config.get('GITHUB_CLIENT_ID') %}
+          <a href="{{ url_for('auth.oauth_login', provider='github') }}" class="btn btn-outline-secondary">
+            <i class="ti ti-brand-github me-2"></i>
+            Sign up with GitHub
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

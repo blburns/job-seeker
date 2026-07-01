@@ -1,0 +1,157 @@
+{% extends "base_auth.html" %}
+
+{% block title %}Two-Factor Authentication{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center authentication-wrapper authentication-basic container-p-y">
+  <div class="col-md-6 col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <div class="mb-3">
+            <span class="avatar avatar-xl bg-label-primary">
+              <i class="ti ti-shield-lock ti-lg"></i>
+            </span>
+          </div>
+          <h4 class="mb-1">Two-Factor Authentication</h4>
+          <p class="mb-0 text-muted">Enter the verification code from your authenticator app</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category in ['danger','error'] else 'warning' if category == 'warning' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form id="verify_2fa_form" method="POST" action="{{ url_for('auth.verify_2fa') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="use_backup" id="use_backup" value="0" />
+
+          <div class="mb-4" id="totp-input-group">
+            <label for="token" class="form-label">Verification Code</label>
+            <input
+              type="text"
+              class="form-control form-control-lg text-center"
+              id="token"
+              name="token"
+              placeholder="000000"
+              maxlength="6"
+              pattern="[0-9]{6}"
+              required
+              autofocus
+              style="letter-spacing: 0.5em; font-size: 1.5rem;">
+            <div class="form-text text-center">
+              Enter the 6-digit code from your authenticator app
+            </div>
+          </div>
+
+          <div class="mb-4 d-none" id="backup-input-group">
+            <label for="backup-token" class="form-label">Backup Code</label>
+            <input
+              type="text"
+              class="form-control form-control-lg text-center"
+              id="backup-token"
+              placeholder="XXXX-XXXX"
+              maxlength="9"
+              style="letter-spacing: 0.3em; font-size: 1.2rem;">
+            <div class="form-text text-center">
+              Enter one of your backup codes
+            </div>
+          </div>
+
+          <div class="mb-4 d-grid">
+            <button class="btn btn-primary btn-lg" type="submit">
+              <i class="ti ti-check me-2"></i>
+              Verify
+            </button>
+          </div>
+
+          <div class="text-center">
+            <button type="button" class="btn btn-link" id="toggle-backup" onclick="toggleBackupMode()">
+              <i class="ti ti-key me-1"></i>
+              <span id="backup-toggle-text">Use a backup code instead</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="divider my-4">
+          <div class="divider-text">or</div>
+        </div>
+
+        <div class="text-center">
+          <a href="{{ url_for('auth.login') }}" class="btn btn-label-secondary">
+            <i class="ti ti-arrow-left me-1"></i>
+            Back to Login
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 text-center">
+      <p class="text-muted small">
+        <i class="ti ti-info-circle me-1"></i>
+        Lost access to your authenticator app? Use a backup code or contact support.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+let useBackup = false;
+
+function toggleBackupMode() {
+  useBackup = !useBackup;
+  
+  const totpGroup = document.getElementById('totp-input-group');
+  const backupGroup = document.getElementById('backup-input-group');
+  const useBackupInput = document.getElementById('use_backup');
+  const toggleText = document.getElementById('backup-toggle-text');
+  const tokenInput = document.getElementById('token');
+  const backupInput = document.getElementById('backup-token');
+  
+  if (useBackup) {
+    // Switch to backup code mode
+    totpGroup.classList.add('d-none');
+    backupGroup.classList.remove('d-none');
+    useBackupInput.value = '1';
+    toggleText.textContent = 'Use authenticator app instead';
+    tokenInput.removeAttribute('required');
+    backupInput.setAttribute('required', 'required');
+    backupInput.focus();
+    
+    // Copy backup input to token input for form submission
+    backupInput.addEventListener('input', function() {
+      tokenInput.value = this.value.replace('-', '');
+    });
+  } else {
+    // Switch to TOTP mode
+    totpGroup.classList.remove('d-none');
+    backupGroup.classList.add('d-none');
+    useBackupInput.value = '0';
+    toggleText.textContent = 'Use a backup code instead';
+    backupInput.removeAttribute('required');
+    tokenInput.setAttribute('required', 'required');
+    tokenInput.focus();
+  }
+}
+
+// Auto-format token input
+document.getElementById('token').addEventListener('input', function(e) {
+  this.value = this.value.replace(/[^0-9]/g, '');
+});
+
+// Auto-format backup code input
+document.getElementById('backup-token').addEventListener('input', function(e) {
+  let value = this.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+  if (value.length > 4) {
+    value = value.slice(0, 4) + '-' + value.slice(4, 8);
+  }
+  this.value = value;
+});
+</script>
+{% endblock %}

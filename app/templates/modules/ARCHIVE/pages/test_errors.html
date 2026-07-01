@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Error Testing{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+                    Error Testing Page
+                </h1>
+                
+                <p class="text-gray-600 dark:text-gray-400 mb-8">
+                    This page allows you to test various HTTP error responses. Click the buttons below to trigger different error codes.
+                </p>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <!-- 400 Bad Request -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                400 Bad Request
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                The server cannot process the request due to a client error.
+                            </p>
+                            <a href="{{ url_for('main.error_400') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Trigger 400 Error
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 401 Unauthorized -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                401 Unauthorized
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                Authentication is required to access this resource.
+                            </p>
+                            <a href="{{ url_for('main.error_401') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Trigger 401 Error
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 403 Forbidden -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                403 Forbidden
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                Access to this resource is forbidden.
+                            </p>
+                            <a href="{{ url_for('main.error_403') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Trigger 403 Error
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 404 Not Found -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                404 Not Found
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                The requested resource was not found.
+                            </p>
+                            <a href="{{ url_for('main.error_404') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Trigger 404 Error
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 405 Method Not Allowed -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                405 Method Not Allowed
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                The HTTP method is not allowed for this resource.
+                            </p>
+                            <a href="{{ url_for('main.error_405') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Trigger 405 Error
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 408 Request Timeout -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                408 Request Timeout
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                The request timed out.
+                            </p>
+                            <a href="{{ url_for('main.error_408') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Trigger 408 Error
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 500 Internal Server Error -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                500 Internal Server Error
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                An internal server error occurred.
+                            </p>
+                            <a href="{{ url_for('main.error_500') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Trigger 500 Error
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 418 I'm a teapot -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                418 I'm a teapot
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                The server refuses to brew coffee because it is a teapot.
+                            </p>
+                            <a href="{{ url_for('main.error_418') }}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                Trigger 418 Error
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                                <strong>Warning:</strong> These error pages are for testing purposes only. In production, you should implement proper error handling and user-friendly error pages.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

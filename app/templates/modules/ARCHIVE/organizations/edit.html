@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Edit Organization{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Edit Organization</h2>
+                <p class="mt-1 text-sm text-gray-500">Update organization information</p>
+            </div>
+            <a href="{{ url_for('organizations.view_item', item_id=item.id) }}" class="btn btn-outline">Cancel</a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" class="space-y-6">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="name" class="block text-sm font-medium">Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" id="name" value="{{ item.name if item else '' }}" required class="mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="domain" class="block text-sm font-medium">Domain <span class="text-red-500">*</span></label>
+                            <input type="text" name="domain" id="domain" value="{{ item.website if item.website else '' }}" required class="mt-1 block w-full">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="plan" class="block text-sm font-medium">Plan</label>
+                        <select name="plan" id="plan" class="mt-1 block w-full">
+                            <option value="free" {{ 'selected' if item.settings and item.settings.get('plan') == 'free' }}>Free</option>
+                            <option value="standard" {{ 'selected' if item.settings and item.settings.get('plan') == 'standard' }}>Standard</option>
+                            <option value="premium" {{ 'selected' if item.settings and item.settings.get('plan') == 'premium' }}>Premium</option>
+                            <option value="enterprise" {{ 'selected' if item.settings and item.settings.get('plan') == 'enterprise' }}>Enterprise</option>
+                        </select>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        <button type="submit" class="btn btn-primary">Update Organization</button>
+                        <a href="{{ url_for('organizations.view_item', item_id=item.id) }}" class="btn btn-outline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

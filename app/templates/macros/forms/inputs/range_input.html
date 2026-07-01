@@ -1,0 +1,74 @@
+<!-- Range Input Macro -->
+{% macro range_input(field, min=0, max=100, step=1, class="", required=False, disabled=False, show_value=True) %}
+<div class="space-y-2">
+    <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-700 dark:text-gray-300">Value:</span>
+        {% if show_value %}
+        <span id="{{ field.id }}_value" class="text-sm font-medium text-gray-900 dark:text-white">{{ field.data or min }}</span>
+        {% endif %}
+    </div>
+    
+    <div class="relative">
+        <input 
+            type="range" 
+            id="{{ field.id }}" 
+            name="{{ field.name }}"
+            value="{{ field.data or min }}"
+            min="{{ min }}"
+            max="{{ max }}"
+            step="{{ step }}"
+            class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider {{ class }}"
+            {% if required %}required{% endif %}
+            {% if disabled %}disabled{% endif %}
+            {% if field.errors %}aria-invalid="true"{% endif %}
+            oninput="updateRangeValue('{{ field.id }}', this.value)"
+        >
+        
+        <!-- Custom slider styling -->
+        <style>
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3B82F6;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .slider::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3B82F6;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        </style>
+    </div>
+    
+    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+        <span>{{ min }}</span>
+        <span>{{ max }}</span>
+    </div>
+    
+    {% if field.errors %}
+    <div class="mt-1">
+        {% for error in field.errors %}
+        <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function updateRangeValue(fieldId, value) {
+    const valueDisplay = document.getElementById(fieldId + '_value');
+    if (valueDisplay) {
+        valueDisplay.textContent = value;
+    }
+}
+</script>
+{% endmacro %}

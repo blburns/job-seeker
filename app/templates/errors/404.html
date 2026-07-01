@@ -1,0 +1,20 @@
+{% extends "base_misc.html" %}
+
+{% block title %}Page Not Found - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block misc_code %}404{% endblock %}
+{% block misc_heading %}Page Not Found ⚠️{% endblock %}
+{% block misc_description %}We couldn't find the page you are looking for.{% endblock %}
+{% block misc_actions %}
+  <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to home</a>
+  <button type="button" class="btn btn-label-secondary" onclick="(window.history.length > 1) ? window.history.back() : window.location.assign('{{ url_for('main.index') }}');">Go Back</button>
+{% endblock %}
+{% block misc_image %}
+<div class="mt-4">
+  <img
+    src="{{ url_for('static', filename='assets/img/illustrations/page-misc-error.png') }}"
+    alt="page-misc-error-light"
+    width="225"
+    class="img-fluid" />
+</div>
+{% endblock %}

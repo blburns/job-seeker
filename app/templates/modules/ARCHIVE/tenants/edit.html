@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Edit Tenant{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Edit Tenant</h2>
+                <p class="mt-1 text-sm text-gray-500">Update tenant information</p>
+            </div>
+            <a href="{{ url_for('tenants.view_tenant', tenant_id=tenant.id) }}" class="btn btn-outline">Cancel</a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" class="space-y-6">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="name" class="block text-sm font-medium">Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" id="name" value="{{ tenant.name }}" required class="mt-1 block w-full">
+                        </div>
+                        <div>
+                            <label for="domain" class="block text-sm font-medium">Domain <span class="text-red-500">*</span></label>
+                            <input type="text" name="domain" id="domain" value="{{ tenant.domain }}" required class="mt-1 block w-full">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="status" class="block text-sm font-medium">Status</label>
+                        <select name="status" id="status" class="mt-1 block w-full">
+                            <option value="active" {{ 'selected' if tenant.is_active }}>Active</option>
+                            <option value="suspended" {{ 'selected' if not tenant.is_active }}>Suspended</option>
+                        </select>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        <button type="submit" class="btn btn-primary">Update Tenant</button>
+                        <a href="{{ url_for('tenants.view_tenant', tenant_id=tenant.id) }}" class="btn btn-outline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

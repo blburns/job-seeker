@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Permissions - {{ role.display_name }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="mb-0">
+        <i class="ti ti-shield-lock me-2"></i>
+        Manage Permissions: {{ role.display_name }}
+      </h4>
+      <a href="{{ url_for('admin.role_view', role_id=role.id) }}" class="btn btn-label-secondary">
+        <i class="ti ti-arrow-left me-1"></i>
+        Back to Role
+      </a>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.role_permissions', role_id=role.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Select Permissions</h5>
+        </div>
+        <div class="card-body">
+          {% if grouped_permissions %}
+            {% for module, permissions in grouped_permissions.items() %}
+            <div class="mb-4">
+              <h6 class="text-uppercase text-muted mb-3">
+                <i class="ti ti-folder me-2"></i>
+                {{ module }}
+              </h6>
+              <div class="row">
+                {% for permission in permissions %}
+                <div class="col-md-6 mb-2">
+                  <div class="form-check">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      name="permissions" 
+                      value="{{ permission.id }}" 
+                      id="perm_{{ permission.id }}"
+                      {% if permission.id|string in current_permission_ids %}checked{% endif %}>
+                    <label class="form-check-label" for="perm_{{ permission.id }}">
+                      <strong>{{ permission.display_name }}</strong>
+                      {% if permission.is_system %}
+                        <span class="badge bg-label-warning ms-1">System</span>
+                      {% endif %}
+                      <br>
+                      <small class="text-muted">{{ permission.description or permission.name }}</small>
+                    </label>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            <hr>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted">No permissions available</p>
+          {% endif %}
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="ti ti-check me-1"></i>
+            Save Permissions
+          </button>
+          <a href="{{ url_for('admin.role_view', role_id=role.id) }}" class="btn btn-label-secondary">
+            Cancel
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+  </div>
+</div>
+
+<script>
+// Select all/none functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Add select all/none buttons for each module
+  const modules = document.querySelectorAll('.mb-4');
+  modules.forEach(module => {
+    const header = module.querySelector('h6');
+    if (header) {
+      const selectAllBtn = document.createElement('button');
+      selectAllBtn.type = 'button';
+      selectAllBtn.className = 'btn btn-sm btn-outline-primary ms-2';
+      selectAllBtn.innerHTML = '<i class="ti ti-check-all"></i> Select All';
+      selectAllBtn.onclick = function() {
+        const checkboxes = module.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = true);
+      };
+      
+      const selectNoneBtn = document.createElement('button');
+      selectNoneBtn.type = 'button';
+      selectNoneBtn.className = 'btn btn-sm btn-outline-secondary ms-1';
+      selectNoneBtn.innerHTML = '<i class="ti ti-x"></i> Clear';
+      selectNoneBtn.onclick = function() {
+        const checkboxes = module.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+      };
+      
+      header.appendChild(selectAllBtn);
+      header.appendChild(selectNoneBtn);
+    }
+  });
+});
+</script>
+{% endblock %}

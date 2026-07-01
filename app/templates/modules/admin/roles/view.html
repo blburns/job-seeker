@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}{{ role.display_name }} - Admin - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="mb-0">
+        <i class="ti ti-users-group me-2"></i>
+        {{ role.display_name }}
+        {% if role.is_system_role %}
+          <span class="badge bg-label-info ms-2">System</span>
+        {% endif %}
+        {% if not role.is_active %}
+          <span class="badge bg-label-secondary ms-2">Inactive</span>
+        {% endif %}
+      </h4>
+      <div>
+        <a href="{{ url_for('admin.roles_list') }}" class="btn btn-label-secondary me-2">
+          <i class="ti ti-arrow-left me-1"></i>
+          Back to Roles
+        </a>
+        <a href="{{ url_for('admin.role_edit', role_id=role.id) }}" class="btn btn-primary">
+          <i class="ti ti-edit me-1"></i>
+          Edit Role
+        </a>
+      </div>
+    </div>
+
+    <!-- Role Details -->
+    <div class="row mb-4">
+      <div class="col-md-8">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Role Details</h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <strong>Name:</strong>
+              </div>
+              <div class="col-md-9">
+                <code>{{ role.name }}</code>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <strong>Display Name:</strong>
+              </div>
+              <div class="col-md-9">
+                {{ role.display_name }}
+              </div>
+            </div>
+            {% if role.description %}
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <strong>Description:</strong>
+              </div>
+              <div class="col-md-9">
+                {{ role.description }}
+              </div>
+            </div>
+            {% endif %}
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <strong>Priority:</strong>
+              </div>
+              <div class="col-md-9">
+                {{ role.priority }}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">
+                <strong>Created:</strong>
+              </div>
+              <div class="col-md-9">
+                {{ role.created_at.strftime('%Y-%m-%d %H:%M') if role.created_at else 'N/A' }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Permissions -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Permissions ({{ permissions|length }})</h5>
+            <a href="{{ url_for('admin.role_permissions', role_id=role.id) }}" class="btn btn-sm btn-primary">
+              <i class="ti ti-edit me-1"></i>
+              Manage Permissions
+            </a>
+          </div>
+          <div class="card-body">
+            {% if permissions %}
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Permission</th>
+                    <th>Module</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for permission in permissions %}
+                  <tr>
+                    <td><code>{{ permission.name }}</code></td>
+                    <td><span class="badge bg-label-primary">{{ permission.module }}</span></td>
+                    <td>{{ permission.description or permission.display_name }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No permissions assigned to this role.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-md-4">
+        <!-- Statistics -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Statistics</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span>Permissions:</span>
+              <span class="badge bg-label-primary">{{ permissions|length }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span>Users:</span>
+              <span class="badge bg-label-success">{{ assignments|length }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span>Parent Roles:</span>
+              <span class="badge bg-label-info">{{ hierarchy.parents|length }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Quick Actions</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <a href="{{ url_for('admin.role_permissions', role_id=role.id) }}" class="btn btn-outline-primary">
+                <i class="ti ti-shield-lock me-1"></i>
+                Manage Permissions
+              </a>
+              <a href="{{ url_for('admin.role_edit', role_id=role.id) }}" class="btn btn-outline-primary">
+                <i class="ti ti-edit me-1"></i>
+                Edit Role
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Assignments -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">User Assignments ({{ assignments|length }})</h5>
+      </div>
+      <div class="card-body">
+        {% if assignments %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Assigned By</th>
+                <th>Assigned Date</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for assignment in assignments %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('users.view', user_id=assignment.user_id) }}">
+                    {{ assignment.user.username }}
+                  </a>
+                </td>
+                <td>
+                  {% if assignment.assigner %}
+                    {{ assignment.assigner.username }}
+                  {% else %}
+                    <span class="text-muted">System</span>
+                  {% endif %}
+                </td>
+                <td>{{ assignment.assigned_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                  {% if assignment.expires_at %}
+                    {{ assignment.expires_at.strftime('%Y-%m-%d') }}
+                  {% else %}
+                    <span class="text-muted">Never</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if assignment.is_valid %}
+                    <span class="badge bg-success">Active</span>
+                  {% elif assignment.is_expired %}
+                    <span class="badge bg-warning">Expired</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.user_roles', user_id=assignment.user_id) }}" class="btn btn-sm btn-icon">
+                    <i class="ti ti-eye"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No users assigned to this role.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+{% endblock %}

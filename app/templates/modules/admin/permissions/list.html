@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Permissions - Admin - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h4 class="mb-0">
+          <i class="ti ti-shield-lock me-2"></i>
+          Permissions
+        </h4>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('admin.dashboard') }}" class="btn btn-label-secondary">
+            <i class="ti ti-arrow-left me-1"></i>
+            Back to Dashboard
+          </a>
+          <a href="{{ url_for('admin.permission_create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            Create Permission
+          </a>
+        </div>
+      </div>
+
+      {% if rbac_stats %}
+      <div class="row mb-4">
+        <div class="col-md-4 mb-2">
+          <div class="card border h-100">
+            <div class="card-body py-3 d-flex align-items-center">
+              <div class="avatar avatar-md me-3">
+                <span class="avatar-initial rounded bg-label-primary"><i class="ti ti-shield-lock"></i></span>
+              </div>
+              <div>
+                <small class="d-block text-muted">Total permissions</small>
+                <span class="fw-semibold">{{ rbac_stats.total_permissions|default(0)|int }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="card border h-100">
+            <div class="card-body py-3 d-flex align-items-center">
+              <div class="avatar avatar-md me-3">
+                <span class="avatar-initial rounded bg-label-success"><i class="ti ti-check"></i></span>
+              </div>
+              <div>
+                <small class="d-block text-muted">Active permissions</small>
+                <span class="fw-semibold">{{ rbac_stats.active_permissions|default(0)|int }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="card border h-100">
+            <div class="card-body py-3 d-flex align-items-center">
+              <div class="avatar avatar-md me-3">
+                <span class="avatar-initial rounded bg-label-info"><i class="ti ti-folder"></i></span>
+              </div>
+              <div>
+                <small class="d-block text-muted">Modules</small>
+                <span class="fw-semibold">{{ grouped_permissions|length }} module(s)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if grouped_permissions %}
+      {% for module, permissions in grouped_permissions.items() %}
+      <div class="card mb-4">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <i class="ti ti-folder me-2"></i>
+            {{ module|title }}
+            <span class="badge bg-label-primary ms-2">{{ permissions|length }}</span>
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Display name</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th style="width: 90px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for permission in permissions %}
+                <tr>
+                  <td>
+                    <code>{{ permission.name }}</code>
+                    {% if permission.is_system %}
+                    <span class="badge bg-label-warning ms-1">System</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ permission.display_name }}</td>
+                  <td>
+                    {% if permission.description %}
+                    <small>{{ permission.description[:50] }}{% if permission.description|length > 50 %}…{% endif %}</small>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if permission.category %}
+                    <span class="badge bg-label-secondary">{{ permission.category }}</span>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if permission.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('admin.permission_edit', permission_id=permission.id) }}" class="btn btn-sm btn-icon" title="Edit">
+                      <i class="ti ti-edit"></i>
+                    </a>
+                    {% if not permission.is_system %}
+                    <button type="button" class="btn btn-sm btn-icon text-danger" title="Delete" onclick="deletePermission('{{ permission.id }}', '{{ permission.display_name|e }}')">
+                      <i class="ti ti-trash"></i>
+                    </button>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <i class="ti ti-shield-lock ti-xl text-muted mb-3"></i>
+          <p class="text-muted mb-0">No permissions found</p>
+          <a href="{{ url_for('admin.permission_create') }}" class="btn btn-primary mt-3">
+            <i class="ti ti-plus me-1"></i>
+            Create first permission
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Form -->
+<form id="deletePermissionForm" method="POST" style="display: none;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+</form>
+
+<script>
+function deletePermission(permissionId, permissionName) {
+  if (confirm('Are you sure you want to delete the permission "' + permissionName + '"?\n\nThis will remove it from all roles.')) {
+    const form = document.getElementById('deletePermissionForm');
+    form.action = `/admin/permissions/${permissionId}/delete`;
+    form.submit();
+  }
+}
+</script>
+{% endblock %}

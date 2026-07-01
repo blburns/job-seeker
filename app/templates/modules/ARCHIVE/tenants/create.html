@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Create Tenant{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Create New Tenant</h2>
+                <p class="mt-1 text-sm text-gray-500">Add a new tenant to the system</p>
+            </div>
+            <a href="{{ url_for('tenants.list_tenants') }}" class="btn btn-outline">Back</a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" class="space-y-6">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="name" class="block text-sm font-medium">Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" id="name" required class="mt-1 block w-full border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label for="domain" class="block text-sm font-medium">Domain <span class="text-red-500">*</span></label>
+                            <input type="text" name="domain" id="domain" required class="mt-1 block w-full border-gray-300 rounded-md">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="plan" class="block text-sm font-medium">Plan</label>
+                        <select name="plan" id="plan" class="mt-1 block w-full border-gray-300 rounded-md">
+                            <option value="standard">Standard</option>
+                            <option value="premium">Premium</option>
+                            <option value="enterprise">Enterprise</option>
+                        </select>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        <button type="submit" class="btn btn-primary">Create Tenant</button>
+                        <a href="{{ url_for('tenants.list_tenants') }}" class="btn btn-outline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+<!-- Select Dropdown Macro -->
+{% macro select(field, options=None, placeholder="Select an option", class="", required=False, disabled=False) %}
+<div class="relative">
+    <select 
+        id="{{ field.id }}" 
+        name="{{ field.name }}"
+        class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm {{ class }}"
+        {% if required %}required{% endif %}
+        {% if disabled %}disabled{% endif %}
+        {% if field.errors %}aria-invalid="true"{% endif %}
+    >
+        {% if placeholder %}
+        <option value="" disabled {% if not field.data %}selected{% endif %}>{{ placeholder }}</option>
+        {% endif %}
+        
+        {% if options %}
+            {% for value, label in options.items() %}
+            <option value="{{ value }}" {% if field.data == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        {% else %}
+            {% for choice in field.choices %}
+                {% if choice is iterable and choice is not string %}
+                    <option value="{{ choice[0] }}" {% if field.data == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
+                {% else %}
+                    <option value="{{ choice }}" {% if field.data == choice %}selected{% endif %}>{{ choice }}</option>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </select>
+    
+    <!-- Custom dropdown arrow -->
+    <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </div>
+    
+    {% if field.errors %}
+    <div class="absolute inset-y-0 right-8 flex items-center pointer-events-none">
+        <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}

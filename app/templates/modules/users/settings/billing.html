@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings - Billing & Plans - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    {% set active_tab = 'billing' %}
+    {% include 'modules/users/settings/includes/settings_nav_pills.html' %}
+
+    <div class="card mb-6">
+      <h5 class="card-header">Current Plan</h5>
+      <div class="card-body">
+        <div class="row row-gap-6">
+          <div class="col-md-6 mb-1">
+            <div class="mb-6">
+              <h6 class="mb-1">Your Current Plan is Basic</h6>
+              <p class="text-body mb-0">A simple start for everyone</p>
+            </div>
+            <div class="mb-6">
+              <h6 class="mb-1">Active</h6>
+              <p class="text-body mb-0">We will send you a notification upon subscription expiration</p>
+            </div>
+            <div>
+              <h6 class="mb-1">
+                <span class="me-1">Free</span>
+                <span class="badge bg-label-primary rounded-pill">Current</span>
+              </h6>
+              <p class="mb-1 text-body">Standard plan for small to medium businesses</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="alert alert-info mb-0" role="alert">
+              <h5 class="alert-heading mb-1 d-flex align-items-center">
+                <span class="alert-icon rounded"><i class="icon-base ti tabler-info-circle icon-md"></i></span>
+                <span>Upgrade anytime</span>
+              </h5>
+              <span class="ms-11 ps-1">Contact your administrator to change your plan.</span>
+            </div>
+          </div>
+          <div class="col-12 d-flex gap-2 flex-wrap mt-4">
+            <button class="btn btn-primary" type="button" disabled>Upgrade Plan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-6">
+      <h5 class="card-header">Payment Methods</h5>
+      <div class="card-body">
+        <div class="row gx-6">
+          <div class="col-md-6">
+            <form id="creditCardForm" class="row g-6" method="POST" action="{{ url_for('users.settings_billing') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <div class="col-12 mb-2">
+                <div class="form-check form-check-inline my-2 ms-2 me-6">
+                  <input
+                    name="collapsible-payment"
+                    class="form-check-input"
+                    type="radio"
+                    value="credit_card"
+                    id="collapsible-payment-cc"
+                    checked />
+                  <label class="form-check-label" for="collapsible-payment-cc">Credit/Debit/ATM Card</label>
+                </div>
+                <div class="form-check form-check-inline ms-2 my-2">
+                  <input
+                    name="collapsible-payment"
+                    class="form-check-input"
+                    type="radio"
+                    value="paypal"
+                    id="collapsible-payment-cash" />
+                  <label class="form-check-label" for="collapsible-payment-cash">Paypal account</label>
+                </div>
+              </div>
+              <div class="col-12">
+                <label class="form-label w-100" for="paymentCard">Card Number</label>
+                <div class="input-group input-group-merge">
+                  <input
+                    id="paymentCard"
+                    name="paymentCard"
+                    class="form-control credit-card-mask"
+                    type="text"
+                    placeholder="1356 3215 6548 7898"
+                    aria-describedby="paymentCard2" />
+                  <span class="input-group-text cursor-pointer" id="paymentCard2">
+                    <span class="card-type"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="paymentName">Name</label>
+                <input type="text" id="paymentName" name="paymentName" class="form-control" placeholder="John Doe" />
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="paymentExpiryDate">Exp. Date</label>
+                <input
+                  type="text"
+                  id="paymentExpiryDate"
+                  name="paymentExpiryDate"
+                  class="form-control expiry-date-mask"
+                  placeholder="MM/YY" />
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="paymentCvv">CVV Code</label>
+                <div class="input-group input-group-merge">
+                  <input
+                    type="text"
+                    id="paymentCvv"
+                    name="paymentCvv"
+                    class="form-control cvv-code-mask"
+                    maxlength="3"
+                    placeholder="654" />
+                  <span class="input-group-text cursor-pointer" id="paymentCvv2">
+                    <i
+                      class="icon-base ti tabler-help-circle text-body-secondary"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Card Verification Value"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch ms-2 my-2">
+                  <input type="checkbox" class="form-check-input" id="future-billing" name="future-billing" />
+                  <label for="future-billing" class="switch-label">Save card for future billing?</label>
+                </div>
+              </div>
+              <div class="col-12 mt-6">
+                <button type="submit" class="btn btn-primary me-3">Save Changes</button>
+                <button type="reset" class="btn btn-label-secondary">Cancel</button>
+              </div>
+            </form>
+          </div>
+          <div class="col-md-6 mt-12 mt-md-0">
+            <h6 class="mb-6">My Cards</h6>
+            <div class="added-cards">
+              <div class="cardMaster p-6 bg-lighter rounded mb-6">
+                <div class="d-flex justify-content-between flex-sm-row flex-column">
+                  <div class="card-information me-2">
+                    <img
+                      class="mb-2"
+                      src="{{ url_for('static', filename='assets/img/icons/payments/mastercard.png') }}"
+                      alt="Master Card"
+                      style="height: 30px;" />
+                    <div class="d-flex align-items-center mb-2 flex-wrap gap-2">
+                      <h6 class="mb-0 me-2">{{ user.get_full_name() or user.username }}</h6>
+                      <span class="badge bg-label-primary">Primary</span>
+                    </div>
+                    <span class="card-number">&#8727;&#8727;&#8727;&#8727; &#8727;&#8727;&#8727;&#8727; 9856</span>
+                  </div>
+                  <div class="d-flex flex-column text-start text-lg-end">
+                    <div class="d-flex order-sm-0 order-1 mt-sm-0 mt-4">
+                      <button
+                        class="btn btn-sm btn-label-primary me-4"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editCCModal">
+                        Edit
+                      </button>
+                      <button class="btn btn-sm btn-label-danger">Delete</button>
+                    </div>
+                    <small class="mt-sm-4 mt-2 order-sm-1 order-0">Card expires at 12/26</small>
+                  </div>
+                </div>
+              </div>
+              <div class="cardMaster p-6 bg-lighter rounded">
+                <div class="d-flex justify-content-between flex-sm-row flex-column">
+                  <div class="card-information me-2">
+                    <img
+                      class="mb-2"
+                      src="{{ url_for('static', filename='assets/img/icons/payments/visa.png') }}"
+                      alt="Visa Card"
+                      style="height: 30px;" />
+                    <h6 class="mb-2">{{ user.get_full_name() or user.username }}</h6>
+                    <span class="card-number">&#8727;&#8727;&#8727;&#8727; &#8727;&#8727;&#8727;&#8727; 5896</span>
+                  </div>
+                  <div class="d-flex flex-column text-start text-lg-end">
+                    <div class="d-flex order-sm-0 order-1 mt-sm-0 mt-4">
+                      <button
+                        class="btn btn-sm btn-label-primary me-4"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editCCModal">
+                        Edit
+                      </button>
+                      <button class="btn btn-sm btn-label-danger">Delete</button>
+                    </div>
+                    <small class="mt-sm-4 mt-2 order-sm-1 order-0">Card expires at 10/27</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Credit Card Modal -->
+    <div class="modal fade" id="editCCModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-simple modal-add-new-cc">
+        <div class="modal-content">
+          <div class="modal-body">
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"></button>
+            <div class="text-center mb-6">
+              <h4 class="mb-2">Edit Card</h4>
+              <p class="text-body">Edit your saved card details</p>
+            </div>
+            <form id="editCCForm" class="row g-6" onsubmit="return false">
+              <div class="col-12">
+                <label class="form-label w-100" for="modalEditCard">Card Number</label>
+                <div class="input-group input-group-merge">
+                  <input
+                    id="modalEditCard"
+                    name="modalEditCard"
+                    class="form-control credit-card-mask"
+                    type="text"
+                    placeholder="1356 3215 6548 7898"
+                    aria-describedby="modalEditCard2" />
+                  <span class="input-group-text cursor-pointer" id="modalEditCard2">
+                    <span class="card-type"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="modalEditName">Name</label>
+                <input
+                  type="text"
+                  id="modalEditName"
+                  class="form-control"
+                  placeholder="John Doe" />
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="modalEditExpiryDate">Exp. Date</label>
+                <input
+                  type="text"
+                  id="modalEditExpiryDate"
+                  class="form-control expiry-date-mask"
+                  placeholder="MM/YY" />
+              </div>
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="modalEditCvv">CVV Code</label>
+                <div class="input-group input-group-merge">
+                  <input
+                    type="text"
+                    id="modalEditCvv"
+                    class="form-control cvv-code-mask"
+                    maxlength="3"
+                    placeholder="654" />
+                  <span class="input-group-text cursor-pointer" id="modalEditCvv2">
+                    <i
+                      class="icon-base ti tabler-help-circle text-body-secondary"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Card Verification Value"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch ms-2 my-2">
+                  <input type="checkbox" class="form-check-input" id="editFutureBilling" checked />
+                  <label for="editFutureBilling" class="switch-label">Save card for future billing?</label>
+                </div>
+              </div>
+              <div class="col-12 text-center">
+                <button type="submit" class="btn btn-primary me-3">Submit</button>
+                <button type="reset" class="btn btn-label-secondary" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h5 class="card-header">Billing Address</h5>
+      <div class="card-body">
+        <p class="text-body mb-0">No billing address on file.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

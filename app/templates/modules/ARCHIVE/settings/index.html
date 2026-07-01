@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Settings Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Settings Management</h1>
+                <div>
+                    <a href="{{ url_for('settings_web.create_setting') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Setting
+                    </a>
+                    <a href="{{ url_for('settings_web.bulk_edit') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Bulk Edit
+                    </a>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search_term }}" placeholder="Search settings...">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.name }}" 
+                                        {% if selected_category == category.name %}selected{% endif %}>
+                                    {{ category.display_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <a href="{{ url_for('settings_web.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Settings by Category -->
+            {% for category_name, category_data in settings_by_category.items() %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder"></i> {{ category_data.category.display_name }}
+                        <span class="badge bg-secondary ms-2">{{ category_data.settings|length }}</span>
+                    </h5>
+                    {% if category_data.category.description %}
+                    <small class="text-muted">{{ category_data.category.description }}</small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Key</th>
+                                    <th>Type</th>
+                                    <th>Current Value</th>
+                                    <th>Required</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for setting in category_data.settings %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ setting.name }}</strong>
+                                        {% if setting.description %}
+                                        <br><small class="text-muted">{{ setting.description }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code>{{ setting.key }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ setting.data_type }}</span>
+                                    </td>
+                                    <td>
+                                        {% if setting.is_encrypted %}
+                                        <span class="text-muted">••••••••</span>
+                                        {% else %}
+                                        <code>{{ setting.get_typed_value() or 'Not set' }}</code>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if setting.is_required %}
+                                        <span class="badge bg-warning">Required</span>
+                                        {% else %}
+                                        <span class="text-muted">Optional</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if setting.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('settings_web.view_setting', key=setting.key) }}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if not setting.is_readonly %}
+                                            <a href="{{ url_for('settings_web.edit_setting', key=setting.key) }}" 
+                                               class="btn btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Uncategorized Settings -->
+            {% if uncategorized %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle"></i> Uncategorized Settings
+                        <span class="badge bg-secondary ms-2">{{ uncategorized|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Key</th>
+                                    <th>Type</th>
+                                    <th>Current Value</th>
+                                    <th>Required</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for setting in uncategorized %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ setting.name }}</strong>
+                                        {% if setting.description %}
+                                        <br><small class="text-muted">{{ setting.description }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code>{{ setting.key }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ setting.data_type }}</span>
+                                    </td>
+                                    <td>
+                                        {% if setting.is_encrypted %}
+                                        <span class="text-muted">••••••••</span>
+                                        {% else %}
+                                        <code>{{ setting.get_typed_value() or 'Not set' }}</code>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if setting.is_required %}
+                                        <span class="badge bg-warning">Required</span>
+                                        {% else %}
+                                        <span class="text-muted">Optional</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if setting.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('settings_web.view_setting', key=setting.key) }}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if not setting.is_readonly %}
+                                            <a href="{{ url_for('settings_web.edit_setting', key=setting.key) }}" 
+                                               class="btn btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Empty State -->
+            {% if not settings_by_category and not uncategorized %}
+            <div class="text-center py-5">
+                <i class="fas fa-cog fa-3x text-muted mb-3"></i>
+                <h4>No Settings Found</h4>
+                <p class="text-muted">No settings match your search criteria.</p>
+                <a href="{{ url_for('settings_web.create_setting') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create First Setting
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

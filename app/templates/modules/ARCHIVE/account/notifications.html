@@ -1,0 +1,84 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Notifications - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Notifications</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage your notification preferences
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Email Notifications</h3>
+        </div>
+        <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+            <label class="kt-label">
+                <input class="kt-checkbox" type="checkbox" checked/>
+                <span class="kt-checkbox-label">
+                    <span class="text-sm font-semibold text-mono">Security alerts</span>
+                    <span class="text-xs text-secondary-foreground block">Receive emails about important security events</span>
+                </span>
+            </label>
+            
+            <label class="kt-label">
+                <input class="kt-checkbox" type="checkbox" checked/>
+                <span class="kt-checkbox-label">
+                    <span class="text-sm font-semibold text-mono">Account updates</span>
+                    <span class="text-xs text-secondary-foreground block">Get notified about changes to your account</span>
+                </span>
+            </label>
+            
+            <label class="kt-label">
+                <input class="kt-checkbox" type="checkbox"/>
+                <span class="kt-checkbox-label">
+                    <span class="text-sm font-semibold text-mono">Marketing emails</span>
+                    <span class="text-xs text-secondary-foreground block">Receive updates about new features and offers</span>
+                </span>
+            </label>
+            
+            <label class="kt-label">
+                <input class="kt-checkbox" type="checkbox" checked/>
+                <span class="kt-checkbox-label">
+                    <span class="text-sm font-semibold text-mono">Weekly digest</span>
+                    <span class="text-xs text-secondary-foreground block">Get a weekly summary of your activity</span>
+                </span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="kt-card mt-5">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Push Notifications</h3>
+        </div>
+        <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+            <label class="kt-label">
+                <input class="kt-checkbox" type="checkbox" checked/>
+                <span class="kt-checkbox-label">
+                    <span class="text-sm font-semibold text-mono">Browser notifications</span>
+                    <span class="text-xs text-secondary-foreground block">Receive push notifications in your browser</span>
+                </span>
+            </label>
+            
+            <label class="kt-label">
+                <input class="kt-checkbox" type="checkbox"/>
+                <span class="kt-checkbox-label">
+                    <span class="text-sm font-semibold text-mono">Desktop notifications</span>
+                    <span class="text-xs text-secondary-foreground block">Show notifications on your desktop</span>
+                </span>
+            </label>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}{{ module_name }} Settings{% endblock %}
+
+{% block extra_head %}
+<style>
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .settings-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    .settings-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .settings-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.25rem;
+    }
+    .settings-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+    .settings-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0.25rem 0 0 0;
+    }
+    .setting-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+    .setting-info {
+        flex: 1;
+    }
+    .setting-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin: 0;
+    }
+    .setting-description {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin: 0.25rem 0 0 0;
+    }
+    .setting-control {
+        margin-left: 1rem;
+    }
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #3b82f6;
+    }
+    input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .status-enabled { background: #dcfce7; color: #166534; }
+    .status-disabled { background: #fef2f2; color: #991b1b; }
+    .status-warning { background: #fef3c7; color: #92400e; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:text-3xl sm:truncate">
+                    {{ module_name }} Settings
+                </h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Configure {{ module_name.lower() }} module settings and preferences
+                </p>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4">
+                <a href="{{ url_for('settings_web.dashboard') }}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Settings
+                </a>
+            </div>
+        </div>
+
+        <!-- Module Status Overview -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-8">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="settings-icon" style="background: {{ module_color }};">
+                            <i class="{{ module_icon }} text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ module_name }} Module</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ module_description }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="status-badge {% if module_enabled %}status-enabled{% else %}status-disabled{% endif %}">
+                            {% if module_enabled %}Enabled{% else %}Disabled{% endif %}
+                        </span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" {% if module_enabled %}checked{% endif %} id="module-toggle">
+                            <label for="module-toggle" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Grid -->
+        <div class="settings-grid">
+            <!-- General Settings -->
+            <div class="settings-card">
+                <div class="settings-header">
+                    <div class="settings-icon" style="background: #e0e7ff;">
+                        <i class="fas fa-cog text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="settings-title">General Settings</h3>
+                        <p class="settings-description">Basic module configuration</p>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Auto-save Changes</h4>
+                        <p class="setting-description">Automatically save changes without confirmation</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" checked id="auto-save">
+                            <label for="auto-save" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Show Notifications</h4>
+                        <p class="setting-description">Display success and error notifications</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" checked id="notifications">
+                            <label for="notifications" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Enable Debug Mode</h4>
+                        <p class="setting-description">Show detailed error messages and logs</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="debug-mode">
+                            <label for="debug-mode" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="settings-card">
+                <div class="settings-header">
+                    <div class="settings-icon" style="background: #fef2f2;">
+                        <i class="fas fa-shield-alt text-red-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="settings-title">Security Settings</h3>
+                        <p class="settings-description">Security and access control</p>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Require Authentication</h4>
+                        <p class="setting-description">Force users to log in before accessing this module</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" checked id="require-auth">
+                            <label for="require-auth" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Enable Rate Limiting</h4>
+                        <p class="setting-description">Limit requests per user to prevent abuse</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" checked id="rate-limiting">
+                            <label for="rate-limiting" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Log All Activities</h4>
+                        <p class="setting-description">Record all user activities for audit purposes</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="activity-logging">
+                            <label for="activity-logging" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Settings -->
+            <div class="settings-card">
+                <div class="settings-header">
+                    <div class="settings-icon" style="background: #f0fdf4;">
+                        <i class="fas fa-tachometer-alt text-green-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="settings-title">Performance Settings</h3>
+                        <p class="settings-description">Optimize module performance</p>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Enable Caching</h4>
+                        <p class="setting-description">Cache frequently accessed data</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" checked id="caching">
+                            <label for="caching" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Lazy Loading</h4>
+                        <p class="setting-description">Load data only when needed</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" checked id="lazy-loading">
+                            <label for="lazy-loading" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Background Processing</h4>
+                        <p class="setting-description">Process heavy tasks in the background</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="background-processing">
+                            <label for="background-processing" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integration Settings -->
+            <div class="settings-card">
+                <div class="settings-header">
+                    <div class="settings-icon" style="background: #fef3c7;">
+                        <i class="fas fa-plug text-yellow-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="settings-title">Integration Settings</h3>
+                        <p class="setting-description">External service connections</p>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">API Integration</h4>
+                        <p class="setting-description">Enable external API connections</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="api-integration">
+                            <label for="api-integration" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Webhook Support</h4>
+                        <p class="setting-description">Send notifications to external services</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="webhook-support">
+                            <label for="webhook-support" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4 class="setting-name">Third-party Sync</h4>
+                        <p class="setting-description">Synchronize data with external systems</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="third-party-sync">
+                            <label for="third-party-sync" class="slider"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Changes Button -->
+        <div class="flex justify-end space-x-4">
+            <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-undo mr-2"></i>
+                Reset to Defaults
+            </button>
+            <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-save mr-2"></i>
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Settings - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Settings</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage your account settings
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+        <!-- Settings Sidebar -->
+        <div class="kt-card lg:col-span-1">
+            <div class="kt-card-content p-0">
+                <nav class="flex flex-col">
+                    <a href="{{ safe_url_for('account.user_profile') }}" class="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-accent/30">
+                        <i class="ki-filled ki-user text-lg text-muted-foreground"></i>
+                        <span class="text-sm font-medium text-foreground">Profile</span>
+                    </a>
+                    <a href="{{ safe_url_for('account.security_overview') }}" class="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-accent/30">
+                        <i class="ki-filled ki-shield-check text-lg text-muted-foreground"></i>
+                        <span class="text-sm font-medium text-foreground">Security</span>
+                    </a>
+                    <a href="{{ safe_url_for('account.billing_basic') }}" class="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-accent/30">
+                        <i class="ki-filled ki-wallet text-lg text-muted-foreground"></i>
+                        <span class="text-sm font-medium text-foreground">Billing</span>
+                    </a>
+                    <a href="{{ safe_url_for('account.notifications') }}" class="flex items-center gap-3 px-4 py-3 hover:bg-accent/30">
+                        <i class="ki-filled ki-notification-status text-lg text-muted-foreground"></i>
+                        <span class="text-sm font-medium text-foreground">Notifications</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Settings Content -->
+        <div class="kt-card lg:col-span-3">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Account Settings</h3>
+            </div>
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <form class="flex flex-col gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">First Name</label>
+                            <input class="kt-input" type="text" value="{{ current_user.first_name if current_user.first_name else '' }}"/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="kt-form-label">Last Name</label>
+                            <input class="kt-input" type="text" value="{{ current_user.last_name if current_user.last_name else '' }}"/>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1">
+                        <label class="kt-form-label">Email</label>
+                        <input class="kt-input" type="email" value="{{ get_user_email() }}" readonly/>
+                    </div>
+                    
+                    <div class="flex justify-end gap-2.5 pt-4 border-t border-border">
+                        <button class="kt-btn kt-btn-outline" type="button">Cancel</button>
+                        <button class="kt-btn kt-btn-primary" type="submit">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

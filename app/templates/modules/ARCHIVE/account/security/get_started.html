@@ -1,0 +1,78 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Security - Get Started - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Security - Get Started</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Set up your account security
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-content flex flex-col gap-5 p-5 lg:p-7.5">
+            <div class="flex flex-col gap-2">
+                <h3 class="text-lg font-semibold text-mono">Secure Your Account</h3>
+                <p class="text-sm text-secondary-foreground">Follow these steps to enhance your account security.</p>
+            </div>
+            
+            <!-- Security Steps -->
+            <div class="flex flex-col gap-4">
+                <!-- Step 1 -->
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <i class="ki-filled ki-lock text-primary"></i>
+                        </div>
+                        <div class="w-px h-full bg-border mt-2"></div>
+                    </div>
+                    <div class="flex flex-col gap-2 pb-4">
+                        <h4 class="text-sm font-semibold text-mono">Enable Two-Factor Authentication</h4>
+                        <p class="text-sm text-secondary-foreground">Add an extra layer of security to your account</p>
+                        <a href="{{ safe_url_for('account.security_overview') }}" class="kt-btn kt-btn-sm kt-btn-outline w-fit">Enable 2FA</a>
+                    </div>
+                </div>
+                
+                <!-- Step 2 -->
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <i class="ki-filled ki-key text-muted-foreground"></i>
+                        </div>
+                        <div class="w-px h-full bg-border mt-2"></div>
+                    </div>
+                    <div class="flex flex-col gap-2 pb-4">
+                        <h4 class="text-sm font-semibold text-mono">Review Active Sessions</h4>
+                        <p class="text-sm text-secondary-foreground">Check and manage devices logged into your account</p>
+                        <a href="{{ safe_url_for('account.security_current_sessions') }}" class="kt-btn kt-btn-sm kt-btn-outline w-fit">View Sessions</a>
+                    </div>
+                </div>
+                
+                <!-- Step 3 -->
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <i class="ki-filled ki-shield-check text-muted-foreground"></i>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <h4 class="text-sm font-semibold text-mono">Set Up Recovery Options</h4>
+                        <p class="text-sm text-secondary-foreground">Configure backup and recovery settings</p>
+                        <a href="{{ safe_url_for('account.security_backup_recovery') }}" class="kt-btn kt-btn-sm kt-btn-outline w-fit">Configure</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Role - Admin - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+  <div class="col-lg-8 offset-lg-2">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="mb-0">
+        <i class="ti ti-users-group me-2"></i>
+        Edit Role
+      </h4>
+      <a href="{{ url_for('admin.role_view', role_id=role.id) }}" class="btn btn-label-secondary">
+        <i class="ti ti-arrow-left me-1"></i>
+        Back to Role
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.role_edit', role_id=role.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          
+          <div class="mb-3">
+            <label class="form-label">Role Name</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              value="{{ role.name }}"
+              disabled>
+            <div class="form-text">Role name cannot be changed</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="display_name" class="form-label">Display Name <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="display_name" 
+              name="display_name" 
+              value="{{ role.display_name }}"
+              required>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea 
+              class="form-control" 
+              id="description" 
+              name="description" 
+              rows="3">{{ role.description or '' }}</textarea>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="priority" class="form-label">Priority</label>
+              <input 
+                type="number" 
+                class="form-control" 
+                id="priority" 
+                name="priority" 
+                value="{{ role.priority }}"
+                min="0"
+                max="100">
+              <div class="form-text">Higher priority roles appear first (0-100)</div>
+            </div>
+            <div class="col-md-6">
+              <label for="is_active" class="form-label">Status</label>
+              <select class="form-select" id="is_active" name="is_active">
+                <option value="1" {% if role.is_active %}selected{% endif %}>Active</option>
+                <option value="0" {% if not role.is_active %}selected{% endif %}>Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          {% if role.is_system_role %}
+          <div class="alert alert-warning">
+            <i class="ti ti-alert-triangle me-2"></i>
+            This is a system role. Some fields cannot be modified.
+          </div>
+          {% endif %}
+
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('admin.role_view', role_id=role.id) }}" class="btn btn-label-secondary">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="ti ti-check me-1"></i>
+              Update Role
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+{% endblock %}

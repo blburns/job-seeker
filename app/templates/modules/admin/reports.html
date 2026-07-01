@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Admin - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.report-card { transition: box-shadow 0.2s; }
+.report-card:hover { box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.08); }
+.report-metric { font-size: 1.25rem; font-weight: 600; }
+.report-table th { font-weight: 500; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h4 class="mb-0">
+          <i class="ti ti-report-analytics me-2"></i>
+          Reports
+        </h4>
+        <div class="d-flex align-items-center gap-2">
+          <form method="get" action="{{ url_for('admin.reports') }}" class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 text-nowrap">Period</label>
+            <select name="period" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+              <option value="7" {{ 'selected' if period == 7 else '' }}>Last 7 days</option>
+              <option value="30" {{ 'selected' if period == 30 else '' }}>Last 30 days</option>
+              <option value="90" {{ 'selected' if period == 90 else '' }}>Last 90 days</option>
+            </select>
+          </form>
+          <a href="{{ url_for('admin.dashboard') }}" class="btn btn-label-secondary">
+            <i class="ti ti-arrow-left me-1"></i>
+            Back to Dashboard
+          </a>
+        </div>
+      </div>
+
+      {% set r = report %}
+      {% if not r %}
+      <div class="alert alert-warning">Report data could not be loaded.</div>
+      {% else %}
+
+      <!-- User Activity Report -->
+      <div class="card report-card mb-4">
+        <div class="card-header d-flex align-items-center">
+          <i class="ti ti-users me-2 text-primary"></i>
+          <h5 class="mb-0">User Activity</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3 col-6">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Total users</span>
+                <span class="report-metric">{{ r.users.total|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Active</span>
+                <span class="report-metric text-success">{{ r.users.active|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">New signups ({{ period }}d)</span>
+                <span class="report-metric text-info">{{ r.signups.total|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-3 col-6">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Avg signups/day</span>
+                <span class="report-metric">{{ r.signups.average_daily|default(0) }}</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-muted small mb-0 mt-2">
+            Verified: {{ r.users.verified|default(0) }} · With 2FA: {{ r.users.with_2fa|default(0) }} ({{ r.users['2fa_percentage']|default(0) }}%)
+          </p>
+        </div>
+      </div>
+
+      <!-- Sessions Report -->
+      <div class="card report-card mb-4">
+        <div class="card-header d-flex align-items-center">
+          <i class="ti ti-device-desktop me-2 text-success"></i>
+          <h5 class="mb-0">Sessions</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Active sessions</span>
+                <span class="report-metric text-success">{{ r.sessions.active|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Total sessions</span>
+                <span class="report-metric">{{ r.sessions.total|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Expired</span>
+                <span class="report-metric text-muted">{{ r.sessions.expired|default(0)|int }}</span>
+              </div>
+            </div>
+          </div>
+          {% if r.sessions.by_device and r.sessions.by_device.items() %}
+          <p class="text-muted small mb-0 mt-2">
+            By device: {% for device, count in r.sessions.by_device.items() %}{{ device }}: {{ count }}{% if not loop.last %} · {% endif %}{% endfor %}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Email Report -->
+      <div class="card report-card mb-4">
+        <div class="card-header d-flex align-items-center">
+          <i class="ti ti-mail me-2 text-info"></i>
+          <h5 class="mb-0">Email (last 7 days)</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Total</span>
+                <span class="report-metric">{{ r.emails.total|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Sent</span>
+                <span class="report-metric text-success">{{ r.emails.sent|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Delivered</span>
+                <span class="report-metric">{{ r.emails.delivered|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Failed</span>
+                <span class="report-metric text-danger">{{ r.emails.failed|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Bounced</span>
+                <span class="report-metric text-warning">{{ r.emails.bounced|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Success rate</span>
+                <span class="report-metric">{{ r.emails.success_rate|default(0) }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Report -->
+      <div class="card report-card mb-4">
+        <div class="card-header d-flex align-items-center">
+          <i class="ti ti-shield-lock me-2 text-warning"></i>
+          <h5 class="mb-0">Security – Failed logins ({{ period }}d)</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Failed login attempts</span>
+                <span class="report-metric {{ 'text-danger' if r.security.failed_login_count > 0 else 'text-muted' }}">{{ r.security.failed_login_count|default(0)|int }}</span>
+              </div>
+            </div>
+          </div>
+          {% if r.security.failed_recent and r.security.failed_recent|length > 0 %}
+          <div class="table-responsive mt-3">
+            <table class="table table-sm report-table">
+              <thead>
+                <tr>
+                  <th>User / Email</th>
+                  <th>IP</th>
+                  <th>Reason</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in r.security.failed_recent %}
+                <tr>
+                  <td><code>{{ f.username_or_email|e }}</code></td>
+                  <td><small>{{ f.ip_address|e }}</small></td>
+                  <td><span class="badge bg-label-danger">{{ f.reason|e }}</span></td>
+                  <td><small>{{ f.attempted_at[:19] if f.attempted_at else '—' }}</small></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p class="text-muted small mb-0 mt-2">No recent failed login attempts.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- RBAC Report -->
+      <div class="card report-card mb-4">
+        <div class="card-header d-flex align-items-center">
+          <i class="ti ti-key me-2 text-secondary"></i>
+          <h5 class="mb-0">Roles & Permissions</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Permissions</span>
+                <span class="report-metric">{{ r.rbac.total_permissions|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Active permissions</span>
+                <span class="report-metric text-success">{{ r.rbac.active_permissions|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Roles</span>
+                <span class="report-metric">{{ r.rbac.total_roles|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Active roles</span>
+                <span class="report-metric text-success">{{ r.rbac.active_roles|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Assignments</span>
+                <span class="report-metric">{{ r.rbac.total_assignments|default(0)|int }}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-4">
+              <div class="border rounded p-3">
+                <span class="d-block text-muted small">Expired assignments</span>
+                <span class="report-metric text-warning">{{ r.rbac.expired_assignments|default(0)|int }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User growth (optional summary) -->
+      {% if r.user_growth and r.user_growth|length > 0 %}
+      <div class="card report-card mb-4">
+        <div class="card-header d-flex align-items-center">
+          <i class="ti ti-chart-line me-2 text-primary"></i>
+          <h5 class="mb-0">User growth (last {{ r.user_growth|length }} month(s))</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm report-table">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>New users</th>
+                  <th>Total (cumulative)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in r.user_growth %}
+                <tr>
+                  <td>{{ row.month }}</td>
+                  <td>{{ row.new_users|int }}</td>
+                  <td>{{ row.total_users|int }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <p class="text-muted small mb-0">
+        <i class="ti ti-clock me-1"></i>
+        Report generated {{ report.timestamp[:19] if report.timestamp else '—' }} UTC
+      </p>
+
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+<!-- Vuexy Sidebar Component -->
+<aside id="layout-menu" class="layout-menu menu-vertical menu">
+  <div class="app-brand demo">
+    <a href="{{ url_for('main.index') }}" class="app-brand-link">
+      <span class="app-brand-logo demo">
+        <span class="text-primary">
+          <svg width="32" height="22" viewBox="0 0 32 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M0.00172773 0V6.85398C0.00172773 6.85398 -0.133178 9.01207 1.98092 10.8388L13.6912 21.9964L19.7809 21.9181L18.8042 9.88248L16.4951 7.17289L9.23799 0H0.00172773Z"
+              fill="currentColor" />
+            <path
+              opacity="0.06"
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M7.69824 16.4364L12.5199 3.23696L16.5541 7.25596L7.69824 16.4364Z"
+              fill="#161616" />
+            <path
+              opacity="0.06"
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M8.07751 15.9175L13.9419 4.63989L16.5849 7.28475L8.07751 15.9175Z"
+              fill="#161616" />
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M7.77295 16.3566L23.6563 0H32V6.88383C32 6.88383 31.8262 9.17836 30.6591 10.4057L19.7824 22H13.6938L7.77295 16.3566Z"
+              fill="currentColor" />
+          </svg>
+        </span>
+      </span>
+      <span class="app-brand-text demo menu-text fw-bold ms-3">{{ config.get('APP_NAME', 'Vuexy') }}</span>
+    </a>
+
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+      <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
+      <i class="icon-base ti tabler-x d-block d-xl-none"></i>
+    </a>
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+
+  {% set current_endpoint = current_request_endpoint|default(request.endpoint|default('')) %}
+  <ul class="menu-inner py-1">
+    {% for section in menu_sections %}
+      {% set section_modules = modules_by_section.get(section.name, []) %}
+      {% if section.name == 'account' and not current_user.is_authenticated %}{% set section_modules = [] %}{% endif %}
+      {% if section_modules %}
+        <!-- Section Header -->
+        {% if section.display_name %}
+        <li class="menu-header small">
+          <span class="menu-header-text">{{ section.display_name }}</span>
+        </li>
+        {% endif %}
+        
+        <!-- Section Modules -->
+        {% for module in section_modules %}
+          {% if module.children %}
+            {% set ns = namespace(module_active=false, child_active=false) %}
+            {% for child in module.children %}
+              {% if child.get('children') %}
+                {% for grandchild in child.children %}
+                  {% set gc_bp = grandchild.blueprint_name if grandchild.blueprint_name else (child.blueprint_name if child.blueprint_name else module.blueprint_name) %}
+                  {% set gc_ep = gc_bp + '.' + grandchild.route %}
+                  {% if current_endpoint == gc_ep %}
+                    {% set ns.module_active = true %}
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                {% set child_bp = child.blueprint_name if child.blueprint_name else module.blueprint_name %}
+                {% set child_ep = child_bp + '.' + child.route %}
+                {% if current_endpoint == child_ep %}
+                  {% set ns.module_active = true %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            <!-- Module with Children (Accordion) -->
+            <li class="menu-item{% if ns.module_active %} active open{% endif %}">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                {% if module_icons and module.icon in module_icons %}
+                  <span class="menu-icon icon-base">{{ module_icons[module.icon]|safe }}</span>
+                {% else %}
+                  <i class="menu-icon icon-base ti ti-circle"></i>
+                {% endif %}
+                <div data-i18n="{{ module.display_name }}">{{ module.display_name }}</div>
+              </a>
+              <ul class="menu-sub">
+                {% for child in module.children %}
+                  {% if child.get('children') %}
+                    {% set ns = namespace(child_active=false) %}
+                    {% for grandchild in child.children %}
+                      {% set gc_bp = grandchild.blueprint_name if grandchild.blueprint_name else (child.blueprint_name if child.blueprint_name else module.blueprint_name) %}
+                      {% set gc_ep = gc_bp + '.' + grandchild.route %}
+                      {% if current_endpoint == gc_ep %}
+                        {% set ns.child_active = true %}
+                      {% endif %}
+                    {% endfor %}
+                    <!-- Child with Grandchildren (Nested) -->
+                    <li class="menu-item{% if ns.child_active %} active open{% endif %}">
+                      <a href="javascript:void(0);" class="menu-link menu-toggle">
+                        <div data-i18n="{{ child.display_name }}">{{ child.display_name }}</div>
+                      </a>
+                      <ul class="menu-sub">
+                        {% for grandchild in child.children %}
+                          {% set gc_bp = grandchild.blueprint_name if grandchild.blueprint_name else (child.blueprint_name if child.blueprint_name else module.blueprint_name) %}
+                          {% set gc_endpoint = gc_bp + '.' + grandchild.route %}
+                          {% set gc_url = safe_url_for(gc_endpoint) %}
+                          {# User-view tabs need user_id: use viewed user if on a user view page, else current user #}
+                          {% if gc_bp == 'users' and grandchild.route.startswith('view_user_') %}
+                            {% set _uid = user.id if (user is defined and user.id is defined) else (current_user.id if current_user.is_authenticated else none) %}
+                            {% set gc_href = url_for(gc_endpoint, user_id=_uid) if _uid else url_for(gc_bp + '.list_users') %}
+                          {% else %}
+                            {% set gc_href = gc_url if gc_url != '#' else '#' %}
+                          {% endif %}
+                          <li class="menu-item{% if current_endpoint == gc_endpoint %} active{% endif %}">
+                            <a href="{{ gc_href }}" class="menu-link">
+                              <div data-i18n="{{ grandchild.display_name }}">{{ grandchild.display_name }}</div>
+                            </a>
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    </li>
+                  {% else %}
+                    <!-- Simple Child Link -->
+                    {% set child_bp = child.blueprint_name if child.blueprint_name else module.blueprint_name %}
+                    {% set child_endpoint = child_bp + '.' + child.route %}
+                    {% set child_url = safe_url_for(child_endpoint) %}
+                    <li class="menu-item{% if current_endpoint == child_endpoint %} active{% endif %}">
+                      <a href="{{ child_url if child_url != '#' else '#' }}" class="menu-link">
+                        <div data-i18n="{{ child.display_name }}">{{ child.display_name }}</div>
+                      </a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            </li>
+          {% else %}
+            <!-- Simple Module Link (No Children) -->
+            {% set endpoint = module.blueprint_name + '.' + module.route if module.route else None %}
+            {% set module_url = safe_url_for(endpoint) if endpoint else '#' %}
+            <li class="menu-item{% if current_endpoint == endpoint %} active{% endif %}">
+              <a href="{{ module_url }}" class="menu-link">
+                {% if module_icons and module.icon in module_icons %}
+                  <span class="menu-icon icon-base">{{ module_icons[module.icon]|safe }}</span>
+                {% else %}
+                  <i class="menu-icon icon-base ti ti-circle"></i>
+                {% endif %}
+                <div data-i18n="{{ module.display_name }}">{{ module.display_name }}</div>
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  </ul>
+</aside>

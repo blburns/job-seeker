@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}User Permission Inspector{% endblock %}
+
+{% block extra_head %}
+<style>
+    .permission-matrix {
+        overflow-x: auto;
+    }
+    .permission-cell {
+        text-align: center;
+        min-width: 100px;
+    }
+    .granted {
+        background-color: #10b981;
+        color: white;
+    }
+    .denied {
+        background-color: #ef4444;
+        color: white;
+    }
+    .neutral {
+        background-color: #6b7280;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">User Permission Inspector</h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Select a user to view their comprehensive permissions</p>
+        </div>
+
+        <!-- User Selection Form -->
+        <div class="card mb-8">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('settings_web.inspect_permissions') }}" class="flex items-end gap-4">
+                    <div class="flex-1">
+                        <label for="user_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Select User
+                        </label>
+                        <select name="user_id" id="user_id" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                            <option value="">-- Select a user --</option>
+                            {% for user in all_users %}
+                            <option value="{{ user.id }}" {% if selected_user and selected_user.id == user.id %}selected{% endif %}>
+                                {{ user.username }} ({{ user.email }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Inspect
+                    </button>
+                    <a href="{{ url_for('settings_web.permissions') }}" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+                        Back to Permissions
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        {% if selected_user %}
+        <!-- User Information -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- User Details -->
+            <div class="card lg:col-span-1">
+                <div class="card-header">
+                    <h2 class="text-xl font-semibold">User Information</h2>
+                </div>
+                <div class="card-body space-y-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Username</label>
+                        <p class="text-lg font-medium text-gray-900 dark:text-white">
+                            {{ permissions_data.user_info.username }}
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</label>
+                        <p class="text-lg font-medium text-gray-900 dark:text-white">
+                            {{ permissions_data.user_info.email }}
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Display Name</label>
+                        <p class="text-lg font-medium text-gray-900 dark:text-white">
+                            {{ permissions_data.user_info.display_name or 'N/A' }}
+                        </p>
+                    </div>
+                    <div class="flex gap-2">
+                        {% if permissions_data.user_info.is_superadmin %}
+                        <span class="px-2 py-1 bg-red-600 text-white rounded text-sm">Super Admin</span>
+                        {% elif permissions_data.user_info.is_admin %}
+                        <span class="px-2 py-1 bg-orange-600 text-white rounded text-sm">Admin</span>
+                        {% endif %}
+                        {% if permissions_data.user_info.is_active %}
+                        <span class="px-2 py-1 bg-green-600 text-white rounded text-sm">Active</span>
+                        {% else %}
+                        <span class="px-2 py-1 bg-gray-600 text-white rounded text-sm">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Roles -->
+            <div class="card lg:col-span-2">
+                <div class="card-header">
+                    <h2 class="text-xl font-semibold">Direct Roles</h2>
+                </div>
+                <div class="card-body">
+                    {% if permissions_data.roles %}
+                    <div class="space-y-3">
+                        {% for role in permissions_data.roles %}
+                        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 dark:text-white">{{ role.display_name }}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ role.name }}</p>
+                                </div>
+                                <span class="px-2 py-1 bg-blue-600 text-white rounded text-sm">Direct Role</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 dark:text-gray-400">No direct roles assigned</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Groups -->
+            <div class="card lg:col-span-3">
+                <div class="card-header">
+                    <h2 class="text-xl font-semibold">Group Memberships</h2>
+                </div>
+                <div class="card-body">
+                    {% if permissions_data.groups %}
+                    <div class="space-y-4">
+                        {% for group in permissions_data.groups %}
+                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <div class="mb-3">
+                                <h3 class="font-semibold text-gray-900 dark:text-white">{{ group.display_name }}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ group.name }}</p>
+                            </div>
+                            {% if group.roles %}
+                            <div class="ml-6 space-y-2">
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Group Roles:</p>
+                                {% for role in group.roles %}
+                                <div class="p-2 bg-blue-50 dark:bg-blue-900 rounded">
+                                    <span class="font-semibold text-gray-900 dark:text-white">{{ role.display_name }}</span>
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">({{ role.name }})</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 dark:text-gray-400">No group memberships</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Effective Permissions Matrix -->
+        {% if permissions_data.effective_permissions %}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-xl font-semibold">Effective Permissions Matrix</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400">All permissions this user has access to</p>
+            </div>
+            <div class="card-body">
+                <div class="permission-matrix overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider sticky left-0 bg-gray-50 dark:bg-gray-800 z-10">
+                                    Permission
+                                </th>
+                                {% for action in ['create', 'read', 'update', 'delete', 'manage', 'view'] %}
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    {{ action }}
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                            {% for module, actions in permissions_data.effective_permissions.items() %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white sticky left-0 bg-white dark:bg-gray-900 z-10">
+                                    <div class="flex items-center">
+                                        <span class="inline-block w-3 h-3 rounded-full mr-2 bg-blue-500"></span>
+                                        {{ module }}
+                                    </div>
+                                </td>
+                                {% for action in ['create', 'read', 'update', 'delete', 'manage', 'view'] %}
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    {% if actions.get(action) %}
+                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                        ✓ Granted
+                                    </span>
+                                    {% else %}
+                                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                                        —
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- No User Selected -->
+        <div class="card">
+            <div class="card-body text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Select a User</h3>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">Use the dropdown above to select a user and view their permissions</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

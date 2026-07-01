@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ module_name }} Status{% endblock %}
+
+{% block extra_head %}
+<style>
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .status-healthy {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    
+    .status-warning {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-inactive {
+        background-color: #e5e7eb;
+        color: #374151;
+    }
+    
+    .status-error {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ module_name }} Status</h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">System health and statistics for the {{ module_name }} module</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{{ url_for('contacts.dashboard') }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overall Status -->
+        <div class="mb-8">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Module Status</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Last updated: {{ status_data.last_updated[:16] if status_data.last_updated else 'Unknown' }}
+                        </p>
+                    </div>
+                    <div>
+                        <span class="status-indicator status-{{ status_data.health or 'error' }}">
+                            {{ (status_data.health or 'error').title() }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        {% if status_data.statistics %}
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Statistics</h3>
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {% for key, value in status_data.statistics.items() %}
+                <div class="stat-card">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                    {{ key.replace('_', ' ').title() }}
+                                </dt>
+                                <dd class="text-lg font-medium text-gray-900 dark:text-white">
+                                    {% if value is number %}
+                                        {{ "{:,}".format(value) }}
+                                    {% else %}
+                                        {{ value }}
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Error Display -->
+        {% if status_data.error %}
+        <div class="mb-8">
+            <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-6">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div class="ml-3">
+                        <h3 class="text-lg font-semibold text-red-900 dark:text-red-300">Error</h3>
+                        <p class="mt-2 text-sm text-red-700 dark:text-red-400">{{ status_data.error }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

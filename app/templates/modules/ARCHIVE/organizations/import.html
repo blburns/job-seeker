@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Import Organizations{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Import Organizations</h2>
+            <p class="mt-1 text-sm text-gray-500">Import organizations from CSV file</p>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <div>
+                        <label for="file" class="block text-sm font-medium">CSV File</label>
+                        <input type="file" name="file" id="file" accept=".csv" required class="mt-1 block w-full">
+                        <p class="mt-1 text-xs text-gray-500">Upload a CSV file with organization data</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="submit" class="btn btn-primary">Import Organizations</button>
+                        <a href="{{ url_for('organizations.list_items') }}" class="btn btn-outline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

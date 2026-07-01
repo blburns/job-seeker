@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Email Templates - Admin - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h4 class="mb-0">
+          <i class="ti ti-mail me-2"></i>
+          Email Templates
+        </h4>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('admin.email_template_create') }}" class="btn btn-primary">
+            <i class="ti ti-plus me-1"></i>
+            Create template
+          </a>
+          <a href="{{ url_for('admin.email_logs') }}" class="btn btn-label-secondary">
+            <i class="ti ti-list me-1"></i>
+            Email Logs
+          </a>
+          <a href="{{ url_for('admin.dashboard') }}" class="btn btn-label-secondary">
+            <i class="ti ti-arrow-left me-1"></i>
+            Back to Dashboard
+          </a>
+        </div>
+      </div>
+
+      <div class="alert alert-info mb-4">
+        <i class="ti ti-info-circle me-2"></i>
+        Templates are stored under <code>app/templates/emails/</code>. Use <strong>Create template</strong> to add a new file or <strong>Edit</strong> to change an existing one. Preview uses sample data only.
+      </div>
+
+      <div class="card">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <i class="ti ti-file-text me-2"></i>
+            Available templates
+          </h5>
+          <span class="badge bg-label-primary">{{ template_list|length }} template(s)</span>
+        </div>
+        <div class="card-body p-0">
+          {% if template_list %}
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Filename</th>
+                  <th>Times used</th>
+                  <th class="text-nowrap" style="width: 1%; white-space: nowrap;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for t in template_list %}
+                <tr>
+                  <td>
+                    <code>{{ t.name }}</code>
+                  </td>
+                  <td><small class="text-muted">{{ t.filename }}</small></td>
+                  <td>
+                    <span class="badge bg-label-secondary">{{ t.usage_count|default(0)|int }}</span>
+                  </td>
+                  <td class="text-nowrap align-middle">
+                    <div class="d-inline-flex flex-nowrap gap-1 align-items-center">
+                      <a href="{{ url_for('admin.email_template_preview', name=t.name) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary" title="Preview in new tab">
+                        <i class="ti ti-eye me-1"></i>
+                        Preview
+                      </a>
+                      <a href="{{ url_for('admin.email_template_edit', name=t.name) }}" class="btn btn-sm btn-outline-secondary" title="Edit template">
+                        <i class="ti ti-edit me-1"></i>
+                        Edit
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="card-body text-center py-5">
+            <i class="ti ti-file-off ti-xl text-muted mb-3"></i>
+            <p class="text-muted mb-0">No email templates found under <code>templates/emails/</code>.</p>
+            <p class="text-muted small mt-2">Add <code>.html</code> files to that directory to list them here.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Team Members - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Team Members</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Manage team members and permissions
+            </div>
+        </div>
+        <div class="flex items-center gap-2.5">
+            <button class="kt-btn kt-btn-primary">
+                <i class="ki-filled ki-plus text-lg"></i>
+                Add Member
+            </button>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="kt-card">
+        <div class="kt-card-header">
+            <h3 class="kt-card-title">Members</h3>
+        </div>
+        <div class="kt-card-content p-0">
+            <div class="kt-table-responsive">
+                <table class="kt-table kt-table-row-bordered kt-table-row-dashed align-middle gs-0">
+                    <thead>
+                        <tr class="text-start text-muted-foreground fw-bold fs-7 text-uppercase gs-0">
+                            <th class="min-w-200px">Member</th>
+                            <th class="min-w-150px">Role</th>
+                            <th class="min-w-150px">Joined</th>
+                            <th class="min-w-100px text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="kt-avatar size-10">
+                                        <div class="kt-avatar-image">
+                                            <img alt="avatar" src="{{ url_for('static', filename='assets/media/avatars/300-1.png') }}"/>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-semibold text-mono">John Doe</span>
+                                        <span class="text-xs text-secondary-foreground">john@example.com</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="kt-badge kt-badge-sm kt-badge-primary">Owner</span>
+                            </td>
+                            <td>
+                                <span class="text-sm text-secondary-foreground">Jan 1, 2024</span>
+                            </td>
+                            <td class="text-end">
+                                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" title="Edit">
+                                    <i class="ki-filled ki-pencil text-lg"></i>
+                                </button>
+                                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" title="Remove">
+                                    <i class="ki-filled ki-trash text-lg text-danger"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="kt-avatar size-10">
+                                        <div class="kt-avatar-image">
+                                            <img alt="avatar" src="{{ url_for('static', filename='assets/media/avatars/300-2.png') }}"/>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-semibold text-mono">Jane Smith</span>
+                                        <span class="text-xs text-secondary-foreground">jane@example.com</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="kt-badge kt-badge-sm kt-badge-info">Member</span>
+                            </td>
+                            <td>
+                                <span class="text-sm text-secondary-foreground">Jan 5, 2024</span>
+                            </td>
+                            <td class="text-end">
+                                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" title="Edit">
+                                    <i class="ki-filled ki-pencil text-lg"></i>
+                                </button>
+                                <button class="kt-btn kt-btn-sm kt-btn-icon kt-btn-ghost" title="Remove">
+                                    <i class="ki-filled ki-trash text-lg text-danger"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}

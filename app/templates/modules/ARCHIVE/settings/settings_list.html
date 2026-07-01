@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% set active_page = "settings" %}
+
+{% block title %}{{ setting_type.title() }} Settings{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ setting_type.title() }} Settings</h1>
+                    <p class="mt-2 text-gray-600">{{ description }}</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{{ url_for('settings_web.dashboard') }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        ← Back to Dashboard
+                    </a>
+                    <button onclick="saveAllSettings()" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        💾 Save All Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Type Tabs -->
+        <div class="mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <a href="{{ url_for('settings_web.global_settings') }}" 
+                       class="{% if setting_type == 'global' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        🌍 Global Settings
+                    </a>
+                    {% if current_user.has_role('admin') or current_user.has_role('super_admin') %}
+                    <a href="{{ url_for('settings_web.admin_settings') }}" 
+                       class="{% if setting_type == 'admin' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        👑 Admin Settings
+                    </a>
+                    {% endif %}
+                    {% if current_user.has_role('super_admin') %}
+                    <a href="{{ url_for('settings_web.super_admin_settings') }}" 
+                       class="{% if setting_type == 'super_admin' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        🔒 Super Admin Settings
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('settings_web.user_settings') }}" 
+                       class="{% if setting_type == 'user' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                        👤 User Settings
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                <div class="flex-1 max-w-lg">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input type="text" id="searchInput" placeholder="Search settings..." 
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                </div>
+                <div class="flex space-x-3">
+                    <select id="categoryFilter" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.name }}">{{ category.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="dataTypeFilter" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                        <option value="">All Types</option>
+                        <option value="string">String</option>
+                        <option value="integer">Integer</option>
+                        <option value="boolean">Boolean</option>
+                        <option value="json">JSON</option>
+                        <option value="email">Email</option>
+                        <option value="url">URL</option>
+                        <option value="password">Password</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings by Category -->
+        {% for category in categories %}
+        {% set category_settings = settings_by_category.get(category.name, []) %}
+        {% if category_settings %}
+        <div class="mb-8 category-section" data-category="{{ category.name }}">
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">{{ category.display_name }}</h3>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {{ category_settings|length }} settings
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-6">{{ category.description }}</p>
+
+                    <div class="space-y-6">
+                        {% for setting in category_settings %}
+                        <div class="setting-item border border-gray-200 rounded-lg p-4" 
+                             data-key="{{ setting.key }}" 
+                             data-type="{{ setting.data_type }}"
+                             data-category="{{ category.name }}">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-3">
+                                        <h4 class="text-sm font-medium text-gray-900">{{ setting.name }}</h4>
+                                        {% if setting.is_required %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            Required
+                                        </span>
+                                        {% endif %}
+                                        {% if setting.is_encrypted %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            Encrypted
+                                        </span>
+                                        {% endif %}
+                                        {% if setting.is_readonly %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                            Read Only
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="mt-1 text-sm text-gray-500">{{ setting.description }}</p>
+                                    <div class="mt-2 flex items-center space-x-4 text-xs text-gray-400">
+                                        <span>Key: <code class="bg-gray-100 px-1 py-0.5 rounded">{{ setting.key }}</code></span>
+                                        <span>Type: {{ setting.data_type }}</span>
+                                        {% if setting.default_value %}
+                                        <span>Default: {{ setting.default_value }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                {% if setting.data_type == 'boolean' %}
+                                <div class="flex items-center">
+                                    <input type="checkbox" 
+                                           id="setting_{{ setting.key }}" 
+                                           name="{{ setting.key }}"
+                                           value="true"
+                                           {% if setting.get_typed_value() %}checked{% endif %}
+                                           {% if setting.is_readonly %}disabled{% endif %}
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <label for="setting_{{ setting.key }}" class="ml-2 text-sm text-gray-700">
+                                        Enable {{ setting.name }}
+                                    </label>
+                                </div>
+                                {% elif setting.data_type == 'integer' %}
+                                <input type="number" 
+                                       id="setting_{{ setting.key }}" 
+                                       name="{{ setting.key }}"
+                                       value="{{ setting.get_typed_value() or '' }}"
+                                       {% if setting.is_readonly %}readonly{% endif %}
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                {% elif setting.data_type == 'email' %}
+                                <input type="email" 
+                                       id="setting_{{ setting.key }}" 
+                                       name="{{ setting.key }}"
+                                       value="{{ setting.get_typed_value() or '' }}"
+                                       {% if setting.is_readonly %}readonly{% endif %}
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                {% elif setting.data_type == 'url' %}
+                                <input type="url" 
+                                       id="setting_{{ setting.key }}" 
+                                       name="{{ setting.key }}"
+                                       value="{{ setting.get_typed_value() or '' }}"
+                                       {% if setting.is_readonly %}readonly{% endif %}
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                {% elif setting.data_type == 'password' %}
+                                <div class="relative">
+                                    <input type="password" 
+                                           id="setting_{{ setting.key }}" 
+                                           name="{{ setting.key }}"
+                                           value="{{ setting.get_typed_value() or '' }}"
+                                           {% if setting.is_readonly %}readonly{% endif %}
+                                           class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                        <button type="button" onclick="togglePassword('setting_{{ setting.key }}')" 
+                                                class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% elif setting.data_type == 'json' %}
+                                <textarea id="setting_{{ setting.key }}" 
+                                          name="{{ setting.key }}"
+                                          rows="4"
+                                          {% if setting.is_readonly %}readonly{% endif %}
+                                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-sm">{{ setting.get_typed_value() or '' }}</textarea>
+                                {% else %}
+                                <input type="text" 
+                                       id="setting_{{ setting.key }}" 
+                                       name="{{ setting.key }}"
+                                       value="{{ setting.get_typed_value() or '' }}"
+                                       {% if setting.is_readonly %}readonly{% endif %}
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                {% endif %}
+                                
+                                <!-- Validation Error -->
+                                <div id="error_{{ setting.key }}" class="mt-1 text-sm text-red-600 hidden"></div>
+                                
+                                <!-- Help Text -->
+                                {% if setting.validation_rules %}
+                                <div class="mt-1 text-xs text-gray-500">
+                                    {% if setting.validation_rules.get('min_value') %}
+                                    Min: {{ setting.validation_rules.min_value }}
+                                    {% endif %}
+                                    {% if setting.validation_rules.get('max_value') %}
+                                    Max: {{ setting.validation_rules.max_value }}
+                                    {% endif %}
+                                    {% if setting.validation_rules.get('pattern') %}
+                                    Pattern: {{ setting.validation_rules.pattern }}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        <!-- No Settings Message -->
+        {% if not settings_by_category %}
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No settings found</h3>
+            <p class="mt-1 text-sm text-gray-500">No {{ setting_type }} settings are available at the moment.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const settingItems = document.querySelectorAll('.setting-item');
+    
+    settingItems.forEach(item => {
+        const key = item.dataset.key.toLowerCase();
+        const name = item.querySelector('h4').textContent.toLowerCase();
+        const description = item.querySelector('p').textContent.toLowerCase();
+        
+        if (key.includes(searchTerm) || name.includes(searchTerm) || description.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// Category filter
+document.getElementById('categoryFilter').addEventListener('change', function(e) {
+    const selectedCategory = e.target.value;
+    const categorySections = document.querySelectorAll('.category-section');
+    
+    categorySections.forEach(section => {
+        if (!selectedCategory || section.dataset.category === selectedCategory) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+});
+
+// Data type filter
+document.getElementById('dataTypeFilter').addEventListener('change', function(e) {
+    const selectedType = e.target.value;
+    const settingItems = document.querySelectorAll('.setting-item');
+    
+    settingItems.forEach(item => {
+        if (!selectedType || item.dataset.type === selectedType) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// Toggle password visibility
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+    input.setAttribute('type', type);
+}
+
+// Save all settings
+function saveAllSettings() {
+    const formData = new FormData();
+    const settingItems = document.querySelectorAll('.setting-item');
+    
+    settingItems.forEach(item => {
+        const key = item.dataset.key;
+        const input = item.querySelector('input, textarea');
+        if (input) {
+            let value = input.value;
+            if (input.type === 'checkbox') {
+                value = input.checked ? 'true' : 'false';
+            }
+            formData.append(key, value);
+        }
+    });
+    
+    // Add CSRF token
+    formData.append('csrf_token', '{{ csrf_token() }}');
+    
+    fetch('{{ url_for("settings_web.bulk_update", setting_type=setting_type) }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            alert('Settings saved successfully!');
+            // Reload page to show updated values
+            window.location.reload();
+        } else {
+            // Show error messages
+            if (data.errors) {
+                Object.keys(data.errors).forEach(key => {
+                    const errorDiv = document.getElementById('error_' + key);
+                    if (errorDiv) {
+                        errorDiv.textContent = data.errors[key];
+                        errorDiv.classList.remove('hidden');
+                    }
+                });
+            }
+            alert('Error saving settings: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving settings');
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,212 @@
+<!-- Vuexy Header/Navbar Component -->
+<nav
+  class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+  id="layout-navbar">
+  <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+    <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+      <i class="icon-base ti tabler-menu-2 icon-md"></i>
+    </a>
+  </div>
+
+  <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+    <div class="navbar-nav align-items-center">
+      <!-- Theme Toggle -->
+      <div class="nav-item dropdown me-2 me-xl-0">
+        <a
+          class="nav-link dropdown-toggle hide-arrow"
+          id="nav-theme"
+          href="javascript:void(0);"
+          data-bs-toggle="dropdown">
+          <i class="icon-base ti tabler-sun icon-md theme-icon-active"></i>
+          <span class="d-none ms-2" id="nav-theme-text">Toggle theme</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="nav-theme-text">
+          <li>
+            <button
+              type="button"
+              class="dropdown-item align-items-center active"
+              data-bs-theme-value="light"
+              aria-pressed="false">
+              <span><i class="icon-base ti tabler-sun icon-md me-3" data-icon="sun"></i>Light</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              class="dropdown-item align-items-center"
+              data-bs-theme-value="dark"
+              aria-pressed="true">
+              <span><i class="icon-base ti tabler-moon-stars icon-md me-3" data-icon="moon-stars"></i>Dark</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              class="dropdown-item align-items-center"
+              data-bs-theme-value="system"
+              aria-pressed="false">
+              <span><i class="icon-base ti tabler-device-desktop-analytics icon-md me-3" data-icon="device-desktop-analytics"></i>System</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <ul class="navbar-nav flex-row align-items-center ms-md-auto">
+      <!-- Search -->
+      <li class="nav-item d-none d-lg-flex me-2 me-xl-0">
+        <a class="nav-link" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#searchModal">
+          <i class="icon-base ti tabler-search icon-md"></i>
+        </a>
+      </li>
+      <!-- / Search -->
+
+      <!-- Notifications -->
+      <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-2 me-xl-0">
+        <a
+          class="nav-link dropdown-toggle hide-arrow"
+          href="javascript:void(0);"
+          data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
+          aria-expanded="false">
+          <i class="icon-base ti tabler-bell icon-md"></i>
+          <span class="badge bg-danger rounded-pill badge-notifications">8</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end py-0" aria-labelledby="notificationDropdown">
+          <li class="dropdown-menu-header border-bottom">
+            <div class="dropdown-header d-flex align-items-center py-3">
+              <h5 class="text-body mb-0 me-auto">Notification</h5>
+              <span class="badge rounded-pill badge-label bg-label-primary">8 New</span>
+            </div>
+          </li>
+          <li class="dropdown-notifications-list scrollable-container">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item list-group-item-action dropdown-notifications-item">
+                <div class="d-flex">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="avatar">
+                      <span class="avatar-initial rounded-circle bg-label-primary">
+                        <i class="icon-base ti tabler-mail icon-md"></i>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1">You have new message</h6>
+                    <small class="text-body">You have 18 unread messages</small>
+                    <small class="text-muted d-block">1 day ago</small>
+                  </div>
+                  <div class="flex-shrink-0 dropdown-notifications-actions">
+                    <a href="javascript:void(0)" class="dropdown-notifications-read"><span class="badge badge-dot"></span></a>
+                    <a href="javascript:void(0)" class="dropdown-notifications-archive"><span class="icon-base ti tabler-x icon-sm"></span></a>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </li>
+          <li class="dropdown-menu-footer border-top">
+            <a href="javascript:void(0);" class="dropdown-item d-flex justify-content-center text-primary p-0 h-px-50 fw-medium">
+              View all notifications
+            </a>
+          </li>
+        </ul>
+      </li>
+      <!-- / Notifications -->
+
+      <!-- User -->
+      {% if current_user.is_authenticated %}
+      <li class="nav-item navbar-dropdown dropdown-user dropdown">
+        <a
+          class="nav-link dropdown-toggle hide-arrow p-0"
+          href="javascript:void(0);"
+          data-bs-toggle="dropdown">
+          <div class="avatar avatar-online">
+            {% if current_user.photo_url %}
+            <img src="{{ current_user.photo_url }}" alt class="rounded-circle" />
+            {% else %}
+            <span class="avatar-initial rounded-circle bg-label-primary">{{ (get_user_display_name(current_user) or current_user.username)[0].upper() }}</span>
+            {% endif %}
+          </div>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li>
+            <a class="dropdown-item" href="{{ safe_url_for('users.profile') }}">
+              <div class="d-flex">
+                <div class="flex-shrink-0 me-3">
+                  <div class="avatar avatar-online">
+                    {% if current_user.photo_url %}
+                    <img src="{{ current_user.photo_url }}" alt class="w-px-40 h-auto rounded-circle" />
+                    {% else %}
+                    <span class="avatar-initial rounded-circle bg-label-primary">{{ (get_user_display_name(current_user) or current_user.username)[0].upper() }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0">{{ get_user_display_name(current_user) or current_user.username }}</h6>
+                  <small class="text-body-secondary">
+                    {% if current_user.roles %}
+                      {{ current_user.roles[0].display_name }}
+                    {% else %}
+                      User
+                    {% endif %}
+                  </small>
+                </div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <div class="dropdown-divider my-1 mx-n2"></div>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ safe_url_for('users.profile') }}">
+              <i class="icon-base ti tabler-user icon-md me-3"></i><span>My Profile</span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ safe_url_for('users.view_user_account', user_id=current_user.id) }}">
+              <i class="icon-base ti tabler-user-circle icon-md me-3"></i><span>My Account</span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ safe_url_for('users.settings_account') }}">
+              <i class="icon-base ti tabler-settings icon-md me-3"></i><span>Settings</span>
+            </a>
+          </li>
+          <li>
+            <div class="dropdown-divider my-1 mx-n2"></div>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ safe_url_for('auth.logout') }}">
+              <i class="icon-base ti tabler-power icon-md me-3"></i><span>Log Out</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+      {% else %}
+      <li class="nav-item">
+        <a class="nav-link" href="{{ safe_url_for('auth.login') }}">Sign In</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ safe_url_for('auth.register') }}">Sign Up</a>
+      </li>
+      {% endif %}
+      <!--/ User -->
+    </ul>
+  </div>
+</nav>
+
+<!-- Search Modal -->
+<div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 pb-4">
+        <div class="d-flex align-items-center">
+          <i class="icon-base ti tabler-search icon-lg me-2"></i>
+          <input type="text" class="form-control border-0 shadow-none" placeholder="Search..." autofocus />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

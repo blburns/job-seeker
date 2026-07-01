@@ -1,0 +1,127 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<tr>
+  <td style="padding: 40px 30px;">
+    <h1 style="margin: 0 0 20px; font-size: 28px; font-weight: 600; color: #dc2626;">
+      Account Suspension Notice
+    </h1>
+    
+    <p style="margin: 0 0 20px; font-size: 16px; line-height: 24px; color: #4a5568;">
+      Hi {{ user.username }},
+    </p>
+    
+    <p style="margin: 0 0 20px; font-size: 16px; line-height: 24px; color: #4a5568;">
+      We're writing to inform you that your account has been temporarily suspended.
+    </p>
+    
+    <!-- Suspension Details -->
+    <div style="margin: 30px 0; padding: 20px; background-color: #fef2f2; border-left: 4px solid #dc2626; border-radius: 4px;">
+      <h3 style="margin: 0 0 10px; font-size: 16px; font-weight: 600; color: #991b1b;">
+        Suspension Details
+      </h3>
+      <table style="width: 100%;">
+        <tr>
+          <td style="padding: 8px 0;">
+            <strong style="color: #7f1d1d;">Reason:</strong>
+          </td>
+          <td style="padding: 8px 0; color: #7f1d1d;">
+            {{ suspension.reason }}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0;">
+            <strong style="color: #7f1d1d;">Suspension Date:</strong>
+          </td>
+          <td style="padding: 8px 0; color: #7f1d1d;">
+            {{ suspension.suspended_at.strftime('%B %d, %Y at %I:%M %p') }}
+          </td>
+        </tr>
+        {% if suspension.expires_at %}
+        <tr>
+          <td style="padding: 8px 0;">
+            <strong style="color: #7f1d1d;">Expires:</strong>
+          </td>
+          <td style="padding: 8px 0; color: #7f1d1d;">
+            {{ suspension.expires_at.strftime('%B %d, %Y at %I:%M %p') }}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td style="padding: 8px 0;">
+            <strong style="color: #7f1d1d;">Duration:</strong>
+          </td>
+          <td style="padding: 8px 0; color: #7f1d1d;">
+            Indefinite (requires manual review)
+          </td>
+        </tr>
+        {% endif %}
+      </table>
+    </div>
+    
+    <!-- What This Means -->
+    <h3 style="margin: 30px 0 15px; font-size: 18px; font-weight: 600; color: #1a1a1a;">
+      What This Means
+    </h3>
+    
+    <div style="padding: 15px 20px; background-color: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+      <p style="margin: 0 0 10px; line-height: 24px; color: #4a5568;">
+        During the suspension period:
+      </p>
+      <ul style="margin: 0; padding-left: 20px; color: #4a5568; line-height: 28px;">
+        <li>You will not be able to log in to your account</li>
+        <li>Your profile and content will be hidden from other users</li>
+        <li>You will not receive notifications or updates</li>
+        <li>Active subscriptions will be paused</li>
+      </ul>
+    </div>
+    
+    <!-- Next Steps -->
+    <h3 style="margin: 30px 0 15px; font-size: 18px; font-weight: 600; color: #1a1a1a;">
+      Next Steps
+    </h3>
+    
+    <div style="padding: 15px 20px; background-color: #eff6ff; border-radius: 8px; border: 1px solid #3b82f6;">
+      <p style="margin: 0 0 10px; line-height: 24px; color: #1e40af;">
+        <strong>If you believe this suspension was made in error:</strong>
+      </p>
+      <ol style="margin: 0; padding-left: 20px; color: #1e40af; line-height: 28px;">
+        <li>Review our Terms of Service and Community Guidelines</li>
+        <li>Contact our support team to appeal this decision</li>
+        <li>Provide any relevant information or context</li>
+      </ol>
+    </div>
+    
+    <!-- Contact Support Button -->
+    <table style="width: 100%; margin: 30px 0;">
+      <tr>
+        <td align="center">
+          <a href="{{ appeal_url }}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+            Appeal This Decision
+          </a>
+        </td>
+      </tr>
+    </table>
+    
+    <!-- Additional Information -->
+    {% if suspension.additional_info %}
+    <div style="margin: 30px 0; padding: 15px 20px; background-color: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+      <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #4a5568;">
+        Additional Information:
+      </h4>
+      <p style="margin: 0; font-size: 14px; line-height: 22px; color: #718096;">
+        {{ suspension.additional_info }}
+      </p>
+    </div>
+    {% endif %}
+    
+    <p style="margin: 30px 0 0; font-size: 14px; line-height: 22px; color: #718096;">
+      We take account security and community safety seriously. If you have any questions, please contact our support team at {{ config.get('SUPPORT_EMAIL', 'support@example.com') }}.
+    </p>
+    
+    <p style="margin: 20px 0 0; font-size: 12px; line-height: 20px; color: #9ca3af;">
+      This is an automated message. Please do not reply to this email.
+    </p>
+  </td>
+</tr>
+{% endblock %}

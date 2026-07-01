@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Tenant Settings{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Tenant Settings</h2>
+            <p class="mt-1 text-sm text-gray-500">Configure tenant settings and preferences</p>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" class="space-y-6">
+                    <div>
+                        <label for="max_users" class="block text-sm font-medium">Max Users</label>
+                        <input type="number" name="max_users" id="max_users" value="10" class="mt-1 block w-full">
+                    </div>
+                    <div>
+                        <label for="storage_limit" class="block text-sm font-medium">Storage Limit (GB)</label>
+                        <input type="number" name="storage_limit" id="storage_limit" value="10" class="mt-1 block w-full">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

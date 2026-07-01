@@ -1,0 +1,88 @@
+{% extends "base_metronic.html" %}
+
+{% block title %}Security Overview - {{ config.get('APP_NAME', 'Application') }}{% endblock %}
+
+{% block content %}
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+        <div class="flex flex-col justify-center gap-2">
+            <h1 class="text-xl font-medium leading-none text-mono">Security Overview</h1>
+            <div class="flex items-center gap-2 text-sm font-normal text-secondary-foreground">
+                Monitor and manage your account security
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+
+<!-- Container -->
+<div class="kt-container-fixed">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <!-- Security Status -->
+        <div class="kt-card lg:col-span-2">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Security Status</h3>
+            </div>
+            <div class="kt-card-content flex flex-col gap-4 p-5 lg:p-7.5">
+                <!-- Two-Factor Authentication -->
+                <div class="flex items-center justify-between p-4 border border-border rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="ki-filled ki-lock text-2xl text-primary"></i>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-semibold text-mono">Two-Factor Authentication</span>
+                            <span class="text-xs text-secondary-foreground">Not enabled</span>
+                        </div>
+                    </div>
+                    <button class="kt-btn kt-btn-sm kt-btn-primary">Enable</button>
+                </div>
+                
+                <!-- Password -->
+                <div class="flex items-center justify-between p-4 border border-border rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="ki-filled ki-key text-2xl text-success"></i>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-semibold text-mono">Password</span>
+                            <span class="text-xs text-secondary-foreground">Last changed 30 days ago</span>
+                        </div>
+                    </div>
+                    <button class="kt-btn kt-btn-sm kt-btn-outline">Change</button>
+                </div>
+                
+                <!-- Active Sessions -->
+                <div class="flex items-center justify-between p-4 border border-border rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i class="ki-filled ki-abstract-26 text-2xl text-info"></i>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-semibold text-mono">Active Sessions</span>
+                            <span class="text-xs text-secondary-foreground">2 devices</span>
+                        </div>
+                    </div>
+                    <a href="{{ safe_url_for('account.security_current_sessions') }}" class="kt-btn kt-btn-sm kt-btn-outline">Manage</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Score -->
+        <div class="kt-card">
+            <div class="kt-card-header">
+                <h3 class="kt-card-title">Security Score</h3>
+            </div>
+            <div class="kt-card-content flex flex-col items-center gap-4 p-5 lg:p-7.5">
+                <div class="relative size-32 flex items-center justify-center">
+                    <svg class="transform -rotate-90 size-32">
+                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="none" class="text-muted"/>
+                        <circle cx="64" cy="64" r="56" stroke="currentColor" stroke-width="8" fill="none" stroke-dasharray="352" stroke-dashoffset="105.6" class="text-warning"/>
+                    </svg>
+                    <div class="absolute flex flex-col items-center">
+                        <span class="text-3xl font-semibold text-mono">70%</span>
+                        <span class="text-xs text-secondary-foreground">Good</span>
+                    </div>
+                </div>
+                <p class="text-sm text-center text-secondary-foreground">Your account security is good, but could be improved.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Container -->
+{% endblock %}
