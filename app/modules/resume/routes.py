@@ -52,12 +52,14 @@ def upload():
             file_bytes = file.read()
             profile_data, confidence = resume_parser_service.parse_file(file_bytes, file.filename)
             errors = resume_parser_service.validate_profile(profile_data)
+            diagnostics = resume_parser_service.get_parse_diagnostics(profile_data)
             return render_template(
                 'modules/resume/review.html',
                 profile_data=profile_data,
                 profile_json=json.dumps(profile_data, indent=2),
                 parse_confidence=confidence,
                 validation_errors=errors,
+                parse_diagnostics=diagnostics,
                 source_filename=file.filename,
             )
         except Exception as exc:

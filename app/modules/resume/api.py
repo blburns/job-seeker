@@ -58,6 +58,7 @@ def upload_resume():
             'profile_data': profile_data,
             'parse_confidence': confidence,
             'validation_errors': errors,
+            'parse_diagnostics': resume_parser_service.get_parse_diagnostics(profile_data),
             'source_filename': secure_filename(file.filename),
         })
     except Exception as exc:
