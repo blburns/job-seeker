@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Upload Resume{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header"><h5 class="mb-0">Upload Resume</h5></div>
+      <div class="card-body">
+        <p class="text-muted">Upload PDF, DOCX, or TXT. We'll extract a structured master profile for ATS-safe tailoring.</p>
+        <form method="post" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">Resume file</label>
+            <input type="file" name="file" class="form-control" accept=".pdf,.docx,.txt" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Parse Resume</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

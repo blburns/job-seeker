@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Review Parsed Resume{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between">
+        <h5 class="mb-0">Review &amp; Edit</h5>
+        <span class="badge bg-label-info">Parse confidence: {{ parse_confidence }}%</span>
+      </div>
+      <div class="card-body">
+        {% if validation_errors %}
+        <div class="alert alert-warning">
+          <ul class="mb-0">{% for err in validation_errors %}<li>{{ err }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
+        <form method="post" action="{{ url_for('resume.save_reviewed') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="source_filename" value="{{ source_filename }}">
+          <input type="hidden" name="parse_confidence" value="{{ parse_confidence }}">
+          <div class="mb-3">
+            <label class="form-label">Structured profile (JSON)</label>
+            <textarea name="profile_data" class="form-control font-monospace" rows="24">{{ profile_json }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Master Profile</button>
+          <a href="{{ url_for('resume.upload') }}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h6>ATS tips</h6>
+        <ul class="small text-muted mb-0">
+          <li>Single-column export only</li>
+          <li>Standard section headings</li>
+          <li>No invented experience</li>
+          <li>Keywords in context, not stuffed</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
