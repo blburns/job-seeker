@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Applications Dashboard{% endblock %}
+{% block content %}
+<h4 class="mb-4">Applications Dashboard</h4>
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body text-center">
+      <h3>{{ pipeline.summary.total }}</h3><small class="text-muted">Total</small>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body text-center">
+      <h3>{{ pipeline.summary.applied }}</h3><small class="text-muted">Applied</small>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body text-center">
+      <h3>{{ pipeline.summary.interviews }}</h3><small class="text-muted">Interviews</small>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body text-center">
+      <h3>{{ pipeline.summary.response_rate }}%</h3><small class="text-muted">Response Rate</small>
+    </div></div>
+  </div>
+</div>
+<div class="d-flex justify-content-between mb-3">
+  <h5 class="mb-0">Recent Applications</h5>
+  <a href="{{ url_for('applications.pipeline') }}" class="btn btn-outline-primary btn-sm">View Pipeline</a>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Job</th><th>Company</th><th>Stage</th><th>Applied</th><th></th></tr></thead>
+      <tbody>
+        {% for app in applications[:10] %}
+        <tr>
+          <td>{{ app.job_posting.title if app.job_posting else '-' }}</td>
+          <td>{{ app.job_posting.company if app.job_posting else '-' }}</td>
+          <td><span class="badge bg-label-primary">{{ app.stage }}</span></td>
+          <td>{{ app.applied_at.strftime('%Y-%m-%d') if app.applied_at else '-' }}</td>
+          <td><a href="{{ url_for('applications.detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No applications yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

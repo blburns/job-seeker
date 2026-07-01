@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}New Application{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header"><h5 class="mb-0">New Application</h5></div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">Select Job Posting</label>
+            <select name="job_posting_id" class="form-select" required>
+              <option value="">Choose a job...</option>
+              {% for posting in postings %}
+              <option value="{{ posting.id }}" {% if request.args.get('job_id') == posting.id|string %}selected{% endif %}>
+                {{ posting.title }} — {{ posting.company }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Create Application</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Review Application{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="mb-1">{{ job.title }} at {{ job.company }}</h4>
+    <p class="text-muted mb-0">Review before applying — semi-automated pre-fill</p>
+  </div>
+  <div class="d-flex gap-2">
+    {% if version %}
+    <a href="{{ url_for('apply.download_resume', application_id=application.id) }}" class="btn btn-outline-primary">Download Resume</a>
+    {% endif %}
+    <form method="post" action="{{ url_for('apply.mark_applied', application_id=application.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-primary">Mark as Applied</button>
+    </form>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-4">
+  <div class="card mb-4">
+    <div class="card-header bg-label-primary"><h6 class="mb-0">Keywords</h6></div>
+    <div class="card-body">
+      {% if keyword_analysis %}
+      <p>Coverage: <strong>{{ keyword_analysis.coverage_score }}%</strong></p>
+      <div class="mb-2">
+        {% for kw in keyword_analysis.matched_keywords[:15] %}
+        <span class="badge bg-label-success me-1 mb-1">{{ kw }}</span>
+        {% endfor %}
+      </div>
+      <div>
+        {% for kw in keyword_analysis.missing_keywords[:10] %}
+        <span class="badge bg-label-danger me-1 mb-1">{{ kw }}</span>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">No keyword analysis available.</p>
+      {% endif %}
+    </div>
+  </div>
+  </div>
+
+  <div class="col-lg-4">
+  <div class="card mb-4">
+    <div class="card-header bg-label-info"><h6 class="mb-0">Tailored Resume</h6></div>
+    <div class="card-body">
+      {% if version %}
+      <p>Version {{ version.version_number }} · {{ version.status }}</p>
+      <p>ATS Score: {{ version.ats_score or '-' }}%</p>
+      <p class="small text-muted mb-0">{{ version.export_filename }}</p>
+      {% else %}
+      <p class="text-muted">No tailored resume. <a href="{{ url_for('applications.detail', application_id=application.id) }}">Tailor first</a>.</p>
+      {% endif %}
+    </div>
+  </div>
+  </div>
+
+  <div class="col-lg-4">
+  <div class="card mb-4">
+    <div class="card-header bg-label-success"><h6 class="mb-0">Pre-fill Fields</h6></div>
+    <div class="card-body">
+      {% if draft %}
+      <form method="post" action="{{ url_for('apply.save_draft', application_id=application.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% for key, value in draft.form_fields.items() %}
+        <div class="mb-2">
+          <label class="form-label small text-capitalize">{{ key.replace('_', ' ') }}</label>
+          <input type="text" name="{{ key }}" class="form-control form-control-sm" value="{{ value }}">
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-sm btn-primary mt-2">Save Draft</button>
+      </form>
+      {% else %}
+      <p class="text-muted mb-0">No pre-fill draft.</p>
+      {% endif %}
+    </div>
+  </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h6 class="mb-0">Job Description</h6></div>
+  <div class="card-body"><pre class="small mb-0" style="white-space:pre-wrap;max-height:300px;overflow:auto">{{ job.description }}</pre></div>
+</div>
+{% endblock %}

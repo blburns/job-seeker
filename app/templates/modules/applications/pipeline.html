@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Application Pipeline{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/libs/jkanban/jkanban.css') }}" />
+<style>
+.kanban-board { min-height: 400px; }
+.kanban-item { cursor: grab; }
+.kanban-item-title { font-weight: 600; font-size: 0.9rem; }
+.kanban-item-company { font-size: 0.8rem; color: #697a8d; }
+</style>
+{% endblock %}
+{% block extra_vendor_js %}
+<script src="{{ url_for('static', filename='assets/vendor/libs/jkanban/jkanban.js') }}"></script>
+<script>
+const STAGE_LABELS = {
+  saved: 'Saved', tailoring: 'Tailoring', ready_to_apply: 'Ready',
+  applied: 'Applied', phone_screen: 'Phone Screen', interview: 'Interview',
+  offer: 'Offer', rejected: 'Rejected', withdrawn: 'Withdrawn'
+};
+const pipelineData = {{ pipeline.stages | tojson }};
+
+const boards = Object.keys(STAGE_LABELS).map(stage => ({
+  id: stage,
+  title: STAGE_LABELS[stage] + ' (' + (pipelineData[stage]?.count || 0) + ')',
+  item: (pipelineData[stage]?.applications || []).map(app => ({
+    id: app.id,
+    title: '<div class="kanban-item-title">' + app.job_title + '</div><div class="kanban-item-company">' + app.company + '</div>'
+  }))
+}));
+
+const kanban = new jKanban({
+  element: '#kanban-board',
+  boards: boards,
+  dragBoards: false,
+  dropEl: function(el, target, source, sibling) {
+    const appId = el.dataset.eid;
+    const newStage = target.parentElement.dataset.id;
+    fetch('/api/v1/applications/' + appId + '/stage', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content
+      },
+      body: JSON.stringify({stage: newStage})
+    }).catch(() => location.reload());
+  }
+});
+</script>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0">Application Pipeline</h4>
+  <a href="{{ url_for('applications.new_application') }}" class="btn btn-primary">New Application</a>
+</div>
+<div id="kanban-board" class="kanban-board"></div>
+{% endblock %}
