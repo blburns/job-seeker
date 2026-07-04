@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.services.keyword_service import keyword_service
+from app.services.llm_service import llm_service
 
 
 class TailoringService:
@@ -68,13 +69,25 @@ class TailoringService:
         return tailored, diff_log
 
     @classmethod
+    def _normalize_summary_variant(cls, variant: Any) -> Dict[str, Any]:
+        if isinstance(variant, dict):
+            return variant
+        text = str(variant).strip()
+        if not text:
+            return {}
+        return {'id': None, 'text': text, 'tags': []}
+
+    @classmethod
     def _select_summary(cls, profile: Dict[str, Any], jd_keywords: set) -> Optional[Dict[str, Any]]:
         variants = profile.get('summary_variants', [])
         if not variants:
             return None
-        best = variants[0]
+        best = cls._normalize_summary_variant(variants[0])
         best_score = 0
         for variant in variants:
+            variant = cls._normalize_summary_variant(variant)
+            if not variant:
+                continue
             text = variant.get('text', '').lower()
             score = sum(1 for kw in jd_keywords if kw in text)
             tags = variant.get('tags', [])
@@ -82,7 +95,7 @@ class TailoringService:
             if score > best_score:
                 best_score = score
                 best = variant
-        return best
+        return best or None
 
     @classmethod
     def _reorder_experience(cls, experience: List[Dict[str, Any]], jd_keywords: set) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
@@ -159,7 +172,9 @@ class TailoringService:
                 if kw.lower() in old_text.lower():
                     keyword_idx += 1
                     continue
-                new_text = cls._natural_rephrase(old_text, kw)
+                new_text = cls._natural_rephrase(
+                    old_text, kw, profile.get('headline', '')
+                )
                 if new_text != old_text:
                     diffs.append({
                         'field': 'experience.bullet',
@@ -174,13 +189,33 @@ class TailoringService:
         return diffs
 
     @classmethod
-    def _natural_rephrase(cls, text: str, keyword: str) -> str:
+    def _natural_rephrase(cls, text: str, keyword: str, job_title: str = '') -> str:
         """Add keyword naturally if not already present. No new facts."""
         if keyword.lower() in text.lower():
             return text
-        if text.endswith('.'):
-            return f"{text[:-1]}, including {keyword}."
-        return f"{text} ({keyword})"
+        return llm_service.rephrase_bullet(text, keyword, job_title)
+
+    @classmethod
+    def tailor_for_job_with_coverage(
+        cls,
+        master_data: Dict[str, Any],
+        job_title: str,
+        job_description: str,
+        company: str = '',
+    ) -> Tuple[Dict[str, Any], List[Dict[str, Any]], float]:
+        tailored, diff_log = cls.tailor_for_job(master_data, job_title, job_description, company)
+        analysis = keyword_service.analyze_coverage(job_description, tailored)
+        return tailored, diff_log, float(analysis.get('coverage_score', 0))
+
+    @classmethod
+    def generate_cover_letter_for_job(
+        cls,
+        master_data: Dict[str, Any],
+        job_title: str,
+        company: str,
+        job_description: str,
+    ) -> str:
+        return llm_service.generate_cover_letter(master_data, job_title, company, job_description)
 
     @classmethod
     def validate_diff(cls, diff_log: List[Dict[str, Any]], master_data: Dict[str, Any]) -> List[str]:
