@@ -20,6 +20,38 @@ from app.extensions.core import db
 
 JOBS_TABLES = None
 
+COLUMN_MIGRATIONS = [
+    ('applications', 'submission_status', 'VARCHAR(50)', 'VARCHAR(50)'),
+    ('applications', 'submission_proof', 'VARCHAR(1024)', 'VARCHAR(1024)'),
+    ('applications', 'submission_error', 'TEXT', 'TEXT'),
+    ('applications', 'apply_batch_id', 'CHAR(36)', 'UUID'),
+    ('applications', 'follow_up_at', 'DATETIME', 'TIMESTAMP'),
+    ('apply_drafts', 'cover_letter', 'TEXT', 'TEXT'),
+    ('job_search_profiles', 'indeed_max_age_days', 'INTEGER', 'INTEGER'),
+    ('job_search_profiles', 'indeed_radius_miles', 'INTEGER', 'INTEGER'),
+]
+
+
+def _migrate_automation_columns(engine, db_type: str):
+    from sqlalchemy import inspect
+    schema = 'jobs' if db_type == 'postgresql' else None
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names(schema=schema))
+    if not schema:
+        existing_tables |= set(inspector.get_table_names())
+
+    for table, column, sqlite_type, pg_type in COLUMN_MIGRATIONS:
+        if table not in existing_tables:
+            continue
+        columns = {c['name'] for c in inspector.get_columns(table, schema=schema)}
+        if column in columns:
+            continue
+        col_type = pg_type if db_type == 'postgresql' else sqlite_type
+        qualified = f'"{schema}"."{table}"' if schema else f'"{table}"'
+        db.session.execute(text(f'ALTER TABLE {qualified} ADD COLUMN {column} {col_type}'))
+        print(f'Added column {table}.{column}')
+    db.session.commit()
+
 
 def _get_jobs_tables():
     global JOBS_TABLES
@@ -27,6 +59,8 @@ def _get_jobs_tables():
         from app.models.jobs import (
             MasterProfile, JobPosting, ResumeVersion, Application,
             ApplicationActivity, KeywordAnalysis, ApplyDraft,
+            JobSearchProfile, CompanyBlocklist, DiscoveryRun, DiscoveredJob,
+            ApplyBatch, ApplyBatchItem, PortalCredential,
         )
         JOBS_TABLES = [
             MasterProfile.__table__,
@@ -36,6 +70,13 @@ def _get_jobs_tables():
             ApplicationActivity.__table__,
             KeywordAnalysis.__table__,
             ApplyDraft.__table__,
+            JobSearchProfile.__table__,
+            CompanyBlocklist.__table__,
+            DiscoveryRun.__table__,
+            DiscoveredJob.__table__,
+            ApplyBatch.__table__,
+            ApplyBatchItem.__table__,
+            PortalCredential.__table__,
         ]
     return JOBS_TABLES
 
@@ -71,6 +112,7 @@ def create_jobs_schema():
                 print('Indexes created')
 
             print('\nJob seeker schema ready.')
+            _migrate_automation_columns(engine, db_type)
             return True
         except Exception as exc:
             db.session.rollback()
