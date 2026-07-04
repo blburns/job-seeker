@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}Discovery Inbox{% endblock %}
+{% block content %}
+{% call page_header('Discovery Inbox', 'Review discovered jobs ranked by fit score') %}
+  <a href="{{ url_for('jobs.search_profiles_list') }}" class="btn btn-outline-primary btn-sm">Search Profiles</a>
+  <a href="{{ url_for('apply.credentials_list') }}" class="btn btn-outline-secondary btn-sm">Portal Credentials</a>
+{% endcall %}
+
+{% if recent_runs %}
+<div class="card mb-4">
+  <div class="card-header"><h5 class="card-title mb-0">Recent Discovery Runs</h5></div>
+  <div class="card-datatable table-responsive">
+    <table class="table border-top mb-0">
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>Status</th>
+          <th>Found</th>
+          <th>Inbox</th>
+          <th>When</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in recent_runs %}
+        <tr>
+          <td><span class="badge bg-label-secondary">{{ run.source }}</span></td>
+          <td>
+            {% if run.status == 'failed' %}
+            <span class="badge bg-label-danger">{{ run.status }}</span>
+            {% elif run.status == 'completed' %}
+            <span class="badge bg-label-success">{{ run.status }}</span>
+            {% else %}
+            <span class="badge bg-label-warning">{{ run.status }}</span>
+            {% endif %}
+          </td>
+          <td>{{ run.jobs_found or 0 }}</td>
+          <td>{{ run.jobs_new or 0 }}</td>
+          <td>{{ run.created_at.strftime('%Y-%m-%d %H:%M') if run.created_at else '-' }}</td>
+          <td class="small text-danger">
+            {% if run.error_message %}
+              {{ run.error_message }}
+              {% if run.source in ['linkedin', 'indeed'] and (
+                'session' in run.error_message|lower or
+                'credential' in run.error_message|lower or
+                'login' in run.error_message|lower or
+                'auth' in run.error_message|lower or
+                'storage_state' in run.error_message|lower
+              ) and 'redis' not in run.error_message|lower and '6379' not in run.error_message %}
+              <a href="{{ url_for('apply.credentials_list') }}">Reconnect session</a>
+              {% endif %}
+            {% else %}-{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-datatable table-responsive">
+    <table class="table border-top">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Company</th>
+          <th>Fit</th>
+          <th>Source</th>
+          <th>Location</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in discovered_jobs %}
+        <tr>
+          <td>
+            <strong>{{ job.title }}</strong>
+            {% if job.url %}<br><a href="{{ job.url }}" target="_blank" class="small">View posting</a>{% endif %}
+          </td>
+          <td>{{ job.company }}</td>
+          <td>{% if job.fit_score is not none %}{{ job.fit_score }}%{% else %}-{% endif %}</td>
+          <td><span class="badge bg-label-secondary">{{ job.source }}</span></td>
+          <td>{{ job.location or '-' }}</td>
+          <td class="text-end">
+            <form method="post" action="{{ url_for('jobs.accept_discovered', discovered_id=job.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-success">Accept</button>
+            </form>
+            <form method="post" action="{{ url_for('jobs.skip_discovered', discovered_id=job.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-secondary">Skip</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr class="table-empty">
+          <td colspan="6" class="text-center text-muted">No new discovered jobs. <a href="{{ url_for('jobs.search_profiles_list') }}">Run a search profile</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

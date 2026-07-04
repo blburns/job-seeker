@@ -6,7 +6,11 @@ from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 
 from app.extensions.core import db
-from app.models.jobs import JobPosting, JobSource, KeywordAnalysis, MasterProfile
+from app.models.jobs import (
+    CompanyBlocklist, DiscoveredJob, DiscoveredJobStatus, JobPosting, JobSearchProfile,
+    JobSource, KeywordAnalysis, MasterProfile,
+)
+from app.services.discovery_orchestrator import discovery_orchestrator
 from app.services.job_discovery_service import job_discovery_service
 from app.services.keyword_service import keyword_service
 from app.utils.security import sanitize_input
@@ -141,3 +145,127 @@ def discover_rss():
     except Exception as exc:
         logger.exception('RSS discovery failed')
         return jsonify({'error': str(exc)}), 400
+
+
+@jobs_api_bp.route('/discover/rss/save', methods=['POST'])
+@login_required
+def save_rss_jobs():
+    data = request.get_json() or {}
+    jobs = data.get('jobs') or []
+    saved = []
+    for job in jobs:
+        url = (job.get('url') or '').strip()
+        if url and JobPosting.query.filter_by(user_id=current_user.id, url=url, is_deleted=False).first():
+            continue
+        posting = JobPosting(
+            user_id=current_user.id,
+            title=sanitize_input(job.get('title', 'Untitled'), 255),
+            company=sanitize_input(job.get('company', 'Unknown'), 255),
+            description=job.get('description', ''),
+            url=url or None,
+            source=JobSource.RSS.value,
+        )
+        db.session.add(posting)
+        saved.append(posting)
+    db.session.commit()
+    return jsonify({'saved': len(saved), 'data': [p.to_dict() for p in saved]}), 201
+
+
+@jobs_api_bp.route('/search-profiles', methods=['GET'])
+@login_required
+def list_search_profiles():
+    profiles = JobSearchProfile.query.filter_by(
+        user_id=current_user.id, is_deleted=False
+    ).order_by(JobSearchProfile.created_at.desc()).all()
+    return jsonify({'data': [p.to_dict() for p in profiles]})
+
+
+@jobs_api_bp.route('/search-profiles', methods=['POST'])
+@login_required
+def create_search_profile():
+    data = request.get_json() or {}
+    profile = JobSearchProfile(
+        user_id=current_user.id,
+        name=sanitize_input(data.get('name', 'Default Search'), 255),
+        titles=data.get('titles') or [],
+        locations=data.get('locations') or [],
+        remote_preference=data.get('remote_preference', 'any'),
+        min_fit_score=int(data.get('min_fit_score', 50)),
+        sources=data.get('sources') or ['adzuna', 'remotive'],
+        greenhouse_boards=data.get('greenhouse_boards') or [],
+        lever_boards=data.get('lever_boards') or [],
+        rss_feeds=data.get('rss_feeds') or [],
+        schedule_hours=int(data.get('schedule_hours', 6)),
+        is_active=True,
+        indeed_max_age_days=int(data.get('indeed_max_age_days', 7)),
+        indeed_radius_miles=int(data.get('indeed_radius_miles', 0)),
+    )
+    db.session.add(profile)
+    db.session.commit()
+    return jsonify(profile.to_dict()), 201
+
+
+@jobs_api_bp.route('/search-profiles/<uuid:profile_id>', methods=['PATCH'])
+@login_required
+def update_search_profile(profile_id):
+    profile = JobSearchProfile.query.filter_by(
+        id=profile_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    data = request.get_json() or {}
+    for field in (
+        'titles', 'locations', 'remote_preference', 'min_fit_score', 'sources',
+        'greenhouse_boards', 'lever_boards', 'rss_feeds', 'schedule_hours', 'is_active',
+        'indeed_max_age_days', 'indeed_radius_miles',
+    ):
+        if field in data:
+            setattr(profile, field, data[field])
+    if 'name' in data:
+        profile.name = sanitize_input(data['name'], 255)
+    db.session.commit()
+    return jsonify(profile.to_dict())
+
+
+@jobs_api_bp.route('/search-profiles/<uuid:profile_id>', methods=['DELETE'])
+@login_required
+def delete_search_profile(profile_id):
+    profile = JobSearchProfile.query.filter_by(
+        id=profile_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    profile.soft_delete()
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@jobs_api_bp.route('/search-profiles/<uuid:profile_id>/run', methods=['POST'])
+@login_required
+def run_search_profile(profile_id):
+    try:
+        discovery_orchestrator.run_discovery(profile_id, current_user.id)
+        return jsonify({'success': True})
+    except Exception as exc:
+        logger.exception('Discovery run failed')
+        return jsonify({'error': str(exc)}), 400
+
+
+@jobs_api_bp.route('/inbox', methods=['GET'])
+@login_required
+def list_inbox():
+    jobs = DiscoveredJob.query.filter_by(
+        user_id=current_user.id,
+        status=DiscoveredJobStatus.NEW.value,
+    ).order_by(DiscoveredJob.fit_score.desc()).limit(100).all()
+    return jsonify({'data': [j.to_dict() for j in jobs]})
+
+
+@jobs_api_bp.route('/inbox/<uuid:discovered_id>/accept', methods=['POST'])
+@login_required
+def accept_inbox_job(discovered_id):
+    posting = discovery_orchestrator.accept_discovered_job(discovered_id, current_user.id)
+    return jsonify(posting.to_dict())
+
+
+@jobs_api_bp.route('/inbox/<uuid:discovered_id>/skip', methods=['POST'])
+@login_required
+def skip_inbox_job(discovered_id):
+    discovery_orchestrator.skip_discovered_job(discovered_id, current_user.id)
+    return jsonify({'success': True})

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}{% if profile %}Edit Search Profile{% else %}New Search Profile{% endif %}{% endblock %}
+{% block content %}
+{% call page_header(
+  'Edit Search Profile' if profile else 'New Search Profile',
+  'Configure titles, sources, and discovery schedule'
+) %}{% endcall %}
+
+<div class="card">
+  <div class="card-body">
+    <form method="post" action="{% if profile %}{{ url_for('jobs.search_profile_edit', profile_id=profile.id) }}{% else %}{{ url_for('jobs.search_profile_new') }}{% endif %}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <label class="form-label" for="name">Profile Name</label>
+          <input type="text" id="name" name="name" class="form-control" value="{{ profile.name if profile else 'Default Search' }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="min_fit_score">Min Fit Score (%)</label>
+          <input type="number" id="min_fit_score" name="min_fit_score" class="form-control" value="{{ profile.min_fit_score if profile else 50 }}" min="0" max="100">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="titles">Job Titles (comma-separated)</label>
+          <input type="text" id="titles" name="titles" class="form-control" value="{{ (profile.titles or [])|join(', ') if profile else '' }}" placeholder="Software Engineer, Backend Developer">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="locations">Locations (comma-separated)</label>
+          <input type="text" id="locations" name="locations" class="form-control" value="{{ (profile.locations or [])|join(', ') if profile else '' }}" placeholder="Remote, San Francisco">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="remote_preference">Remote Preference</label>
+          <select id="remote_preference" name="remote_preference" class="form-select">
+            {% for opt in [('any', 'Any'), ('remote', 'Remote only'), ('hybrid', 'Hybrid'), ('onsite', 'On-site')] %}
+            <option value="{{ opt[0] }}" {% if (profile.remote_preference if profile else 'any') == opt[0] %}selected{% endif %}>{{ opt[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="schedule_hours">Discovery Interval (hours)</label>
+          <input type="number" id="schedule_hours" name="schedule_hours" class="form-control" value="{{ profile.schedule_hours if profile else 6 }}" min="1">
+        </div>
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if not profile or profile.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">Active (include in scheduled discovery)</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Sources</label>
+          <div class="d-flex flex-wrap gap-3">
+            {% for src in sources %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="sources" value="{{ src }}" id="src_{{ src }}"
+                {% if profile %}
+                  {% if src in (profile.sources or []) %}checked{% endif %}
+                {% elif src in ['adzuna', 'remotive'] %}
+                  checked
+                {% endif %}>
+              <label class="form-check-label" for="src_{{ src }}">{{ src|title }}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="greenhouse_boards">Greenhouse Boards (comma-separated tokens or URLs)</label>
+          <input type="text" id="greenhouse_boards" name="greenhouse_boards" class="form-control" value="{{ (profile.greenhouse_boards or [])|join(', ') if profile else '' }}" placeholder="stripe, airbnb">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="lever_boards">Lever Boards (comma-separated)</label>
+          <input type="text" id="lever_boards" name="lever_boards" class="form-control" value="{{ (profile.lever_boards or [])|join(', ') if profile else '' }}" placeholder="netflix, spotify">
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="rss_feeds">RSS Feeds (comma-separated URLs)</label>
+          <input type="text" id="rss_feeds" name="rss_feeds" class="form-control" value="{{ (profile.rss_feeds or [])|join(', ') if profile else '' }}" placeholder="https://example.com/jobs.rss">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="indeed_max_age_days">Indeed: max job age (days)</label>
+          <input type="number" id="indeed_max_age_days" name="indeed_max_age_days" class="form-control" value="{{ profile.indeed_max_age_days if profile else 7 }}" min="1">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="indeed_radius_miles">Indeed: radius (miles, 0 = any)</label>
+          <input type="number" id="indeed_radius_miles" name="indeed_radius_miles" class="form-control" value="{{ profile.indeed_radius_miles if profile else 0 }}" min="0">
+        </div>
+        <div class="col-12">
+          <div class="alert alert-info mb-0 small">
+            Enable <strong>indeed</strong> or <strong>linkedin</strong> sources only after setting
+            <code>INDEED_SCRAPE_ENABLED</code> / <code>LINKEDIN_SCRAPE_ENABLED</code> and adding portal credentials.
+            LinkedIn requires a Playwright <code>storage_state</code> session.
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary">{% if profile %}Save Changes{% else %}Create Profile{% endif %}</button>
+        <a href="{{ url_for('jobs.search_profiles_list') }}" class="btn btn-outline-secondary">Cancel</a>
+        {% if profile %}
+        <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteSearchProfileModal">Delete</button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if profile %}
+<div class="modal fade" id="deleteSearchProfileModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete search profile?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">Delete <strong>{{ profile.name }}</strong>? This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" action="{{ url_for('jobs.search_profile_delete', profile_id=profile.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

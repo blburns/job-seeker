@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}Search Profiles{% endblock %}
+{% block content %}
+{% call page_header('Job Search Profiles', 'Automated discovery criteria and connected sources') %}
+  <a href="{{ url_for('jobs.search_profile_new') }}" class="btn btn-primary btn-sm">New Profile</a>
+{% endcall %}
+
+<div class="card">
+  <div class="card-datatable table-responsive">
+    <table class="table border-top">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Titles</th>
+          <th>Sources</th>
+          <th>Schedule</th>
+          <th>Last Run</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for profile in profiles %}
+        <tr>
+          <td>{{ profile.name }}</td>
+          <td>{{ (profile.titles or [])|join(', ') or '-' }}</td>
+          <td>
+            {% for src in profile.sources or [] %}
+            <span class="badge bg-label-secondary me-1">{{ src }}</span>
+            {% else %}-{% endfor %}
+          </td>
+          <td>Every {{ profile.schedule_hours }}h</td>
+          <td>{{ profile.last_run_at.strftime('%Y-%m-%d %H:%M') if profile.last_run_at else 'Never' }}</td>
+          <td class="text-end">
+            <a href="{{ url_for('jobs.search_profile_edit', profile_id=profile.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <form method="post" action="{{ url_for('jobs.run_discovery', profile_id=profile.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-primary">Run Now</button>
+            </form>
+            <form method="post" action="{{ url_for('jobs.search_profile_delete', profile_id=profile.id) }}" class="d-inline" onsubmit="return confirm('Delete this search profile?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr class="table-empty">
+          <td colspan="6" class="text-center text-muted">No search profiles yet. <a href="{{ url_for('jobs.search_profile_new') }}">Create one</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
