@@ -39,6 +39,7 @@ MODULES = [
         'parent': None,
         'children': [
             {'name': 'profiles', 'display_name': 'Master Profile', 'route': 'profiles_list', 'icon': 'profile'},
+            {'name': 'manual', 'display_name': 'Create Profile', 'route': 'profile_manual', 'icon': 'add'},
             {'name': 'upload', 'display_name': 'Upload Resume', 'route': 'upload', 'icon': 'upload'},
         ]
     },
@@ -59,6 +60,8 @@ MODULES = [
             {'name': 'new', 'display_name': 'Add Job', 'route': 'posting_new', 'icon': 'add'},
             {'name': 'fetch', 'display_name': 'Fetch from URL', 'route': 'posting_fetch', 'icon': 'link'},
             {'name': 'discover', 'display_name': 'Discover Jobs', 'route': 'discover', 'icon': 'search'},
+            {'name': 'search_profiles', 'display_name': 'Search Profiles', 'route': 'search_profiles_list', 'icon': 'filter'},
+            {'name': 'inbox', 'display_name': 'Discovery Inbox', 'route': 'discovery_inbox', 'icon': 'inbox'},
         ]
     },
     {
@@ -76,8 +79,24 @@ MODULES = [
         'children': [
             {'name': 'list', 'display_name': 'All Applications', 'route': 'list_view', 'icon': 'list'},
             {'name': 'pipeline', 'display_name': 'Pipeline', 'route': 'pipeline', 'icon': 'kanban'},
+            {'name': 'queue', 'display_name': 'Apply Queue', 'route': 'apply_queue', 'icon': 'queue'},
+            {'name': 'batches', 'display_name': 'Apply Batches', 'route': 'batches_list', 'icon': 'batch'},
             {'name': 'new', 'display_name': 'New Application', 'route': 'new_application', 'icon': 'add'},
         ]
+    },
+    {
+        'name': 'analytics',
+        'display_name': 'Analytics',
+        'description': 'Pipeline metrics and source effectiveness',
+        'icon': 'chart',
+        'color': 'info',
+        'permission': None,
+        'blueprint_name': 'analytics',
+        'route': 'dashboard',
+        'sort_order': 35,
+        'section': 'job_seeker',
+        'parent': None,
+        'children': []
     },
     {
         'name': 'admin',
@@ -143,6 +162,10 @@ ICONS = {
     'search': 'tabler-search',
     'kanban': 'tabler-layout-kanban',
     'chart': 'tabler-chart-bar',
+    'filter': 'tabler-filter',
+    'inbox': 'tabler-inbox',
+    'queue': 'tabler-list-check',
+    'batch': 'tabler-stack-2',
 }
 
 COLOR_CLASSES = {

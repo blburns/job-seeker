@@ -49,6 +49,12 @@ try:
 except ImportError:
     HAS_APPLY = False
 
+try:
+    from app.modules.analytics import analytics_bp
+    HAS_ANALYTICS = True
+except ImportError:
+    HAS_ANALYTICS = False
+
 
 def register_blueprints(app: Flask) -> None:
     """Register all application blueprints."""
@@ -80,3 +86,6 @@ def register_blueprints(app: Flask) -> None:
     if HAS_APPLY:
         app.register_blueprint(apply_bp)
         app.register_blueprint(apply_api_bp)
+
+    if HAS_ANALYTICS:
+        app.register_blueprint(analytics_bp)
