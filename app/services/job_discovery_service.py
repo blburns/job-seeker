@@ -114,19 +114,23 @@ class JobDiscoveryService:
     def build_apply_draft(cls, profile_data: Dict[str, Any], job_data: Dict[str, Any]) -> Dict[str, Any]:
         contact = profile_data.get('contact', {})
         experience = profile_data.get('experience', [])
+        defaults = profile_data.get('application_defaults', {})
         return {
             'full_name': contact.get('name', ''),
             'email': contact.get('email', ''),
             'phone': contact.get('phone', ''),
             'location': contact.get('location', ''),
             'linkedin': contact.get('linkedin', ''),
+            'website': contact.get('website', ''),
             'current_title': profile_data.get('headline', ''),
             'current_company': experience[0].get('company', '') if experience else '',
             'years_experience': str(len(experience) * 2),
-            'work_authorization': '',
-            'salary_expectation': '',
+            'work_authorization': defaults.get('work_authorization', ''),
+            'salary_expectation': defaults.get('salary_expectation', ''),
+            'willing_to_relocate': defaults.get('willing_to_relocate', ''),
+            'requires_sponsorship': defaults.get('requires_sponsorship', ''),
             'cover_letter': '',
-            'how_did_you_hear': 'Job board',
+            'how_did_you_hear': defaults.get('how_did_you_hear', 'Job board'),
             'job_title': job_data.get('title', ''),
             'job_company': job_data.get('company', ''),
             'job_url': job_data.get('url', ''),
