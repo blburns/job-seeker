@@ -7,9 +7,11 @@ from flask_login import current_user, login_required
 
 from app.extensions.core import db
 from app.models.jobs import (
-    Application, ApplicationStage, JobPosting, MasterProfile, ResumeVersion,
+    Application, ApplicationStage, JobPosting, KeywordAnalysis, MasterProfile, ResumeVersion,
 )
+from app.services.activity_service import activity_service
 from app.services.pipeline_service import pipeline_service
+from app.services.keyword_service import keyword_service
 from app.services.tailoring_service import tailoring_service
 from app.services.resume_export_service import resume_export_service
 from . import applications_bp
@@ -86,18 +88,99 @@ def new_application():
     return render_template('modules/applications/new.html', postings=postings)
 
 
+@applications_bp.route('/queue')
+@login_required
+def apply_queue():
+    apps = Application.query.filter_by(
+        user_id=current_user.id, is_deleted=False
+    ).filter(
+        Application.stage.in_([
+            ApplicationStage.SAVED.value,
+            ApplicationStage.TAILORING.value,
+            ApplicationStage.READY_TO_APPLY.value,
+        ])
+    ).order_by(Application.updated_at.desc()).all()
+    return render_template('modules/applications/apply_queue.html', applications=apps)
+
+
+@applications_bp.route('/batches')
+@login_required
+def batches_list():
+    from app.models.jobs import ApplyBatch
+    batches = ApplyBatch.query.filter_by(user_id=current_user.id).order_by(
+        ApplyBatch.created_at.desc()
+    ).all()
+    return render_template('modules/applications/batches_list.html', batches=batches)
+
+
+@applications_bp.route('/batches/create', methods=['POST'])
+@login_required
+def create_batch():
+    from app.services.apply_batch_service import apply_batch_service
+    app_ids = request.form.getlist('application_ids')
+    if not app_ids:
+        flash('Select at least one application.', 'warning')
+        return redirect(url_for('applications.apply_queue'))
+    try:
+        batch = apply_batch_service.create_batch(current_user.id, app_ids)
+        flash(f'Batch created with {len(app_ids)} applications.', 'success')
+        return redirect(url_for('applications.batch_detail', batch_id=batch.id))
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+        return redirect(url_for('applications.apply_queue'))
+
+
+@applications_bp.route('/batches/<uuid:batch_id>')
+@login_required
+def batch_detail(batch_id):
+    from app.models.jobs import ApplyBatch, ApplyBatchItem
+    batch = ApplyBatch.query.filter_by(id=batch_id, user_id=current_user.id).first_or_404()
+    items = ApplyBatchItem.query.filter_by(batch_id=batch.id).all()
+    return render_template('modules/applications/batch_detail.html', batch=batch, items=items)
+
+
+@applications_bp.route('/batches/<uuid:batch_id>/approve', methods=['POST'])
+@login_required
+def approve_batch(batch_id):
+    from app.services.apply_batch_service import apply_batch_service
+    from app.tasks.job_tasks import submit_apply_batch
+    try:
+        apply_batch_service.approve_batch(current_user.id, batch_id)
+        submit_apply_batch.delay(str(batch_id), str(current_user.id))
+        flash('Batch approved. Applications are being submitted.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    return redirect(url_for('applications.batch_detail', batch_id=batch_id))
+
+
+@applications_bp.route('/batch-tailor', methods=['POST'])
+@login_required
+def batch_tailor():
+    from app.tasks.job_tasks import batch_tailor_applications
+    app_ids = request.form.getlist('application_ids')
+    if app_ids:
+        batch_tailor_applications.delay(app_ids, str(current_user.id))
+        flash(f'Tailoring {len(app_ids)} applications in background.', 'success')
+    return redirect(url_for('applications.apply_queue'))
+
+
 @applications_bp.route('/<uuid:application_id>')
 @login_required
 def detail(application_id):
+    from app.models.jobs import ApplicationActivity
     app_record = Application.query.filter_by(
         id=application_id, user_id=current_user.id, is_deleted=False
     ).first_or_404()
     version = app_record.resume_version
+    activities = ApplicationActivity.query.filter_by(
+        application_id=app_record.id
+    ).order_by(ApplicationActivity.created_at.desc()).limit(50).all()
     return render_template(
         'modules/applications/detail.html',
         application=app_record,
         version=version,
         job=app_record.job_posting,
+        activities=activities,
     )
 
 
@@ -115,10 +198,11 @@ def tailor(application_id):
         return redirect(url_for('applications.detail', application_id=application_id))
 
     job = app_record.job_posting
-    tailored, diff_log = tailoring_service.tailor_for_job(
+    jd_text = f"{job.description or ''} {job.requirements or ''}"
+    tailored, diff_log, coverage = tailoring_service.tailor_for_job_with_coverage(
         profile.profile_data or {},
         job.title,
-        f"{job.description or ''} {job.requirements or ''}",
+        jd_text,
         job.company,
     )
     docx_bytes, filename = resume_export_service.export_docx(tailored)
@@ -135,11 +219,24 @@ def tailor(application_id):
         tailored_data=tailored,
         diff_log=diff_log,
         ats_score=ats_result['score'],
+        keyword_coverage=coverage,
         export_filename=filename,
     )
     db.session.add(version)
     app_record.resume_version_id = version.id
     app_record.stage = ApplicationStage.TAILORING.value
+    analysis = keyword_service.analyze_coverage(jd_text, profile.profile_data or {})
+    db.session.add(KeywordAnalysis(
+        user_id=current_user.id,
+        job_posting_id=job.id,
+        master_profile_id=profile.id,
+        jd_keywords=analysis['jd_keywords'],
+        matched_keywords=analysis['matched_keywords'],
+        missing_keywords=analysis['missing_keywords'],
+        synonym_matches=analysis['synonym_matches'],
+        coverage_score=analysis['coverage_score'],
+    ))
+    activity_service.log(app_record.id, current_user.id, 'tailor', subject='Resume tailored')
     db.session.commit()
     flash(f'Resume tailored. ATS score: {ats_result["score"]}%', 'success')
     return redirect(url_for('applications.detail', application_id=application_id))
@@ -163,6 +260,7 @@ def approve(application_id):
     version.approved_at = datetime.utcnow()
     version.approved_by = current_user.id
     app_record.stage = ApplicationStage.READY_TO_APPLY.value
+    activity_service.log(app_record.id, current_user.id, 'approve', subject='Resume approved')
     db.session.commit()
     flash('Resume approved. Ready to apply.', 'success')
     return redirect(url_for('applications.detail', application_id=application_id))

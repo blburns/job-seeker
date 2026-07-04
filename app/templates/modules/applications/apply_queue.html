@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}Apply Queue{% endblock %}
+{% block content %}
+{% call page_header('Apply Queue', 'Batch tailor, review, and approve applications') %}
+  <a href="{{ url_for('applications.batches_list') }}" class="btn btn-outline-primary btn-sm">View Batches</a>
+{% endcall %}
+
+<form method="post" id="queueForm">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card mb-3">
+    <div class="card-body d-flex flex-wrap gap-2">
+      <button type="submit" formaction="{{ url_for('applications.batch_tailor') }}" class="btn btn-outline-primary btn-sm">Tailor Selected</button>
+      <button type="submit" formaction="{{ url_for('applications.create_batch') }}" class="btn btn-primary btn-sm">Add to Apply Batch</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-datatable table-responsive">
+      <table class="table border-top">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll" class="form-check-input"></th>
+            <th>Job</th>
+            <th>Company</th>
+            <th>Stage</th>
+            <th>Fit</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in applications %}
+          <tr>
+            <td><input type="checkbox" name="application_ids" value="{{ app.id }}" class="form-check-input row-check"></td>
+            <td>{{ app.job_posting.title if app.job_posting else 'Unknown' }}</td>
+            <td>{{ app.job_posting.company if app.job_posting else '-' }}</td>
+            <td><span class="badge bg-label-info">{{ app.stage }}</span></td>
+            <td>{{ app.job_posting.fit_score or '-' }}{% if app.job_posting and app.job_posting.fit_score %}%{% endif %}</td>
+            <td class="text-end">
+              <a href="{{ url_for('applications.detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr class="table-empty">
+            <td colspan="6" class="text-center text-muted">No applications in queue.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</form>
+{% endblock %}
+{% block extra_vendor_js %}
+<script>
+document.getElementById('selectAll')?.addEventListener('change', function() {
+  document.querySelectorAll('.row-check').forEach(cb => { cb.checked = this.checked; });
+});
+</script>
+{% endblock %}

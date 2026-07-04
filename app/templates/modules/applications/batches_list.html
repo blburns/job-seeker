@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}Apply Batches{% endblock %}
+{% block content %}
+{% call page_header('Apply Batches', 'Batches approved for automated submission') %}
+  <a href="{{ url_for('applications.apply_queue') }}" class="btn btn-outline-primary btn-sm">Apply Queue</a>
+{% endcall %}
+
+<div class="card">
+  <div class="card-datatable table-responsive">
+    <table class="table border-top">
+      <thead>
+        <tr>
+          <th>Created</th>
+          <th>Status</th>
+          <th>Applications</th>
+          <th>Approved</th>
+          <th>Completed</th>
+          <th class="text-end">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for batch in batches %}
+        <tr>
+          <td>{{ batch.created_at.strftime('%Y-%m-%d %H:%M') if batch.created_at else '-' }}</td>
+          <td><span class="badge bg-label-{{ 'success' if batch.status == 'completed' else 'warning' }}">{{ batch.status }}</span></td>
+          <td>{{ (batch.application_ids or [])|length }}</td>
+          <td>{{ batch.approved_at.strftime('%Y-%m-%d %H:%M') if batch.approved_at else '-' }}</td>
+          <td>{{ batch.completed_at.strftime('%Y-%m-%d %H:%M') if batch.completed_at else '-' }}</td>
+          <td class="text-end">
+            <a href="{{ url_for('applications.batch_detail', batch_id=batch.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr class="table-empty">
+          <td colspan="6" class="text-center text-muted">No batches yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}Batch Detail{% endblock %}
+{% block content %}
+{% call page_header('Apply Batch', batch.status|title) %}
+  {% if batch.status == 'draft' %}
+  <form method="post" action="{{ url_for('applications.approve_batch', batch_id=batch.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-success btn-sm">Approve &amp; Submit</button>
+  </form>
+  {% endif %}
+{% endcall %}
+
+<div class="card mb-4">
+  <div class="card-body">
+    <p class="mb-1"><strong>Applications:</strong> {{ (batch.application_ids or [])|length }}</p>
+    <p class="mb-0"><strong>Status:</strong> {{ batch.status }}</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h5 class="card-title mb-0">Per-Application Progress</h5></div>
+  <div class="card-datatable table-responsive">
+    <table class="table border-top">
+      <thead>
+        <tr>
+          <th>Job</th>
+          <th>Company</th>
+          <th>Status</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.application.job_posting.title if item.application and item.application.job_posting else '-' }}</td>
+          <td>{{ item.application.job_posting.company if item.application and item.application.job_posting else '-' }}</td>
+          <td><span class="badge bg-label-secondary">{{ item.status }}</span></td>
+          <td class="small text-danger">{{ item.error_message or '' }}</td>
+        </tr>
+        {% else %}
+        <tr class="table-empty">
+          <td colspan="4" class="text-center text-muted">No items in batch.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
