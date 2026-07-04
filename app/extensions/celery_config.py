@@ -53,8 +53,13 @@ celery_config = {
     
     # Task execution settings
     'task_track_started': True,
-    'task_time_limit': 300,  # 5 minutes
-    'task_soft_time_limit': 240,  # 4 minutes
+    'task_time_limit': 600,
+    'task_soft_time_limit': 540,
+
+    'task_routes': {
+        'app.tasks.job_tasks.run_discovery_for_profile': {'queue': 'scraping'},
+        'app.tasks.job_tasks.run_all_active_discoveries': {'queue': 'scraping'},
+    },
     
     # Task retry settings
     'task_acks_late': True,
@@ -66,22 +71,34 @@ celery_config = {
     'result_expires': 3600,  # 1 hour
     
     # Worker settings
-    'worker_prefetch_multiplier': 4,
-    'worker_max_tasks_per_child': 1000,
+    'worker_prefetch_multiplier': 1,
+    'worker_max_tasks_per_child': 50,
     
     # Beat schedule (for periodic tasks)
     'beat_schedule': {
         'cleanup-expired-sessions': {
-            'task': 'app.tasks.cleanup_expired_sessions',
-            'schedule': 3600.0,  # Every hour
+            'task': 'app.tasks.maintenance_tasks.cleanup_expired_sessions',
+            'schedule': 3600.0,
         },
         'cleanup-expired-role-assignments': {
-            'task': 'app.tasks.cleanup_expired_role_assignments',
-            'schedule': 3600.0,  # Every hour
+            'task': 'app.tasks.maintenance_tasks.cleanup_expired_role_assignments',
+            'schedule': 3600.0,
         },
         'cleanup-old-email-logs': {
-            'task': 'app.tasks.cleanup_old_email_logs',
-            'schedule': 86400.0,  # Every day
+            'task': 'app.tasks.maintenance_tasks.cleanup_old_email_logs',
+            'schedule': 86400.0,
+        },
+        'run-active-job-discoveries': {
+            'task': 'app.tasks.job_tasks.run_all_active_discoveries',
+            'schedule': 21600.0,
+        },
+        'check-follow-up-reminders': {
+            'task': 'app.tasks.job_tasks.check_follow_up_reminders',
+            'schedule': 86400.0,
+        },
+        'check-portal-sessions': {
+            'task': 'app.tasks.job_tasks.check_portal_sessions',
+            'schedule': 43200.0,
         },
     },
 }

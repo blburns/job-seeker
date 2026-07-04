@@ -5,13 +5,14 @@ Entry point for Celery worker
 
 import os
 from app import create_app
-from app.extensions.celery_config import make_celery
+from app.extensions.celery_config import make_celery, init_celery
 
 # Create Flask app
 flask_app = create_app()
 
 # Create Celery app
 celery = make_celery(flask_app)
+celery = init_celery(flask_app, celery)
 
 # Import tasks to register them
 import app.tasks  # noqa

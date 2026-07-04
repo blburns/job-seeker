@@ -15,6 +15,48 @@ services:
     ports:
       - "6380:6379"
 
+  celery_worker:
+    build: .
+    command: celery -A celery_app.celery worker --loglevel=info -Q celery,scraping --concurrency=2
+    environment:
+      FLASK_ENV: development
+      DB_TYPE: postgresql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: jobseeker_db
+      DB_USER: jobseeker
+      DB_PASSWORD: jobseeker
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      PLAYWRIGHT_HEADLESS: "true"
+      LINKEDIN_SCRAPE_ENABLED: "false"
+      INDEED_SCRAPE_ENABLED: "false"
+      SCRAPE_RATE_LIMIT_PER_HOUR: "20"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+
+  celery_beat:
+    build: .
+    command: celery -A celery_app.celery beat --loglevel=info
+    environment:
+      FLASK_ENV: development
+      DB_TYPE: postgresql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: jobseeker_db
+      DB_USER: jobseeker
+      DB_PASSWORD: jobseeker
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+
   web:
     build: .
     command: python run.py
