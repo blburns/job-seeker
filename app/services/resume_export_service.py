@@ -145,7 +145,10 @@ class ResumeExportService:
     def _get_summary_text(cls, profile_data: Dict[str, Any]) -> str:
         variants = profile_data.get('summary_variants', [])
         if variants:
-            return variants[0].get('text', '')
+            first = variants[0]
+            if isinstance(first, dict):
+                return first.get('text', '')
+            return str(first)
         return profile_data.get('summary', '')
 
     @classmethod

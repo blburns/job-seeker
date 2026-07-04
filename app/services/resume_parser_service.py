@@ -491,6 +491,10 @@ class ResumeParserService:
         }
 
     @classmethod
+    def make_bullet(cls, text: str) -> Dict[str, Any]:
+        return cls._make_bullet(text)
+
+    @classmethod
     def _make_bullet(cls, text: str) -> Dict[str, Any]:
         return {
             'id': str(uuid.uuid4()),

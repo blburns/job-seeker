@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}{% if profile %}Edit Master Profile{% else %}Create Master Profile{% endif %}{% endblock %}
+{% block extra_vendor_css %}
+<style>
+  .repeatable-block { border: 1px solid var(--bs-border-color); border-radius: 0.375rem; padding: 1.25rem; margin-bottom: 1rem; position: relative; }
+  .repeatable-block .remove-row { position: absolute; top: 0.75rem; right: 0.75rem; }
+</style>
+{% endblock %}
+{% block content %}
+{% call page_header(
+  'Edit Master Profile' if profile else 'Create Master Profile',
+  'Enter your ATS-ready information once — used for tailoring, exports, and auto-fill on every application'
+) %}
+  <a href="{{ url_for('resume.profiles_list') }}" class="btn btn-outline-secondary btn-sm">Back to Profiles</a>
+{% endcall %}
+
+{% if validation_errors %}
+<div class="alert alert-warning">
+  <ul class="mb-0">{% for err in validation_errors %}<li>{{ err }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" id="masterProfileForm" action="{% if profile %}{{ url_for('resume.profile_manual_edit', profile_id=profile.id) }}{% else %}{{ url_for('resume.profile_manual') }}{% endif %}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="card mb-4">
+    <div class="card-header"><h5 class="card-title mb-0">Contact Information</h5></div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="contact_name">Full Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="contact_name" name="contact_name" value="{{ form.contact.name }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="contact_email">Email <span class="text-danger">*</span></label>
+          <input type="email" class="form-control" id="contact_email" name="contact_email" value="{{ form.contact.email }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="contact_phone">Phone</label>
+          <input type="tel" class="form-control" id="contact_phone" name="contact_phone" value="{{ form.contact.phone }}" placeholder="(555) 123-4567">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="contact_location">City, State / Country</label>
+          <input type="text" class="form-control" id="contact_location" name="contact_location" value="{{ form.contact.location }}" placeholder="San Francisco, CA">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="contact_linkedin">LinkedIn URL</label>
+          <input type="url" class="form-control" id="contact_linkedin" name="contact_linkedin" value="{{ form.contact.linkedin }}" placeholder="https://linkedin.com/in/yourname">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="contact_website">Portfolio / Website</label>
+          <input type="url" class="form-control" id="contact_website" name="contact_website" value="{{ form.contact.website }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header"><h5 class="card-title mb-0">Professional Summary</h5></div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label" for="headline">Professional Headline / Target Title</label>
+        <input type="text" class="form-control" id="headline" name="headline" value="{{ form.headline }}" placeholder="Senior Software Engineer">
+      </div>
+      <div>
+        <label class="form-label" for="summary">Professional Summary</label>
+        <textarea class="form-control" id="summary" name="summary" rows="5" placeholder="2–4 sentences highlighting your experience, strengths, and career focus.">{{ form.summary }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Work Experience</h5>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="addExperience">+ Add Position</button>
+    </div>
+    <div class="card-body" id="experienceContainer">
+      {% for exp in form.experience %}
+      <div class="repeatable-block experience-row">
+        <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove" {% if form.experience|length <= 1 %}style="display:none"{% endif %}>&times;</button>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Job Title <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="exp_title[]" value="{{ exp.title }}" placeholder="Software Engineer">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Company <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="exp_company[]" value="{{ exp.company }}" placeholder="Acme Corp">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Start Date</label>
+            <input type="text" class="form-control" name="exp_start[]" value="{{ exp.start }}" placeholder="Jan 2020">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">End Date</label>
+            <input type="text" class="form-control" name="exp_end[]" value="{{ exp.end }}" placeholder="Present">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Location</label>
+            <input type="text" class="form-control" name="exp_location[]" value="{{ exp.location }}" placeholder="Remote">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Accomplishments (one per line)</label>
+            <textarea class="form-control" name="exp_bullets[]" rows="4" placeholder="Built scalable APIs serving 1M+ requests/day&#10;Led team of 4 engineers on platform migration">{{ exp.bullets }}</textarea>
+            <small class="text-muted">Use metrics and action verbs. Each line becomes a resume bullet.</small>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Education</h5>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="addEducation">+ Add Education</button>
+    </div>
+    <div class="card-body" id="educationContainer">
+      {% for edu in form.education %}
+      <div class="repeatable-block education-row">
+        <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove" {% if form.education|length <= 1 %}style="display:none"{% endif %}>&times;</button>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Institution</label>
+            <input type="text" class="form-control" name="edu_institution[]" value="{{ edu.institution }}" placeholder="University of Example">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Degree</label>
+            <input type="text" class="form-control" name="edu_degree[]" value="{{ edu.degree }}" placeholder="B.S. Computer Science">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Field of Study</label>
+            <input type="text" class="form-control" name="edu_field[]" value="{{ edu.field }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Start</label>
+            <input type="text" class="form-control" name="edu_start[]" value="{{ edu.start }}" placeholder="2016">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">End</label>
+            <input type="text" class="form-control" name="edu_end[]" value="{{ edu.end }}" placeholder="2020">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">GPA</label>
+            <input type="text" class="form-control" name="edu_gpa[]" value="{{ edu.gpa }}" placeholder="3.8">
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header"><h5 class="card-title mb-0">Skills &amp; Certifications</h5></div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label" for="skills_technical">Technical Skills</label>
+          <textarea class="form-control" id="skills_technical" name="skills_technical" rows="2" placeholder="Python, Flask, PostgreSQL, AWS, Docker">{{ form.skills.technical }}</textarea>
+          <small class="text-muted">Comma-separated. These power keyword matching and tailoring.</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="skills_soft">Soft Skills</label>
+          <textarea class="form-control" id="skills_soft" name="skills_soft" rows="2" placeholder="Leadership, Communication, Mentoring">{{ form.skills.soft }}</textarea>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="skills_certifications">Certifications</label>
+          <textarea class="form-control" id="skills_certifications" name="skills_certifications" rows="2" placeholder="AWS Solutions Architect, PMP">{{ form.skills.certifications }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Projects <span class="text-muted fw-normal">(optional)</span></h5>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="addProject">+ Add Project</button>
+    </div>
+    <div class="card-body" id="projectContainer">
+      {% for proj in form.projects %}
+      <div class="repeatable-block project-row">
+        <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove">&times;</button>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Project Name</label>
+            <input type="text" class="form-control" name="proj_name[]" value="{{ proj.name }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">URL</label>
+            <input type="url" class="form-control" name="proj_url[]" value="{{ proj.url }}">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="proj_description[]" rows="2">{{ proj.description }}</textarea>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0" id="noProjectsHint">No projects added yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header"><h5 class="card-title mb-0">Application Defaults</h5></div>
+    <div class="card-body">
+      <p class="text-muted small">Pre-fill common ATS application questions for every job you apply to.</p>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="work_authorization">Work Authorization</label>
+          <select class="form-select" id="work_authorization" name="work_authorization">
+            <option value="">Select…</option>
+            {% for opt in ['US Citizen', 'Green Card', 'H-1B', 'OPT', 'Requires Sponsorship', 'Authorized to work in US', 'Authorized to work in Canada', 'Authorized to work in UK'] %}
+            <option value="{{ opt }}" {% if form.application_defaults.work_authorization == opt %}selected{% endif %}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="salary_expectation">Salary Expectation</label>
+          <input type="text" class="form-control" id="salary_expectation" name="salary_expectation" value="{{ form.application_defaults.salary_expectation }}" placeholder="$120,000 - $150,000">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="willing_to_relocate">Willing to Relocate</label>
+          <select class="form-select" id="willing_to_relocate" name="willing_to_relocate">
+            <option value="">Select…</option>
+            <option value="Yes" {% if form.application_defaults.willing_to_relocate == 'Yes' %}selected{% endif %}>Yes</option>
+            <option value="No" {% if form.application_defaults.willing_to_relocate == 'No' %}selected{% endif %}>No</option>
+            <option value="Open to discussion" {% if form.application_defaults.willing_to_relocate == 'Open to discussion' %}selected{% endif %}>Open to discussion</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="requires_sponsorship">Requires Visa Sponsorship</label>
+          <select class="form-select" id="requires_sponsorship" name="requires_sponsorship">
+            <option value="">Select…</option>
+            <option value="Yes" {% if form.application_defaults.requires_sponsorship == 'Yes' %}selected{% endif %}>Yes</option>
+            <option value="No" {% if form.application_defaults.requires_sponsorship == 'No' %}selected{% endif %}>No</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="how_did_you_hear">How did you hear about us?</label>
+          <input type="text" class="form-control" id="how_did_you_hear" name="how_did_you_hear" value="{{ form.application_defaults.how_did_you_hear }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <button type="submit" class="btn btn-primary">{% if profile %}Save Changes{% else %}Save Master Profile{% endif %}</button>
+    <a href="{{ url_for('resume.profiles_list') }}" class="btn btn-outline-secondary">Cancel</a>
+  </div>
+</form>
+
+<template id="experienceTemplate">
+  <div class="repeatable-block experience-row">
+    <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove">&times;</button>
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label">Job Title <span class="text-danger">*</span></label><input type="text" class="form-control" name="exp_title[]" placeholder="Software Engineer"></div>
+      <div class="col-md-6"><label class="form-label">Company <span class="text-danger">*</span></label><input type="text" class="form-control" name="exp_company[]" placeholder="Acme Corp"></div>
+      <div class="col-md-4"><label class="form-label">Start Date</label><input type="text" class="form-control" name="exp_start[]" placeholder="Jan 2020"></div>
+      <div class="col-md-4"><label class="form-label">End Date</label><input type="text" class="form-control" name="exp_end[]" placeholder="Present"></div>
+      <div class="col-md-4"><label class="form-label">Location</label><input type="text" class="form-control" name="exp_location[]" placeholder="Remote"></div>
+      <div class="col-12"><label class="form-label">Accomplishments (one per line)</label><textarea class="form-control" name="exp_bullets[]" rows="4"></textarea></div>
+    </div>
+  </div>
+</template>
+
+<template id="educationTemplate">
+  <div class="repeatable-block education-row">
+    <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove">&times;</button>
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label">Institution</label><input type="text" class="form-control" name="edu_institution[]"></div>
+      <div class="col-md-6"><label class="form-label">Degree</label><input type="text" class="form-control" name="edu_degree[]"></div>
+      <div class="col-md-4"><label class="form-label">Field of Study</label><input type="text" class="form-control" name="edu_field[]"></div>
+      <div class="col-md-3"><label class="form-label">Start</label><input type="text" class="form-control" name="edu_start[]"></div>
+      <div class="col-md-3"><label class="form-label">End</label><input type="text" class="form-control" name="edu_end[]"></div>
+      <div class="col-md-2"><label class="form-label">GPA</label><input type="text" class="form-control" name="edu_gpa[]"></div>
+    </div>
+  </div>
+</template>
+
+<template id="projectTemplate">
+  <div class="repeatable-block project-row">
+    <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Remove">&times;</button>
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label">Project Name</label><input type="text" class="form-control" name="proj_name[]"></div>
+      <div class="col-md-6"><label class="form-label">URL</label><input type="url" class="form-control" name="proj_url[]"></div>
+      <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" name="proj_description[]" rows="2"></textarea></div>
+    </div>
+  </div>
+</template>
+{% endblock %}
+
+{% block extra_vendor_js %}
+<script>
+(function() {
+  function updateRemoveButtons(container, minRows) {
+    const rows = container.querySelectorAll('.repeatable-block');
+    rows.forEach((row, i) => {
+      const btn = row.querySelector('.remove-row');
+      if (btn) btn.style.display = rows.length <= minRows ? 'none' : '';
+    });
+  }
+
+  function bindRemove(container, minRows) {
+    container.addEventListener('click', function(e) {
+      if (!e.target.classList.contains('remove-row')) return;
+      const row = e.target.closest('.repeatable-block');
+      if (row && container.querySelectorAll('.repeatable-block').length > minRows) {
+        row.remove();
+        updateRemoveButtons(container, minRows);
+      }
+    });
+  }
+
+  const expContainer = document.getElementById('experienceContainer');
+  document.getElementById('addExperience')?.addEventListener('click', function() {
+    const tpl = document.getElementById('experienceTemplate');
+    expContainer.appendChild(tpl.content.cloneNode(true));
+    updateRemoveButtons(expContainer, 1);
+  });
+  bindRemove(expContainer, 1);
+  updateRemoveButtons(expContainer, 1);
+
+  const eduContainer = document.getElementById('educationContainer');
+  document.getElementById('addEducation')?.addEventListener('click', function() {
+    eduContainer.appendChild(document.getElementById('educationTemplate').content.cloneNode(true));
+    updateRemoveButtons(eduContainer, 1);
+  });
+  bindRemove(eduContainer, 1);
+  updateRemoveButtons(eduContainer, 1);
+
+  const projContainer = document.getElementById('projectContainer');
+  document.getElementById('addProject')?.addEventListener('click', function() {
+    document.getElementById('noProjectsHint')?.remove();
+    projContainer.appendChild(document.getElementById('projectTemplate').content.cloneNode(true));
+  });
+  projContainer?.addEventListener('click', function(e) {
+    if (!e.target.classList.contains('remove-row')) return;
+    e.target.closest('.repeatable-block')?.remove();
+  });
+})();
+</script>
+{% endblock %}

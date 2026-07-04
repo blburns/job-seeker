@@ -3,6 +3,7 @@
 {% block title %}Master Profiles{% endblock %}
 {% block content %}
 {% call page_header('Master Profiles', 'Structured resume data for tailoring and export') %}
+  <a href="{{ url_for('resume.profile_manual') }}" class="btn btn-outline-primary btn-sm">Create Manually</a>
   <a href="{{ url_for('resume.upload') }}" class="btn btn-primary btn-sm">Upload Resume</a>
 {% endcall %}
 
@@ -35,6 +36,17 @@
           <td>{{ profile.created_at.strftime('%Y-%m-%d') if profile.created_at else '-' }}</td>
           <td class="text-end">
             <a href="{{ url_for('resume.profile_detail', profile_id=profile.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+            <a href="{{ url_for('resume.profile_manual_edit', profile_id=profile.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            {% if not profile.is_active %}
+            <form method="post" action="{{ url_for('resume.profile_activate', profile_id=profile.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-success">Set Active</button>
+            </form>
+            {% endif %}
+            <form method="post" action="{{ url_for('resume.profile_delete', profile_id=profile.id) }}" class="d-inline" onsubmit="return confirm('Delete this master profile?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
           </td>
         </tr>
         {% else %}

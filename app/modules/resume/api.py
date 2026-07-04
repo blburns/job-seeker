@@ -105,6 +105,41 @@ def update_profile(profile_id):
         profile.profile_data = data['profile_data']
     if 'headline' in data:
         profile.headline = data['headline']
+    if 'is_active' in data and data['is_active']:
+        MasterProfile.query.filter_by(user_id=current_user.id, is_active=True).update({'is_active': False})
+        profile.is_active = True
+    elif 'is_active' in data:
+        profile.is_active = False
+    db.session.commit()
+    return jsonify(profile.to_dict())
+
+
+@resume_api_bp.route('/profiles/<uuid:profile_id>', methods=['DELETE'])
+@login_required
+def delete_profile(profile_id):
+    profile = MasterProfile.query.filter_by(
+        id=profile_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    was_active = profile.is_active
+    profile.soft_delete()
+    if was_active:
+        replacement = MasterProfile.query.filter_by(
+            user_id=current_user.id, is_deleted=False
+        ).order_by(MasterProfile.created_at.desc()).first()
+        if replacement:
+            replacement.is_active = True
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@resume_api_bp.route('/profiles/<uuid:profile_id>/activate', methods=['POST'])
+@login_required
+def activate_profile(profile_id):
+    profile = MasterProfile.query.filter_by(
+        id=profile_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    MasterProfile.query.filter_by(user_id=current_user.id, is_active=True).update({'is_active': False})
+    profile.is_active = True
     db.session.commit()
     return jsonify(profile.to_dict())
 

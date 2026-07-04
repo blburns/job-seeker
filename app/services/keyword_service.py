@@ -72,7 +72,10 @@ class KeywordService:
         parts = []
         parts.append(profile_data.get('headline', ''))
         for variant in profile_data.get('summary_variants', []):
-            parts.append(variant.get('text', ''))
+            if isinstance(variant, dict):
+                parts.append(variant.get('text', ''))
+            else:
+                parts.append(str(variant))
         for exp in profile_data.get('experience', []):
             parts.append(exp.get('title', ''))
             parts.append(exp.get('company', ''))

@@ -3,8 +3,19 @@
 {% block title %}Profile Detail{% endblock %}
 {% block content %}
 {% call page_header(profile.full_name, profile.headline or 'No headline') %}
-  <a href="{{ url_for('resume.profile_edit', profile_id=profile.id) }}" class="btn btn-outline-primary btn-sm">Edit</a>
+  <a href="{{ url_for('resume.profile_manual_edit', profile_id=profile.id) }}" class="btn btn-outline-primary btn-sm">Edit Form</a>
+  <a href="{{ url_for('resume.profile_edit', profile_id=profile.id) }}" class="btn btn-outline-secondary btn-sm">Edit JSON</a>
   <a href="{{ url_for('resume_api.export_profile', profile_id=profile.id) }}" class="btn btn-primary btn-sm">Export DOCX</a>
+  {% if not profile.is_active %}
+  <form method="post" action="{{ url_for('resume.profile_activate', profile_id=profile.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-success btn-sm">Set Active</button>
+  </form>
+  {% endif %}
+  <form method="post" action="{{ url_for('resume.profile_delete', profile_id=profile.id) }}" class="d-inline" onsubmit="return confirm('Delete this master profile?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+  </form>
 {% endcall %}
 
 {% if ats_result %}
