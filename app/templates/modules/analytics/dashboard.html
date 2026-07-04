@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header, stat_card %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+{% call page_header('Job Search Analytics', 'Pipeline funnel, source effectiveness, and adapter stats') %}{% endcall %}
+
+<div class="row g-4 mb-4">
+  {{ stat_card('Total Applications', stats.total_applications, '', 'bg-label-primary', 'tabler-clipboard-list') }}
+  {{ stat_card('Applied', stats.applied_count, '', 'bg-label-success', 'tabler-send') }}
+  {{ stat_card('Interviews', stats.interview_count, '', 'bg-label-info', 'tabler-calendar-event') }}
+  {{ stat_card('This Week', stats.applications_this_week, '', 'bg-label-warning', 'tabler-trending-up') }}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h5 class="card-title mb-0">Pipeline Funnel</h5></div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          {% for step in stats.funnel %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>{{ step.stage|replace('_', ' ')|title }}</span>
+            <strong>{{ step.count }}</strong>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h5 class="card-title mb-0">Source Effectiveness</h5></div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          {% for source, count in stats.source_effectiveness.items() %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>{{ source }}</span>
+            <strong>{{ count }}</strong>
+          </li>
+          {% else %}
+          <li class="list-group-item text-muted">No posting source data yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header"><h5 class="card-title mb-0">Quality Metrics</h5></div>
+      <div class="card-body">
+        <p class="mb-2">Avg keyword coverage at apply: <strong>{{ stats.avg_keyword_coverage }}%</strong></p>
+        <p class="mb-2">Response rate (interviews/applied): <strong>{{ stats.response_rate }}%</strong></p>
+        <p class="mb-0">Discovered jobs staged: <strong>{{ stats.discovered_jobs }}</strong></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header"><h5 class="card-title mb-0">Adapter Submission Stats</h5></div>
+      <div class="card-body">
+        <p class="mb-2 text-success">Successful: <strong>{{ stats.adapter_success }}</strong></p>
+        <p class="mb-0 text-danger">Failed / manual: <strong>{{ stats.adapter_failed }}</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
