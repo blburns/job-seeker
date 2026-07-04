@@ -60,6 +60,11 @@ logs/
 .secrets/
 *.pem
 *.key
+*_storage_state.json
+linkedin_storage_state.json
+
+# Cursor plans (local)
+.cursor/
 
 # Database
 *.db
