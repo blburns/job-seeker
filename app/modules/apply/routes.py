@@ -8,8 +8,11 @@ from flask_login import current_user, login_required
 
 from app.extensions.core import db
 from app.models.jobs import Application, ApplicationStage, ApplyDraft, MasterProfile, ResumeVersionStatus
+from app.services.activity_service import activity_service
 from app.services.job_discovery_service import job_discovery_service
 from app.services.resume_export_service import resume_export_service
+from app.services.tailoring_service import tailoring_service
+from app.services.credential_vault_service import credential_vault_service
 from . import apply_bp
 
 logger = logging.getLogger(__name__)
@@ -34,10 +37,17 @@ def review(application_id):
             profile.profile_data or {},
             {'title': job.title, 'company': job.company, 'url': job.url},
         )
+        cover_letter = tailoring_service.generate_cover_letter_for_job(
+            profile.profile_data or {},
+            job.title,
+            job.company,
+            f"{job.description or ''} {job.requirements or ''}",
+        )
         draft = ApplyDraft(
             application_id=app_record.id,
             user_id=current_user.id,
             form_fields=form_fields,
+            cover_letter=cover_letter,
             status='draft',
         )
         db.session.add(draft)
@@ -94,6 +104,9 @@ def mark_applied(application_id):
 
     app_record.stage = ApplicationStage.APPLIED.value
     app_record.applied_at = datetime.utcnow()
+    if app_record.resume_version and app_record.resume_version.keyword_coverage:
+        app_record.keyword_coverage_at_apply = app_record.resume_version.keyword_coverage
+    activity_service.log(app_record.id, current_user.id, 'submit', subject='Marked applied manually')
     db.session.commit()
     flash('Marked as applied.', 'success')
     return redirect(url_for('applications.detail', application_id=application_id))
@@ -120,3 +133,82 @@ def download_resume(application_id):
         download_name=version.export_filename or filename,
         mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     )
+
+
+@apply_bp.route('/credentials')
+@login_required
+def credentials_list():
+    creds = credential_vault_service.list_credentials(current_user.id)
+    active_portals = {
+        portal: credential_vault_service.has_active(current_user.id, portal)
+        for portal in ('linkedin', 'indeed', 'greenhouse', 'lever')
+    }
+    return render_template(
+        'modules/apply/credentials.html',
+        credentials=creds,
+        active_portals=active_portals,
+        encryption_key_configured=credential_vault_service.encryption_key_configured(),
+    )
+
+
+@apply_bp.route('/credentials/<portal>/test', methods=['POST'])
+@login_required
+def credentials_test(portal):
+    from app.services.scraping.session_health import session_health
+    result = session_health.check_and_update_credential(current_user.id, portal)
+    if result.ok:
+        flash(f'{portal.title()} session is valid.', 'success')
+    else:
+        flash(f'{portal.title()} session check failed: {result.message}', 'danger')
+    return redirect(url_for('apply.credentials_list'))
+
+
+@apply_bp.route('/credentials/<uuid:credential_id>/delete', methods=['POST'])
+@login_required
+def credentials_delete(credential_id):
+    if credential_vault_service.delete(current_user.id, credential_id):
+        flash('Credential deleted.', 'success')
+    else:
+        flash('Credential not found.', 'warning')
+    return redirect(url_for('apply.credentials_list'))
+
+
+@apply_bp.route('/credentials/<portal>/clear', methods=['POST'])
+@login_required
+def credentials_clear_portal(portal):
+    count = credential_vault_service.delete_for_portal(current_user.id, portal)
+    if count:
+        flash(f'Deleted {count} {portal.title()} credential(s).', 'success')
+    else:
+        flash(f'No {portal.title()} credentials to delete.', 'info')
+    return redirect(url_for('apply.credentials_list'))
+
+
+@apply_bp.route('/credentials', methods=['POST'])
+@login_required
+def credentials_store():
+    portal = request.form.get('portal', '').strip()
+    session_data = request.form.get('session_data', '').strip()
+    label = request.form.get('label', '').strip()
+    if not portal or not session_data:
+        flash('Portal and session data are required.', 'warning')
+        return redirect(url_for('apply.credentials_list'))
+    try:
+        import json
+        data = json.loads(session_data)
+    except json.JSONDecodeError:
+        flash('Session data must be valid JSON (paste the full storage_state export file).', 'danger')
+        return redirect(url_for('apply.credentials_list'))
+    try:
+        data = credential_vault_service.validate_portal_data(portal, data)
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+        return redirect(url_for('apply.credentials_list'))
+    if not credential_vault_service.encryption_key_configured():
+        flash(
+            'Warning: CREDENTIAL_ENCRYPTION_KEY is not set in .env — credentials may not survive an app restart.',
+            'warning',
+        )
+    credential_vault_service.store(current_user.id, portal, data, label=label)
+    flash(f'{portal.title()} credentials stored securely.', 'success')
+    return redirect(url_for('apply.credentials_list'))
