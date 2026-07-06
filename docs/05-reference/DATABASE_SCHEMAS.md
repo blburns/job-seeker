@@ -8,13 +8,58 @@ This document describes the database structure organized by PostgreSQL schemas. 
 The database uses PostgreSQL schemas to logically separate tables by module/domain:
 
 1. **`auth`** - Authentication and authorization
-2. **`accounts`** - Business account management
-3. **`contacts`** - Contact management
-4. **`documents`** - Document/file management
-5. **`organizations`** - Organization management
-6. **`tenants`** - Multi-tenancy support
-7. **`settings`** - Application settings and configuration
-8. **`public`** - System tables (alembic_version)
+2. **`jobs`** - Job seeker automation (master profiles, postings, applications, discovery, auto-apply)
+3. **`accounts`** - Business account management (legacy boilerplate)
+4. **`contacts`** - Contact management (legacy boilerplate)
+5. **`documents`** - Document/file management (legacy boilerplate)
+6. **`organizations`** - Organization management (legacy boilerplate)
+7. **`tenants`** - Multi-tenancy support (legacy boilerplate)
+8. **`settings`** - Application settings and configuration (legacy boilerplate)
+9. **`public`** - System tables (alembic_version)
+
+> **Job seeker tables** are the primary active schema. See [JOB_SEEKER_DATA_MODEL.md](JOB_SEEKER_DATA_MODEL.md) for complete jobs schema documentation with field descriptions and relationships.
+
+---
+
+## Schema: `jobs`
+
+**Purpose**: Job seeker automation — master profiles, job postings, applications, discovery, tailoring, and auto-apply.
+
+**Source**: [`app/models/jobs.py`](../../app/models/jobs.py)
+
+### Tables
+
+| Table | Purpose |
+|-------|---------|
+| `master_profiles` | Canonical structured resume per user |
+| `job_postings` | Saved job listings (manual, URL, or discovery) |
+| `job_search_profiles` | Automated discovery criteria |
+| `discovered_jobs` | Staging records in discovery inbox |
+| `discovery_runs` | Audit log for connector executions |
+| `company_blocklists` | Companies/URLs to skip during discovery |
+| `applications` | Job application tracking with pipeline stage |
+| `resume_versions` | Per-job tailored resume with diff log |
+| `keyword_analyses` | JD keyword coverage snapshots |
+| `apply_drafts` | Pre-filled application forms |
+| `apply_batches` | Groups of applications for auto-submission |
+| `apply_batch_items` | Per-application batch progress |
+| `portal_credentials` | Encrypted portal session data |
+| `application_activities` | Application timeline events |
+
+### Key enums
+
+- **ApplicationStage**: `saved`, `tailoring`, `ready_to_apply`, `applied`, `phone_screen`, `interview`, `offer`, `rejected`, `withdrawn`
+- **JobSource**: `manual`, `url`, `rss`, `adzuna`, `remotive`, `greenhouse`, `lever`, `linkedin`, `indeed`
+- **PortalType**: `greenhouse`, `lever`, `ashby`, `linkedin`, `indeed`, `generic`
+
+### Initialization
+
+```bash
+python scripts/init_database.py      # auth + core tables
+python scripts/create_jobs_schema.py # all jobs tables above
+```
+
+Full field-level documentation: [JOB_SEEKER_DATA_MODEL.md](JOB_SEEKER_DATA_MODEL.md)
 
 ---
 
