@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from 'macros/page_layout.html' import page_header %}
+{% from 'macros/tailoring.html' import render_diff_log, render_diff_summary %}
 {% block title %}Application Detail{% endblock %}
 {% block content %}
 {% call page_header(job.title if job else 'Application', (job.company if job else '') ~ ' · ' ~ application.stage) %}
@@ -18,6 +19,11 @@
   {% if application.stage in ['ready_to_apply', 'tailoring'] and version %}
   <a href="{{ url_for('apply.review', application_id=application.id) }}" class="btn btn-primary btn-sm">Review &amp; Apply</a>
   {% endif %}
+  {% if version %}
+  <a href="{{ url_for('applications.tailoring_review', application_id=application.id) }}" class="btn btn-outline-primary btn-sm">
+    <i class="icon-base ti tabler-list-details me-1"></i>Tailoring Review
+  </a>
+  {% endif %}
 {% endcall %}
 
 {% if version %}
@@ -27,25 +33,53 @@
     <span class="badge bg-label-info">{{ version.status }}</span>
   </div>
   <div class="card-body">
+    {{ render_diff_summary(diff_summary, coverage_delta) }}
     {% if version.ats_score %}
-    <p class="mb-3">ATS Score: <strong>{{ version.ats_score }}%</strong></p>
+    <p class="mb-3">ATS Score: <strong>{{ version.ats_score }}%</strong>
+      {% if version.keyword_coverage is not none %}
+      · Keyword coverage: <strong>{{ version.keyword_coverage }}%</strong>
+      {% endif %}
+    </p>
     {% endif %}
-    {% if version.diff_log %}
-    <h6 class="mb-2">Changes Made</h6>
-    <ul class="small mb-0 ps-3">
-      {% for change in version.diff_log[:10] %}
-      <li>{{ change.action }} — {{ change.field }}{% if change.keyword_added %} ({{ change.keyword_added }}){% endif %}</li>
-      {% endfor %}
-    </ul>
+    {% if version.export_filename %}
+    <p class="small text-muted mb-3">Export: {{ version.export_filename }}</p>
     {% endif %}
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0">Recent changes</h6>
+      <div class="d-flex gap-2">
+        {% if version %}
+        <a href="{{ url_for('applications.tailoring_review', application_id=application.id, tab='resume') }}" class="small">Resume output</a>
+        <span class="text-muted">·</span>
+        <a href="{{ url_for('applications.tailoring_review', application_id=application.id, tab='cover') }}" class="small">Cover letter</a>
+        <span class="text-muted">·</span>
+        {% endif %}
+        <a href="{{ url_for('applications.tailoring_review', application_id=application.id) }}" class="small">Full review →</a>
+      </div>
+    </div>
+    {{ render_diff_log(version.diff_log or []) }}
   </div>
 </div>
 {% endif %}
 
 <div class="card">
-  <div class="card-header"><h5 class="card-title mb-0">Notes</h5></div>
+  <div class="card-header border-bottom">
+    <h5 class="card-title mb-0">Notes</h5>
+  </div>
   <div class="card-body">
-    <p class="mb-0 text-muted">{{ application.notes or 'No notes yet.' }}</p>
+    <p class="text-muted small mb-3">
+      Your private notes for this application — recruiter contact info, interview prep,
+      why you want the role, follow-up reminders, or anything else you want to remember.
+    </p>
+    <form method="post" action="{{ url_for('applications.save_notes', application_id=application.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <textarea
+        name="notes"
+        class="form-control mb-3"
+        rows="5"
+        placeholder="e.g. Recruiter: Jane Smith (jane@company.com). Phone screen scheduled for Tuesday 2pm. Emphasize Python + AWS experience."
+      >{{ application.notes or '' }}</textarea>
+      <button type="submit" class="btn btn-sm btn-primary">Save notes</button>
+    </form>
   </div>
 </div>
 

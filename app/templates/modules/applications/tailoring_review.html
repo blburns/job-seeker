@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% from 'macros/tailoring.html' import render_diff_log, render_overview, render_compare, render_keyword_impact, render_version_history, render_resume_output, render_cover_letter %}
+{% block title %}Tailoring Review{% endblock %}
+{% block content %}
+{% set active_tab = request.args.get('tab', 'overview') %}
+{% call page_header('Tailoring Review', (job.title if job else 'Application') ~ (' @ ' ~ job.company if job and job.company else '')) %}
+  <a href="{{ url_for('applications.detail', application_id=application.id) }}" class="btn btn-outline-secondary btn-sm">
+    <i class="icon-base ti tabler-arrow-left me-1"></i>Application
+  </a>
+  {% if version %}
+  <a href="{{ url_for('apply.download_resume', application_id=application.id) }}" class="btn btn-outline-primary btn-sm">
+    <i class="icon-base ti tabler-download me-1"></i>Download DOCX
+  </a>
+  <a href="{{ url_for('applications.tailoring_export', application_id=application.id, version_id=version.id) }}" class="btn btn-outline-secondary btn-sm">
+    <i class="icon-base ti tabler-file-text me-1"></i>Export Report
+  </a>
+  {% endif %}
+  {% if version and version.status == 'pending_approval' %}
+  <form method="post" action="{{ url_for('applications.approve', application_id=application.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-success btn-sm">
+      <i class="icon-base ti tabler-check me-1"></i>Approve Resume
+    </button>
+  </form>
+  {% endif %}
+  {% if application.stage in ['saved', 'tailoring'] %}
+  <form method="post" action="{{ url_for('applications.tailor', application_id=application.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-primary btn-sm">
+      <i class="icon-base ti tabler-refresh me-1"></i>Re-tailor
+    </button>
+  </form>
+  {% endif %}
+{% endcall %}
+
+{% if not version %}
+<div class="alert alert-warning">
+  No tailored resume yet.
+  <form method="post" action="{{ url_for('applications.tailor', application_id=application.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-sm btn-warning ms-2">Tailor Resume</button>
+  </form>
+</div>
+{% else %}
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-9">
+    <div class="alert alert-primary d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+      <div>
+        <strong>Ready to upload?</strong>
+        <span class="d-block small">Download the tailored resume and cover letter for this application.</span>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='resume') }}" class="btn btn-sm btn-primary">View resume</a>
+        <a href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='cover') }}" class="btn btn-sm btn-outline-primary">View cover letter</a>
+        <a href="{{ url_for('apply.download_resume', application_id=application.id) }}" class="btn btn-sm btn-outline-secondary">Download DOCX</a>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header border-bottom">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'overview' %}active{% endif %}" href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='overview') }}">Overview</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'resume' %}active{% endif %}" href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='resume') }}">Resume output</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'cover' %}active{% endif %}" href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='cover') }}">Cover letter</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'changes' %}active{% endif %}" href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='changes') }}">All changes</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'compare' %}active{% endif %}" href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='compare') }}">Master vs tailored</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'keywords' %}active{% endif %}" href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='keywords') }}">Keyword impact</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'rephrase' %}active{% endif %}" href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='rephrase') }}">Bullet edits</a>
+          </li>
+        </ul>
+      </div>
+      <div class="card-body">
+        {% if active_tab == 'overview' %}
+          {{ render_overview(overview, diff_summary, coverage_delta, keyword_impact, version, application) }}
+        {% elif active_tab == 'resume' %}
+          {{ render_resume_output(version, resume_preview, application) }}
+        {% elif active_tab == 'cover' %}
+          {{ render_cover_letter(draft, application) }}
+        {% elif active_tab == 'compare' %}
+          {{ render_compare(compare, compare_has_changes) }}
+        {% elif active_tab == 'keywords' %}
+          {{ render_keyword_impact(keyword_impact) }}
+        {% elif active_tab == 'rephrase' %}
+          {{ render_diff_log(version.diff_log or [], filter_action='rephrase') }}
+        {% else %}
+          {{ render_diff_log(version.diff_log or []) }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3">
+    <div class="card mb-4">
+      <div class="card-header border-bottom"><h6 class="card-title mb-0">This version</h6></div>
+      <div class="card-body">
+        <p class="mb-1"><strong>v{{ version.version_number }}</strong></p>
+        <p class="small text-muted mb-2">{{ version.status|replace('_', ' ')|title }}</p>
+        {% if version.created_at %}
+        <p class="small text-muted mb-2">Created {{ version.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        {% endif %}
+        {% if version.ats_score is not none %}
+        <p class="small mb-1">ATS score: <strong>{{ version.ats_score }}%</strong></p>
+        {% endif %}
+        {% if version.keyword_coverage is not none %}
+        <p class="small mb-1">Coverage: <strong>{{ version.keyword_coverage }}%</strong></p>
+        {% endif %}
+        {% if overview.total_changes %}
+        <p class="small mb-0">{{ overview.total_changes }} recorded change(s)</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if application.stage in ['ready_to_apply', 'tailoring'] and version %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <a href="{{ url_for('apply.review', application_id=application.id) }}" class="btn btn-primary btn-sm w-100">Continue to Review &amp; Apply</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header border-bottom"><h6 class="card-title mb-0">Version history</h6></div>
+      <div class="card-body">
+        {{ render_version_history(version_history, application, version.id) }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

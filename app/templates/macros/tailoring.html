@@ -1,0 +1,432 @@
+{# Tailoring diff display — Bootstrap 5 #}
+
+{% macro diff_action_label(change) %}
+  {% if change.action == 'set' %}Updated
+  {% elif change.action == 'select_variant' %}Selected
+  {% elif change.action == 'reorder' %}Reordered
+  {% elif change.action == 'rephrase' %}Rephrased
+  {% else %}{{ change.action|replace('_', ' ')|title }}
+  {% endif %}
+{% endmacro %}
+
+{% macro diff_field_label(change) %}
+  {% if change.field == 'headline' %}Headline
+  {% elif change.field == 'summary' %}Summary
+  {% elif change.field == 'experience' %}Experience order
+  {% elif change.field == 'skills.technical' %}Skills order
+  {% elif change.field == 'experience.bullet' %}Bullet point
+  {% else %}{{ change.field|replace('.', ' → ')|replace('_', ' ')|title }}
+  {% endif %}
+{% endmacro %}
+
+{% macro render_diff_summary(summary, coverage_delta=None) %}
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">Total changes</div>
+      <div class="h4 mb-0">{{ summary.total_changes }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">Rephrased bullets</div>
+      <div class="h4 mb-0">{{ summary.rephrased_bullets }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">Reordered sections</div>
+      <div class="h4 mb-0">{{ summary.reordered_sections }}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">Keywords added</div>
+      <div class="h4 mb-0">{{ summary.keywords_added|length }}</div>
+    </div>
+  </div>
+</div>
+{% if coverage_delta %}
+<div class="alert alert-light border mb-4">
+  Keyword coverage moved from <strong>{{ coverage_delta.before }}%</strong>
+  to <strong>{{ coverage_delta.after }}%</strong>
+  (<span class="{% if coverage_delta.delta >= 0 %}text-success{% else %}text-danger{% endif %}">
+    {{ '%+.1f'|format(coverage_delta.delta) }}%
+  </span>)
+</div>
+{% endif %}
+{% if summary.keywords_added %}
+<div class="mb-4">
+  <span class="text-muted small d-block mb-2">Keywords woven into bullets</span>
+  <div class="d-flex flex-wrap gap-1">
+    {% for kw in summary.keywords_added %}
+    <span class="badge bg-label-warning">{{ kw }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro render_overview(overview, diff_summary, coverage_delta, keyword_impact, version, application) %}
+<div class="card border-primary border-opacity-25 mb-4">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+      <div class="flex-grow-1">
+        <h5 class="mb-2">What changed</h5>
+        <p class="mb-0 text-muted">{{ overview.narrative }}</p>
+      </div>
+      {% if version %}
+      <div class="d-flex flex-wrap gap-3">
+        {% if version.ats_score is not none %}
+        <div class="text-center px-3">
+          <div class="text-muted small">ATS score</div>
+          <div class="h4 mb-0">{{ version.ats_score }}%</div>
+        </div>
+        {% endif %}
+        {% if version.keyword_coverage is not none %}
+        <div class="text-center px-3 border-start">
+          <div class="text-muted small">Coverage</div>
+          <div class="h4 mb-0">{{ version.keyword_coverage }}%</div>
+        </div>
+        {% endif %}
+        {% if coverage_delta %}
+        <div class="text-center px-3 border-start">
+          <div class="text-muted small">Delta</div>
+          <div class="h4 mb-0 {% if coverage_delta.delta >= 0 %}text-success{% else %}text-danger{% endif %}">
+            {{ '%+.1f'|format(coverage_delta.delta) }}%
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if overview.checklist %}
+    <h6 class="mb-2 mt-2">At a glance</h6>
+    <ul class="list-group list-group-flush tailoring-overview-checklist mb-0">
+      {% for item in overview.checklist %}
+      <li class="list-group-item px-0 py-2 d-flex align-items-start gap-2">
+        <i class="icon-base ti tabler-circle-check text-success mt-1"></i>
+        <div class="flex-grow-1">
+          <strong class="small">{{ item.label }}</strong>
+          <div class="text-muted small">{{ item.detail }}</div>
+        </div>
+        <a href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab=item.tab) }}" class="small text-nowrap">Details</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% elif not overview.has_changes %}
+    <p class="text-muted small mb-0">No edits were required — your master profile already matched this job well.</p>
+    {% endif %}
+  </div>
+</div>
+
+{{ render_diff_summary(diff_summary, coverage_delta) }}
+
+{% if overview.highlights %}
+<div class="card mb-4">
+  <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+    <h6 class="card-title mb-0">Key edits</h6>
+    <a href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='changes') }}" class="small">View all changes</a>
+  </div>
+  <div class="card-body vstack gap-3">
+    {% for item in overview.highlights %}
+    <div class="tailoring-highlight-item">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <strong class="small">{{ item.title }}</strong>
+        {% if item.badge %}
+        <span class="badge bg-label-warning">+ {{ item.badge }}</span>
+        {% endif %}
+      </div>
+      {% if item.before %}
+      <div class="small text-muted mb-1"><del>{{ item.before[:220] }}{% if item.before|length > 220 %}…{% endif %}</del></div>
+      {% endif %}
+      {% if item.after %}
+      <div class="small">{{ item.after[:220] }}{% if item.after|length > 220 %}…{% endif %}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if keyword_impact.newly_matched or keyword_impact.still_missing %}
+<div class="card mb-4">
+  <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+    <h6 class="card-title mb-0">Keyword impact snapshot</h6>
+    <a href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id, tab='keywords') }}" class="small">Full keyword view</a>
+  </div>
+  <div class="card-body">
+    {{ render_keyword_impact(keyword_impact) }}
+  </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro render_resume_output(version, resume_preview, application) %}
+<div class="card border-primary border-opacity-25 mb-4">
+  <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h6 class="card-title mb-0">Resume to upload</h6>
+      <small class="text-muted">This is the tailored DOCX content — download and attach on the job portal.</small>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ url_for('apply.download_resume', application_id=application.id) }}" class="btn btn-sm btn-primary">
+        <i class="icon-base ti tabler-download me-1"></i>Download DOCX
+      </a>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if version %}
+    <p class="small text-muted mb-2">
+      File: <strong>{{ version.export_filename or 'resume.docx' }}</strong>
+      {% if version.ats_score is not none %} · ATS score {{ version.ats_score }}%{% endif %}
+    </p>
+    <p class="small text-muted mb-3">
+      Most portals accept DOCX. Open in Word or Google Docs and use <em>Save as PDF</em> if a PDF is required.
+    </p>
+    <pre class="resume-preview mb-0">{{ resume_preview or 'No preview available.' }}</pre>
+    {% else %}
+    <p class="text-muted mb-0">Tailor a resume first to generate the upload file.</p>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_cover_letter(draft, application, readonly=false) %}
+<div class="card mb-4">
+  <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h6 class="card-title mb-0">Cover letter</h6>
+      <small class="text-muted">Customized for this job — edit before you apply.</small>
+    </div>
+    {% if draft and draft.cover_letter %}
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ url_for('apply.download_cover_letter', application_id=application.id, format='docx') }}" class="btn btn-sm btn-outline-primary">DOCX</a>
+      <a href="{{ url_for('apply.download_cover_letter', application_id=application.id, format='txt') }}" class="btn btn-sm btn-outline-secondary">TXT</a>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    {% if draft %}
+    {% if not readonly %}
+    <form method="post" action="{{ url_for('apply.save_draft', application_id=application.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% for key, value in (draft.form_fields or {}).items() %}
+      <input type="hidden" name="{{ key }}" value="{{ value }}">
+      {% endfor %}
+      <textarea name="cover_letter" class="form-control font-monospace mb-3" rows="12">{{ draft.cover_letter or '' }}</textarea>
+      <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-sm btn-primary">Save cover letter</button>
+      </div>
+    </form>
+    <form method="post" action="{{ url_for('apply.regenerate_cover_letter', application_id=application.id) }}" class="d-inline mt-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-sm btn-outline-secondary">Regenerate with AI</button>
+    </form>
+    {% else %}
+    <pre class="resume-preview mb-0">{{ draft.cover_letter or 'No cover letter yet.' }}</pre>
+    {% endif %}
+    {% else %}
+    <p class="text-muted mb-0">Cover letter is created when you tailor the resume.</p>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_keyword_impact(keyword_impact) %}
+{% if keyword_impact.newly_matched or keyword_impact.still_missing %}
+<div class="row g-4">
+  <div class="col-md-6">
+    <h6 class="text-success mb-2">Newly matched after tailoring</h6>
+    {% if keyword_impact.newly_matched %}
+    <div class="d-flex flex-wrap gap-1">
+      {% for kw in keyword_impact.newly_matched %}
+      <span class="badge bg-label-success">{{ kw }}</span>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted small mb-0">No new keyword matches from tailoring.</p>
+    {% endif %}
+  </div>
+  <div class="col-md-6">
+    <h6 class="text-danger mb-2">Still missing (do not invent)</h6>
+    {% if keyword_impact.still_missing %}
+    <div class="d-flex flex-wrap gap-1">
+      {% for kw in keyword_impact.still_missing[:30] %}
+      <span class="badge bg-label-danger">{{ kw }}</span>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted small mb-0">All extracted JD keywords are covered.</p>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<p class="text-muted mb-0">Run tailoring with a job description to see keyword impact.</p>
+{% endif %}
+{% endmacro %}
+
+{% macro render_compare(compare, compare_has_changes=false) %}
+<div class="vstack gap-4">
+  {% if compare.headline.changed %}
+  <div>
+    <h6 class="mb-2">Headline</h6>
+    <div class="row g-3">
+      <div class="col-md-6"><div class="tailoring-compare-box"><span class="text-muted small d-block mb-1">Master</span>{{ compare.headline.master or '—' }}</div></div>
+      <div class="col-md-6"><div class="tailoring-compare-box tailoring-compare-new"><span class="text-muted small d-block mb-1">Tailored</span>{{ compare.headline.tailored or '—' }}</div></div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if compare.summary.changed %}
+  <div>
+    <h6 class="mb-2">Summary</h6>
+    <div class="row g-3">
+      <div class="col-md-6"><div class="tailoring-compare-box"><span class="text-muted small d-block mb-1">Master</span>{{ compare.summary.master or '—' }}</div></div>
+      <div class="col-md-6"><div class="tailoring-compare-box tailoring-compare-new"><span class="text-muted small d-block mb-1">Tailored</span>{{ compare.summary.tailored or '—' }}</div></div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if compare.skills.changed %}
+  <div>
+    <h6 class="mb-2">Skills order</h6>
+    <div class="row g-3">
+      <div class="col-md-6"><div class="tailoring-compare-box"><span class="text-muted small d-block mb-1">Master</span>{{ compare.skills.master|join(', ') or '—' }}</div></div>
+      <div class="col-md-6"><div class="tailoring-compare-box tailoring-compare-new"><span class="text-muted small d-block mb-1">Tailored</span>{{ compare.skills.tailored|join(', ') or '—' }}</div></div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% for row in compare.experience %}
+  {% if row.changed %}
+  <div>
+    <h6 class="mb-2">{{ row.role }}</h6>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="tailoring-compare-box">
+          <span class="text-muted small d-block mb-1">Master bullets</span>
+          <ul class="small mb-0 ps-3">
+            {% for bullet in row.master_bullets %}<li>{{ bullet }}</li>{% else %}<li class="text-muted">None</li>{% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="tailoring-compare-box tailoring-compare-new">
+          <span class="text-muted small d-block mb-1">Tailored bullets</span>
+          <ul class="small mb-0 ps-3">
+            {% for bullet in row.tailored_bullets %}<li>{{ bullet }}</li>{% else %}<li class="text-muted">None</li>{% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+  {% if not compare_has_changes %}
+  <p class="text-muted mb-0">No visible differences between master profile and tailored version.</p>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_diff_log(diff_log, filter_action='') %}
+{% set changes = diff_log or [] %}
+{% if filter_action %}
+  {% set changes = changes | selectattr('action', 'equalto', filter_action) | list %}
+{% endif %}
+{% if changes %}
+<div class="list-group list-group-flush tailoring-diff-list">
+  {% for change in changes %}
+    {% if not (change.get('_meta') or change.field == '_meta') %}
+    {% if not (change.action == 'set' and change.field == 'headline' and change.old == change.new) %}
+    <div class="list-group-item px-0 py-3">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <span class="badge bg-label-primary">{{ diff_action_label(change) }}</span>
+        <strong class="small">{{ diff_field_label(change) }}</strong>
+        {% if change.role %}
+        <span class="badge bg-label-secondary">{{ change.role }}</span>
+        {% endif %}
+        {% if change.keyword_added %}
+        <span class="badge bg-label-warning">+ {{ change.keyword_added }}</span>
+        {% endif %}
+      </div>
+
+      {% if change.action == 'rephrase' and change.old and change.new %}
+      <div class="tailoring-diff-block mb-1">
+        <span class="text-muted small d-block mb-1">Before</span>
+        <del class="text-muted small">{{ change.old }}</del>
+      </div>
+      <div class="tailoring-diff-block">
+        <span class="text-muted small d-block mb-1">After</span>
+        <span class="small">{{ change.new }}</span>
+      </div>
+
+      {% elif change.action == 'set' and change.old is not none and change.new is not none %}
+      <div class="small">
+        <span class="text-muted">{{ change.old or '—' }}</span>
+        <i class="icon-base ti tabler-arrow-right mx-1 text-muted"></i>
+        <span>{{ change.new }}</span>
+      </div>
+
+      {% elif change.action == 'select_variant' %}
+      {% if change.old %}
+      <div class="tailoring-diff-block mb-1">
+        <span class="text-muted small d-block mb-1">Previous summary</span>
+        <span class="small text-muted">{{ change.old[:300] }}{% if change.old|length > 300 %}…{% endif %}</span>
+      </div>
+      {% endif %}
+      {% if change.new %}
+      <div class="tailoring-diff-block">
+        <span class="text-muted small d-block mb-1">Selected summary</span>
+        <span class="small">{{ change.new[:300] }}{% if change.new|length > 300 %}…{% endif %}</span>
+      </div>
+      {% endif %}
+
+      {% elif change.action == 'reorder' and change.field == 'skills.technical' %}
+      <div class="small">
+        <span class="text-muted">Was:</span> {{ (change.old or [])|join(', ') or '—' }}<br>
+        <span class="text-muted">Now:</span> {{ (change.new or [])|join(', ') or '—' }}
+      </div>
+
+      {% elif change.action == 'reorder' and change.field == 'experience' %}
+      {% if change.old_labels and change.new_labels %}
+      <div class="small mb-1"><span class="text-muted">Was:</span> {{ change.old_labels|join(' → ') }}</div>
+      <div class="small mb-0"><span class="text-muted">Now:</span> {{ change.new_labels|join(' → ') }}</div>
+      {% else %}
+      <p class="small text-muted mb-0">Experience entries reordered to prioritize roles matching job keywords.</p>
+      {% endif %}
+
+      {% else %}
+      <p class="small text-muted mb-0">{{ change.action }} — {{ change.field }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted mb-0">No tailoring changes match this filter.</p>
+{% endif %}
+{% endmacro %}
+
+{% macro render_version_history(versions, application, active_version_id) %}
+{% if versions %}
+<div class="list-group list-group-flush">
+  {% for version in versions %}
+  <a
+    href="{{ url_for('applications.tailoring_review', application_id=application.id, version_id=version.id) }}"
+    class="list-group-item list-group-item-action px-0 d-flex justify-content-between align-items-center {% if version.id == active_version_id %}active{% endif %}"
+  >
+    <div>
+      <strong>v{{ version.version_number }}</strong>
+      <span class="small ms-2">{{ version.status }}</span>
+    </div>
+    <span class="small">{{ version.created_at.strftime('%Y-%m-%d %H:%M') if version.created_at else '' }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted mb-0">No tailored versions yet.</p>
+{% endif %}
+{% endmacro %}

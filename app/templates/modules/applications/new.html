@@ -14,11 +14,16 @@
             <select name="job_posting_id" id="job-posting" class="form-select" required>
               <option value="">Choose a job...</option>
               {% for posting in postings %}
-              <option value="{{ posting.id }}" {% if request.args.get('job_id') == posting.id|string %}selected{% endif %}>
+              <option value="{{ posting.id }}" {% if preselected_job_id == posting.id|string %}selected{% endif %}>
                 {{ posting.title }} — {{ posting.company }}
               </option>
+              {% else %}
+              <option value="" disabled>No job postings without an application</option>
               {% endfor %}
             </select>
+            {% if not postings %}
+            <p class="form-text mb-0">All saved job postings already have applications. Open one from the pipeline instead.</p>
+            {% endif %}
           </div>
           <button type="submit" class="btn btn-primary">Create Application</button>
         </form>

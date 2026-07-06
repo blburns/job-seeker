@@ -37,6 +37,67 @@ pre.code-block {
   margin-bottom: 0;
 }
 
+/* Job posting prose (not monospace code) */
+.job-description {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.65;
+  font-size: 0.9375rem;
+  color: var(--bs-body-color);
+  margin-bottom: 0;
+}
+
+.posting-score-bar {
+  height: 0.5rem;
+  min-width: 6rem;
+}
+
+.tailoring-diff-list .list-group-item + .list-group-item {
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.tailoring-diff-block del {
+  text-decoration-line: line-through;
+  opacity: 0.75;
+}
+
+.tailoring-compare-box {
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  padding: 0.875rem 1rem;
+  min-height: 100%;
+}
+
+.tailoring-compare-new {
+  border-color: rgba(var(--bs-primary-rgb), 0.35);
+  background: rgba(var(--bs-primary-rgb), 0.04);
+}
+
+.tailoring-overview-checklist .list-group-item {
+  border-color: var(--bs-border-color);
+}
+
+.tailoring-highlight-item + .tailoring-highlight-item {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.resume-preview {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--bs-font-monospace);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  padding: 1rem 1.125rem;
+  max-height: 32rem;
+  overflow: auto;
+  margin-bottom: 0;
+}
+
 /* Stat cards on overview pages */
 .stat-card-icon {
   width: 2.5rem;
