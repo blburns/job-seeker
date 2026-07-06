@@ -35,6 +35,12 @@ def _json_type():
     return JSONB if os.environ.get('DB_TYPE', 'sqlite') == 'postgresql' else JSON
 
 
+def _numeric_col(precision, scale, **kwargs):
+    """SQLite lacks native Decimal; use float there to avoid SAWarnings."""
+    asdecimal = os.environ.get('DB_TYPE', 'sqlite') == 'postgresql'
+    return Numeric(precision, scale, asdecimal=asdecimal, **kwargs)
+
+
 def _user_fk():
     if os.environ.get('DB_TYPE', 'sqlite') == 'postgresql':
         return 'auth.users.id'
@@ -122,7 +128,7 @@ class MasterProfile(BaseModel, TimestampMixin, SoftDeleteMixin):
     source_filename = Column(String(255), nullable=True)
     source_type = Column(String(20), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
-    parse_confidence = Column(Numeric(5, 2), nullable=True)
+    parse_confidence = Column(_numeric_col(5, 2), nullable=True)
     notes = Column(Text, nullable=True)
 
     user = relationship('User', foreign_keys=[user_id], backref='master_profiles')
@@ -149,8 +155,8 @@ class JobPosting(BaseModel, TimestampMixin, SoftDeleteMixin):
     requirements = Column(Text, nullable=True)
     location = Column(String(255), nullable=True)
     remote_type = Column(String(50), nullable=True)
-    salary_min = Column(Numeric(12, 2), nullable=True)
-    salary_max = Column(Numeric(12, 2), nullable=True)
+    salary_min = Column(_numeric_col(12, 2), nullable=True)
+    salary_max = Column(_numeric_col(12, 2), nullable=True)
     salary_currency = Column(String(3), default='USD', nullable=False)
     url = Column(String(1024), nullable=True)
     source = Column(String(50), default=JobSource.MANUAL.value, nullable=False)
@@ -166,6 +172,19 @@ class JobPosting(BaseModel, TimestampMixin, SoftDeleteMixin):
     applications = relationship('Application', back_populates='job_posting')
     keyword_analyses = relationship('KeywordAnalysis', back_populates='job_posting')
 
+    @property
+    def discovery_search_profiles(self):
+        """Search profiles that discovered this posting (via discovery inbox)."""
+        profiles = []
+        seen = set()
+        for discovered in self.discovered_jobs or []:
+            profile = discovered.search_profile
+            if not profile or profile.is_deleted or profile.id in seen:
+                continue
+            seen.add(profile.id)
+            profiles.append(profile)
+        return profiles
+
 
 class ResumeVersion(BaseModel, TimestampMixin, SoftDeleteMixin):
     """Tailored resume version for a specific job."""
@@ -179,8 +198,8 @@ class ResumeVersion(BaseModel, TimestampMixin, SoftDeleteMixin):
     status = Column(String(50), default=ResumeVersionStatus.DRAFT.value, nullable=False, index=True)
     tailored_data = Column(_json_type(), nullable=False, default=dict)
     diff_log = Column(_json_type(), nullable=True)
-    ats_score = Column(Numeric(5, 2), nullable=True)
-    keyword_coverage = Column(Numeric(5, 2), nullable=True)
+    ats_score = Column(_numeric_col(5, 2), nullable=True)
+    keyword_coverage = Column(_numeric_col(5, 2), nullable=True)
     export_filename = Column(String(255), nullable=True)
     approved_at = Column(DateTime, nullable=True)
     approved_by = Column(ID_TYPE, ForeignKey(_user_fk()), nullable=True)
@@ -205,7 +224,7 @@ class Application(BaseModel, TimestampMixin, SoftDeleteMixin):
     recruiter_name = Column(String(255), nullable=True)
     recruiter_email = Column(String(255), nullable=True)
     portal_url = Column(String(1024), nullable=True)
-    keyword_coverage_at_apply = Column(Numeric(5, 2), nullable=True)
+    keyword_coverage_at_apply = Column(_numeric_col(5, 2), nullable=True)
     notes = Column(Text, nullable=True)
     submission_status = Column(String(50), nullable=True)
     submission_proof = Column(String(1024), nullable=True)
@@ -249,7 +268,7 @@ class KeywordAnalysis(BaseModel, TimestampMixin):
     matched_keywords = Column(_json_type(), nullable=False, default=list)
     missing_keywords = Column(_json_type(), nullable=False, default=list)
     synonym_matches = Column(_json_type(), nullable=True)
-    coverage_score = Column(Numeric(5, 2), nullable=False, default=0)
+    coverage_score = Column(_numeric_col(5, 2), nullable=False, default=0)
     analysis_metadata = Column(_json_type(), nullable=True)
 
     job_posting = relationship('JobPosting', back_populates='keyword_analyses')
@@ -286,7 +305,7 @@ class JobSearchProfile(BaseModel, TimestampMixin, SoftDeleteMixin):
     remote_preference = Column(String(50), default='any', nullable=False)
     seniority_levels = Column(_json_type(), nullable=True)
     min_fit_score = Column(Integer, default=50, nullable=False)
-    salary_floor = Column(Numeric(12, 2), nullable=True)
+    salary_floor = Column(_numeric_col(12, 2), nullable=True)
     keywords_include = Column(_json_type(), nullable=True)
     keywords_exclude = Column(_json_type(), nullable=True)
     sources = Column(_json_type(), nullable=False, default=list)
@@ -357,6 +376,8 @@ class DiscoveredJob(BaseModel, TimestampMixin):
 
     user = relationship('User', foreign_keys=[user_id])
     job_posting = relationship('JobPosting', backref='discovered_jobs')
+    search_profile = relationship('JobSearchProfile', foreign_keys=[search_profile_id])
+    discovery_run = relationship('DiscoveryRun', foreign_keys=[discovery_run_id])
 
 
 class ApplyBatch(BaseModel, TimestampMixin):

@@ -223,7 +223,32 @@ class DiscoveryOrchestrator:
         if discovered.status == DiscoveredJobStatus.ACCEPTED.value and discovered.job_posting_id:
             return discovered.job_posting
 
-        keywords = keyword_service.extract_keywords(discovered.description or '')
+        from app.services.scraping.job_detail_enrichment import job_detail_enrichment
+
+        enriched = job_detail_enrichment.enrich_discovered_job(discovered, user_id)
+        title = enriched.get('title') or discovered.title
+        company = enriched.get('company') or discovered.company
+        location = enriched.get('location') or discovered.location
+        description = enriched.get('description') or discovered.description or ''
+        requirements = enriched.get('requirements') or ''
+        seniority = enriched.get('seniority') or ''
+
+        if description and description != (discovered.description or ''):
+            discovered.description = description
+        if company and company not in ('Unknown',) and company != discovered.company:
+            discovered.company = company
+        if location and location != discovered.location:
+            discovered.location = location
+
+        keywords = keyword_service.extract_keywords(
+            job_detail_enrichment.keyword_text(
+                title=title,
+                company=company,
+                location=location,
+                description=description,
+                requirements=requirements,
+            )
+        )
         source_map = {
             'greenhouse': JobSource.GREENHOUSE.value,
             'lever': JobSource.LEVER.value,
@@ -235,15 +260,17 @@ class DiscoveryOrchestrator:
         }
         posting = JobPosting(
             user_id=user_id,
-            title=discovered.title,
-            company=discovered.company,
-            description=discovered.description,
-            location=discovered.location,
+            title=title,
+            company=company,
+            description=description,
+            requirements=requirements or None,
+            location=location,
             url=discovered.url,
             source=source_map.get(discovered.source, JobSource.API.value),
             source_id=discovered.source_id,
             extracted_keywords=keywords,
             fit_score=discovered.fit_score,
+            seniority=seniority or None,
         )
         db.session.add(posting)
         db.session.flush()

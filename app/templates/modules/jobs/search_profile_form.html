@@ -98,6 +98,13 @@
         {% endif %}
       </div>
     </form>
+    {% if profile %}
+    <form method="post" action="{{ url_for('jobs.search_profile_duplicate', profile_id=profile.id) }}" class="mt-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline-secondary btn-sm">Duplicate this profile</button>
+      <span class="text-muted small ms-2">Creates a copy you can tweak (e.g. different title or location).</span>
+    </form>
+    {% endif %}
   </div>
 </div>
 

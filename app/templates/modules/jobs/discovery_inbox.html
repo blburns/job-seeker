@@ -1,107 +1,279 @@
 {% extends "base.html" %}
 {% from 'macros/page_layout.html' import page_header %}
 {% block title %}Discovery Inbox{% endblock %}
+{% block extra_vendor_js %}
+<script>
+(function () {
+  const csrfToken = document.querySelector('meta[name=csrf-token]')?.content || '';
+  const inboxBody = document.getElementById('inbox-table-body');
+  const inboxBadge = document.getElementById('inbox-count-badge');
+  const toastHost = document.getElementById('inbox-toast-host');
+
+  function showToast(message, type) {
+    if (!toastHost || !message) return;
+    const alertClass = type === 'warning' ? 'alert-warning'
+      : type === 'danger' ? 'alert-danger'
+      : type === 'success' ? 'alert-success'
+      : 'alert-info';
+    const el = document.createElement('div');
+    el.className = `alert ${alertClass} alert-dismissible fade show shadow-sm mb-2`;
+    el.setAttribute('role', 'alert');
+    el.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+    toastHost.appendChild(el);
+    setTimeout(() => el.remove(), 6000);
+  }
+
+  function updateInboxCount() {
+    const rows = inboxBody?.querySelectorAll('tr.inbox-row') || [];
+    const count = rows.length;
+    if (inboxBadge) {
+      if (count > 0) {
+        inboxBadge.textContent = count;
+        inboxBadge.classList.remove('d-none');
+      } else {
+        inboxBadge.classList.add('d-none');
+      }
+    }
+    if (count === 0 && inboxBody) {
+      inboxBody.innerHTML = `
+        <tr class="table-empty" id="inbox-empty-row">
+          <td colspan="7" class="text-center text-muted py-5">
+            No new discovered jobs.
+            <a href="{{ url_for('jobs.search_profiles_list') }}">Run a search profile</a>
+          </td>
+        </tr>`;
+    }
+  }
+
+  async function inboxAction(btn, action) {
+    const row = btn.closest('tr.inbox-row');
+    const id = row?.dataset.discoveredId;
+    if (!id || btn.disabled) return;
+
+    const acceptBtn = row.querySelector('[data-action="accept"]');
+    const skipBtn = row.querySelector('[data-action="skip"]');
+    const original = btn.textContent;
+    btn.disabled = true;
+    if (acceptBtn) acceptBtn.disabled = true;
+    if (skipBtn) skipBtn.disabled = true;
+    btn.textContent = action === 'accept' ? 'Accepting…' : 'Skipping…';
+
+    try {
+      const resp = await fetch(`/api/v1/jobs/inbox/${id}/${action}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+        },
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.success) {
+        throw new Error(data.error || 'Request failed');
+      }
+      row.classList.add('table-success');
+      row.style.transition = 'opacity 0.35s ease';
+      row.style.opacity = '0';
+      setTimeout(() => {
+        row.remove();
+        updateInboxCount();
+      }, 350);
+      if (data.warning) {
+        showToast(data.warning, 'warning');
+      } else {
+        showToast(data.message || (action === 'accept' ? 'Job accepted.' : 'Job skipped.'), 'success');
+      }
+    } catch (err) {
+      showToast(err.message || 'Something went wrong.', 'danger');
+      btn.disabled = false;
+      if (acceptBtn) acceptBtn.disabled = false;
+      if (skipBtn) skipBtn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  inboxBody?.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    e.preventDefault();
+    inboxAction(btn, btn.dataset.action);
+  });
+})();
+</script>
+{% endblock %}
 {% block content %}
+{% set active_tab = request.args.get('tab', 'inbox') %}
 {% call page_header('Discovery Inbox', 'Review discovered jobs ranked by fit score') %}
   <a href="{{ url_for('jobs.search_profiles_list') }}" class="btn btn-outline-primary btn-sm">Search Profiles</a>
   <a href="{{ url_for('apply.credentials_list') }}" class="btn btn-outline-secondary btn-sm">Portal Credentials</a>
 {% endcall %}
 
-{% if recent_runs %}
-<div class="card mb-4">
-  <div class="card-header"><h5 class="card-title mb-0">Recent Discovery Runs</h5></div>
-  <div class="card-datatable table-responsive">
-    <table class="table border-top mb-0">
-      <thead>
-        <tr>
-          <th>Source</th>
-          <th>Status</th>
-          <th>Found</th>
-          <th>Inbox</th>
-          <th>When</th>
-          <th>Error</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for run in recent_runs %}
-        <tr>
-          <td><span class="badge bg-label-secondary">{{ run.source }}</span></td>
-          <td>
-            {% if run.status == 'failed' %}
-            <span class="badge bg-label-danger">{{ run.status }}</span>
-            {% elif run.status == 'completed' %}
-            <span class="badge bg-label-success">{{ run.status }}</span>
-            {% else %}
-            <span class="badge bg-label-warning">{{ run.status }}</span>
-            {% endif %}
-          </td>
-          <td>{{ run.jobs_found or 0 }}</td>
-          <td>{{ run.jobs_new or 0 }}</td>
-          <td>{{ run.created_at.strftime('%Y-%m-%d %H:%M') if run.created_at else '-' }}</td>
-          <td class="small text-danger">
-            {% if run.error_message %}
-              {{ run.error_message }}
-              {% if run.source in ['linkedin', 'indeed'] and (
-                'session' in run.error_message|lower or
-                'credential' in run.error_message|lower or
-                'login' in run.error_message|lower or
-                'auth' in run.error_message|lower or
-                'storage_state' in run.error_message|lower
-              ) and 'redis' not in run.error_message|lower and '6379' not in run.error_message %}
-              <a href="{{ url_for('apply.credentials_list') }}">Reconnect session</a>
-              {% endif %}
-            {% else %}-{% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endif %}
+<div id="inbox-toast-host" class="position-fixed top-0 end-0 p-3" style="z-index: 1080; max-width: 420px;"></div>
 
 <div class="card">
-  <div class="card-datatable table-responsive">
-    <table class="table border-top">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Company</th>
-          <th>Fit</th>
-          <th>Source</th>
-          <th>Location</th>
-          <th class="text-end">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for job in discovered_jobs %}
-        <tr>
-          <td>
-            <strong>{{ job.title }}</strong>
-            {% if job.url %}<br><a href="{{ job.url }}" target="_blank" class="small">View posting</a>{% endif %}
-          </td>
-          <td>{{ job.company }}</td>
-          <td>{% if job.fit_score is not none %}{{ job.fit_score }}%{% else %}-{% endif %}</td>
-          <td><span class="badge bg-label-secondary">{{ job.source }}</span></td>
-          <td>{{ job.location or '-' }}</td>
-          <td class="text-end">
-            <form method="post" action="{{ url_for('jobs.accept_discovered', discovered_id=job.id) }}" class="d-inline">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-sm btn-success">Accept</button>
-            </form>
-            <form method="post" action="{{ url_for('jobs.skip_discovered', discovered_id=job.id) }}" class="d-inline">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-sm btn-outline-secondary">Skip</button>
-            </form>
-          </td>
-        </tr>
-        {% else %}
-        <tr class="table-empty">
-          <td colspan="6" class="text-center text-muted">No new discovered jobs. <a href="{{ url_for('jobs.search_profiles_list') }}">Run a search profile</a></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="card-header border-bottom">
+    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link {% if active_tab != 'runs' %}active{% endif %}"
+          id="inbox-tab-btn"
+          data-bs-toggle="tab"
+          data-bs-target="#inbox-tab-pane"
+          type="button"
+          role="tab"
+          aria-controls="inbox-tab-pane"
+          aria-selected="{{ 'true' if active_tab != 'runs' else 'false' }}"
+        >
+          <i class="ti tabler-inbox me-1"></i>Inbox
+          <span id="inbox-count-badge" class="badge rounded-pill bg-primary ms-1 {% if not discovered_jobs %}d-none{% endif %}">{{ discovered_jobs|length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link {% if active_tab == 'runs' %}active{% endif %}"
+          id="runs-tab-btn"
+          data-bs-toggle="tab"
+          data-bs-target="#runs-tab-pane"
+          type="button"
+          role="tab"
+          aria-controls="runs-tab-pane"
+          aria-selected="{{ 'true' if active_tab == 'runs' else 'false' }}"
+        >
+          <i class="ti tabler-history me-1"></i>Run History
+          {% if recent_runs %}
+          <span class="badge rounded-pill bg-label-secondary ms-1">{{ recent_runs|length }}</span>
+          {% endif %}
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <div class="tab-content">
+    <div
+      class="tab-pane fade {% if active_tab != 'runs' %}show active{% endif %}"
+      id="inbox-tab-pane"
+      role="tabpanel"
+      aria-labelledby="inbox-tab-btn"
+    >
+      <div class="card-datatable table-responsive">
+        <table class="table border-top mb-0">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Company</th>
+              <th>Search profile</th>
+              <th>Fit</th>
+              <th>Source</th>
+              <th>Location</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inbox-table-body">
+            {% for job in discovered_jobs %}
+            <tr class="inbox-row" data-discovered-id="{{ job.id }}">
+              <td>
+                <strong>{{ job.title }}</strong>
+                {% if job.url %}<br><a href="{{ job.url }}" target="_blank" class="small">View posting</a>{% endif %}
+              </td>
+              <td>{{ job.company }}</td>
+              <td class="small">
+                {% if job.search_profile %}
+                <a href="{{ url_for('jobs.search_profile_edit', profile_id=job.search_profile.id) }}">{{ job.search_profile.name }}</a>
+                {% else %}
+                <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>{% if job.fit_score is not none %}{{ job.fit_score }}%{% else %}-{% endif %}</td>
+              <td><span class="badge bg-label-secondary">{{ job.source }}</span></td>
+              <td>{{ job.location or '-' }}</td>
+              <td class="text-end text-nowrap">
+                <button type="button" class="btn btn-sm btn-success" data-action="accept">Accept</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-action="skip">Skip</button>
+              </td>
+            </tr>
+            {% else %}
+            <tr class="table-empty" id="inbox-empty-row">
+              <td colspan="7" class="text-center text-muted py-5">
+                No new discovered jobs.
+                <a href="{{ url_for('jobs.search_profiles_list') }}">Run a search profile</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div
+      class="tab-pane fade {% if active_tab == 'runs' %}show active{% endif %}"
+      id="runs-tab-pane"
+      role="tabpanel"
+      aria-labelledby="runs-tab-btn"
+    >
+      {% if recent_runs %}
+      <div class="card-datatable table-responsive">
+        <table class="table border-top mb-0">
+          <thead>
+            <tr>
+              <th>Search profile</th>
+              <th>Source</th>
+              <th>Status</th>
+              <th>Found</th>
+              <th>Inbox</th>
+              <th>When</th>
+              <th>Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for run in recent_runs %}
+            <tr>
+              <td>
+                {% if run.search_profile %}
+                <a href="{{ url_for('jobs.search_profile_edit', profile_id=run.search_profile.id) }}">{{ run.search_profile.name }}</a>
+                {% else %}
+                <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td><span class="badge bg-label-secondary">{{ run.source }}</span></td>
+              <td>
+                {% if run.status == 'failed' %}
+                <span class="badge bg-label-danger">{{ run.status }}</span>
+                {% elif run.status == 'completed' %}
+                <span class="badge bg-label-success">{{ run.status }}</span>
+                {% else %}
+                <span class="badge bg-label-warning">{{ run.status }}</span>
+                {% endif %}
+              </td>
+              <td>{{ run.jobs_found or 0 }}</td>
+              <td>{{ run.jobs_new or 0 }}</td>
+              <td class="text-nowrap">{{ run.created_at.strftime('%Y-%m-%d %H:%M') if run.created_at else '-' }}</td>
+              <td class="small text-danger">
+                {% if run.error_message %}
+                  {{ run.error_message }}
+                  {% if run.source in ['linkedin', 'indeed'] and (
+                    'session' in run.error_message|lower or
+                    'credential' in run.error_message|lower or
+                    'login' in run.error_message|lower or
+                    'auth' in run.error_message|lower or
+                    'storage_state' in run.error_message|lower
+                  ) and 'redis' not in run.error_message|lower and '6379' not in run.error_message %}
+                  <br><a href="{{ url_for('apply.credentials_list') }}">Reconnect session</a>
+                  {% endif %}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center text-muted py-5">
+        <p class="mb-0">No discovery runs yet.</p>
+        <a href="{{ url_for('jobs.search_profiles_list') }}" class="small">Run a search profile</a>
+      </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 {% endblock %}

@@ -1,52 +1,229 @@
 {% extends "base.html" %}
-{% from 'macros/page_layout.html' import page_header, stat_card %}
+{% from 'macros/page_layout.html' import page_header %}
 {% block title %}{{ posting.title }}{% endblock %}
 {% block content %}
 {% call page_header(posting.title, posting.company ~ ((' · ' ~ posting.location) if posting.location else '')) %}
-  <a href="{{ url_for('applications.new_application') }}?job_id={{ posting.id }}" class="btn btn-primary btn-sm">Create Application</a>
+  <a href="{{ url_for('jobs.postings_list') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="icon-base ti tabler-arrow-left me-1"></i>Back
+  </a>
+  {% if posting.url and posting.source in ['indeed', 'linkedin'] %}
+  <form method="post" action="{{ url_for('jobs.posting_refresh_details', posting_id=posting.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-primary btn-sm">
+      <i class="icon-base ti tabler-refresh me-1"></i>Refresh Details
+    </button>
+  </form>
+  {% endif %}
+  {% if posting.url %}
+  <a href="{{ posting.url }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
+    <i class="icon-base ti tabler-external-link me-1"></i>View Original
+  </a>
+  {% endif %}
+  {% if existing_application %}
+  <a href="{{ url_for('applications.detail', application_id=existing_application.id) }}" class="btn btn-primary btn-sm">
+    <i class="icon-base ti tabler-briefcase me-1"></i>View Application
+  </a>
+  {% else %}
+  <a href="{{ url_for('applications.new_application') }}?job_id={{ posting.id }}" class="btn btn-primary btn-sm">
+    <i class="icon-base ti tabler-send me-1"></i>Create Application
+  </a>
+  {% endif %}
 {% endcall %}
+
+{% if existing_application %}
+<div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+  <i class="icon-base ti tabler-info-circle me-2"></i>
+  <div class="flex-grow-1">
+    This job is already in your pipeline (stage: <strong>{{ existing_application.stage }}</strong>).
+    It was added automatically when you accepted it from Discovery Inbox.
+  </div>
+  <a href="{{ url_for('applications.detail', application_id=existing_application.id) }}" class="btn btn-sm btn-primary ms-3">
+    View Application
+  </a>
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header border-bottom">
+        <h5 class="card-title mb-0">Overview</h5>
+      </div>
+      <div class="card-body">
+        <dl class="row mb-0 gy-3">
+          <dt class="col-sm-3 text-muted">Company</dt>
+          <dd class="col-sm-9 mb-0">{{ posting.company or '—' }}</dd>
+
+          <dt class="col-sm-3 text-muted">Location</dt>
+          <dd class="col-sm-9 mb-0">{{ posting.location or '—' }}</dd>
+
+          {% if posting.remote_type %}
+          <dt class="col-sm-3 text-muted">Remote</dt>
+          <dd class="col-sm-9 mb-0 text-capitalize">{{ posting.remote_type }}</dd>
+          {% endif %}
+
+          <dt class="col-sm-3 text-muted">Source</dt>
+          <dd class="col-sm-9 mb-0">
+            <span class="badge bg-label-secondary text-capitalize">{{ posting.source }}</span>
+          </dd>
+
+          <dt class="col-sm-3 text-muted">Search profile</dt>
+          <dd class="col-sm-9 mb-0">
+            {% for profile in posting.discovery_search_profiles %}
+            <a href="{{ url_for('jobs.search_profile_edit', profile_id=profile.id) }}">{{ profile.name }}</a>{% if not loop.last %}, {% endif %}
+            {% else %}
+            <span class="text-muted">Not from discovery{% if posting.source == 'manual' %} (added manually){% endif %}</span>
+            {% endfor %}
+          </dd>
+
+          {% if posting.seniority %}
+          <dt class="col-sm-3 text-muted">Seniority</dt>
+          <dd class="col-sm-9 mb-0 text-capitalize">{{ posting.seniority }}</dd>
+          {% endif %}
+
+          {% if posting.fit_score is not none %}
+          <dt class="col-sm-3 text-muted">Fit score</dt>
+          <dd class="col-sm-9 mb-0">
+            <div class="d-flex align-items-center gap-3">
+              <div class="progress flex-grow-1 posting-score-bar">
+                <div
+                  class="progress-bar bg-primary"
+                  role="progressbar"
+                  style="width: {{ posting.fit_score }}%"
+                  aria-valuenow="{{ posting.fit_score }}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+              <span class="fw-medium text-nowrap">{{ posting.fit_score }}%</span>
+            </div>
+          </dd>
+          {% endif %}
+
+          {% if posting.posted_at %}
+          <dt class="col-sm-3 text-muted">Posted</dt>
+          <dd class="col-sm-9 mb-0">{{ posting.posted_at|date }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    {% if analysis %}
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1 pe-3">
+            <span class="badge bg-label-primary rounded-pill mb-2">Keyword Coverage</span>
+            <h3 class="mb-2">{{ analysis.coverage_score }}%</h3>
+            <div class="progress posting-score-bar mb-2">
+              <div
+                class="progress-bar bg-primary"
+                role="progressbar"
+                style="width: {{ analysis.coverage_score }}%"
+                aria-valuenow="{{ analysis.coverage_score }}"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+            <small class="text-muted">
+              {% if not posting.description %}
+              Based on title and metadata — refresh details for full analysis.
+              {% else %}
+              Match against your master profile
+              {% endif %}
+            </small>
+          </div>
+          <span class="avatar-initial rounded bg-label-primary stat-card-icon flex-shrink-0">
+            <i class="icon-base ti tabler-percentage"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+    {% elif not profile %}
+    <div class="alert alert-warning mb-0 h-100 d-flex align-items-center">
+      <i class="icon-base ti tabler-alert-circle me-2"></i>
+      Upload a master profile to see keyword analysis.
+    </div>
+    {% endif %}
+  </div>
+</div>
 
 {% if analysis %}
 <div class="row g-4 mb-4">
-  {{ stat_card('Coverage', analysis.coverage_score ~ '%', 'Keyword match', 'bg-label-primary', 'tabler-percentage') }}
-  {{ stat_card('Matched', analysis.matched_keywords|length, 'Keywords found', 'bg-label-success', 'tabler-check') }}
-  {{ stat_card('Missing', analysis.missing_keywords|length, 'Gaps to address', 'bg-label-danger', 'tabler-alert-circle') }}
-</div>
-
-<div class="row g-4 mb-4">
   <div class="col-md-6">
     <div class="card h-100">
       <div class="card-header border-bottom">
-        <h6 class="card-title mb-0 text-success">Matched Keywords</h6>
+        <h6 class="card-title mb-0 text-success">
+          <i class="icon-base ti tabler-circle-check me-1"></i>Matched Keywords
+        </h6>
       </div>
       <div class="card-body">
-        {% for kw in analysis.matched_keywords %}
-        <span class="badge bg-label-success me-1 mb-1">{{ kw }}</span>
-        {% else %}<span class="text-muted">None</span>{% endfor %}
+        {% if analysis.matched_keywords %}
+        <div class="d-flex flex-wrap gap-1">
+          {% for kw in analysis.matched_keywords %}
+          <span class="badge bg-label-success">{{ kw }}</span>
+          {% endfor %}
+        </div>
+        {% else %}
+        <span class="text-muted">None</span>
+        {% endif %}
       </div>
     </div>
   </div>
   <div class="col-md-6">
     <div class="card h-100">
       <div class="card-header border-bottom">
-        <h6 class="card-title mb-0 text-danger">Missing (do not invent)</h6>
+        <h6 class="card-title mb-0 text-danger">
+          <i class="icon-base ti tabler-alert-triangle me-1"></i>Missing (do not invent)
+        </h6>
       </div>
       <div class="card-body">
-        {% for kw in analysis.missing_keywords[:30] %}
-        <span class="badge bg-label-danger me-1 mb-1">{{ kw }}</span>
-        {% else %}<span class="text-muted">None</span>{% endfor %}
+        {% if analysis.missing_keywords %}
+        <div class="d-flex flex-wrap gap-1">
+          {% for kw in analysis.missing_keywords[:30] %}
+          <span class="badge bg-label-danger">{{ kw }}</span>
+          {% endfor %}
+        </div>
+        {% else %}
+        <span class="text-muted">None</span>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
-{% elif not profile %}
-<div class="alert alert-warning mb-4">Upload a master profile to see keyword analysis.</div>
 {% endif %}
 
-<div class="card">
-  <div class="card-header"><h5 class="card-title mb-0">Job Description</h5></div>
+<div class="card mb-4">
+  <div class="card-header border-bottom">
+    <h5 class="card-title mb-0">Job Description</h5>
+  </div>
   <div class="card-body">
-    <pre class="code-block">{{ posting.description }}</pre>
+    {% if posting.description %}
+    <div class="job-description">{{ posting.description }}</div>
+    {% else %}
+    <p class="text-muted mb-0">
+      No description was captured{% if enrichment_attempted %} (automatic fetch did not return content){% endif %}.
+      {% if posting.url and posting.source in ['indeed', 'linkedin'] %}
+      Use <strong>Refresh Details</strong> above to fetch from {{ posting.source|capitalize }},
+      or {% endif %}
+      {% if posting.url %}
+      <a href="{{ posting.url }}" target="_blank" rel="noopener">open the original posting</a> to review details.
+      {% endif %}
+    </p>
+    {% endif %}
   </div>
 </div>
+
+{% if posting.requirements and posting.requirements.strip() and posting.requirements.strip() != (posting.description or '').strip() %}
+<div class="card">
+  <div class="card-header border-bottom">
+    <h5 class="card-title mb-0">Requirements</h5>
+  </div>
+  <div class="card-body">
+    <div class="job-description">{{ posting.requirements }}</div>
+  </div>
+</div>
+{% endif %}
 {% endblock %}

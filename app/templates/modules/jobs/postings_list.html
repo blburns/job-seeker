@@ -17,6 +17,7 @@
           <th>Company</th>
           <th>Fit Score</th>
           <th>Source</th>
+          <th>Search Profile</th>
           <th class="text-end">Action</th>
         </tr>
       </thead>
@@ -27,13 +28,20 @@
           <td>{{ posting.company }}</td>
           <td>{% if posting.fit_score %}{{ posting.fit_score }}%{% else %}-{% endif %}</td>
           <td><span class="badge bg-label-secondary">{{ posting.source }}</span></td>
+          <td>
+            {% for profile in posting.discovery_search_profiles %}
+            <a href="{{ url_for('jobs.search_profile_edit', profile_id=profile.id) }}" class="text-nowrap">{{ profile.name }}</a>{% if not loop.last %}<br>{% endif %}
+            {% else %}
+            <span class="text-muted">—</span>
+            {% endfor %}
+          </td>
           <td class="text-end">
             <a href="{{ url_for('jobs.posting_detail', posting_id=posting.id) }}" class="btn btn-sm btn-outline-primary">View</a>
           </td>
         </tr>
         {% else %}
         <tr class="table-empty">
-          <td colspan="5" class="text-center text-muted">No job postings yet. <a href="{{ url_for('jobs.posting_new') }}">Add one</a></td>
+          <td colspan="6" class="text-center text-muted">No job postings yet. <a href="{{ url_for('jobs.posting_new') }}">Add one</a></td>
         </tr>
         {% endfor %}
       </tbody>

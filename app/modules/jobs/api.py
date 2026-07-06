@@ -260,12 +260,32 @@ def list_inbox():
 @jobs_api_bp.route('/inbox/<uuid:discovered_id>/accept', methods=['POST'])
 @login_required
 def accept_inbox_job(discovered_id):
-    posting = discovery_orchestrator.accept_discovered_job(discovered_id, current_user.id)
-    return jsonify(posting.to_dict())
+    try:
+        posting = discovery_orchestrator.accept_discovered_job(discovered_id, current_user.id)
+    except Exception as exc:
+        logger.exception('Accept discovered job failed')
+        return jsonify({'success': False, 'error': str(exc)}), 400
+    payload = {
+        'success': True,
+        'posting_id': str(posting.id),
+        'discovered_id': str(discovered_id),
+    }
+    if not (posting.description or '').strip():
+        payload['warning'] = (
+            'Job accepted, but the full description could not be fetched. '
+            'Open the posting and use Refresh Details.'
+        )
+    else:
+        payload['message'] = 'Job accepted and added to postings.'
+    return jsonify(payload)
 
 
 @jobs_api_bp.route('/inbox/<uuid:discovered_id>/skip', methods=['POST'])
 @login_required
 def skip_inbox_job(discovered_id):
-    discovery_orchestrator.skip_discovered_job(discovered_id, current_user.id)
-    return jsonify({'success': True})
+    try:
+        discovery_orchestrator.skip_discovered_job(discovered_id, current_user.id)
+    except Exception as exc:
+        logger.exception('Skip discovered job failed')
+        return jsonify({'success': False, 'error': str(exc)}), 400
+    return jsonify({'success': True, 'discovered_id': str(discovered_id), 'message': 'Job skipped.'})
