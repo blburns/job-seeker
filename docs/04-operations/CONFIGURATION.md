@@ -478,7 +478,77 @@ If you see warnings about default secret keys:
 2. Update `.env` file
 3. Restart application
 
+## Job Seeker Automation
+
+Configuration for job discovery, LLM tailoring, browser scraping, and auto-apply. See [AUTOMATION_SETUP.md](AUTOMATION_SETUP.md) for step-by-step setup.
+
+### Discovery APIs
+
+```env
+ADZUNA_APP_ID=your-adzuna-app-id
+ADZUNA_APP_KEY=your-adzuna-app-key
+DISCOVERY_RATE_LIMIT_PER_HOUR=100
+```
+
+### LLM Tailoring
+
+```env
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+ANTHROPIC_API_KEY=          # Checked but not yet implemented
+```
+
+Without `OPENAI_API_KEY`, tailoring uses heuristic fallbacks (no configuration needed).
+
+### Credential Encryption
+
+Required for storing LinkedIn/Indeed portal sessions:
+
+```env
+# Generate: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+CREDENTIAL_ENCRYPTION_KEY=your-fernet-key
+```
+
+### Playwright Browser Automation
+
+```env
+PLAYWRIGHT_HEADLESS=true
+PLAYWRIGHT_CHANNEL=chrome          # Use system Chrome (recommended on macOS)
+INDEED_PLAYWRIGHT_HEADLESS=false   # Indeed blocks headless browsers
+```
+
+### Scraping Flags (default: disabled)
+
+```env
+LINKEDIN_SCRAPE_ENABLED=false
+INDEED_SCRAPE_ENABLED=false
+SCRAPE_RATE_LIMIT_PER_HOUR=20
+SCRAPE_DELAY_MIN_MS=2000
+SCRAPE_DELAY_MAX_MS=6000
+SCRAPE_USE_REDIS=false             # false | true | auto
+```
+
+### Auto-Apply Flags (default: disabled)
+
+```env
+APPLY_AUTOMATION_ENABLED=false
+LINKEDIN_AUTO_APPLY_ENABLED=false
+INDEED_AUTO_APPLY_ENABLED=false
+DAILY_APPLY_CAP=25
+```
+
+### Celery (optional — Docker/production)
+
+```env
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+```
+
+Local dev with `python run.py` does not require Redis or Celery.
+
 ## See Also
 
-- [GETTING_STARTED.md](GETTING_STARTED.md) - Initial setup
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Production configuration
+- [GETTING_STARTED.md](../01-getting-started/GETTING_STARTED.md) - Initial setup
+- [AUTOMATION_SETUP.md](AUTOMATION_SETUP.md) - Job seeker automation setup
+- [ADMIN_GUIDE.md](ADMIN_GUIDE.md) - Administrator guide
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Production configuration

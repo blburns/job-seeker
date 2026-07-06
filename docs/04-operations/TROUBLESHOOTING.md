@@ -550,8 +550,128 @@ curl http://localhost:5000/health/cache
 
 **Solution:** Check table is in correct schema, run migrations.
 
+## Job Seeker Issues
+
+### Discovery Returns No Results
+
+**Symptoms:**
+- Discovery inbox empty after running search profile
+- Discovery run shows `jobs_found: 0`
+
+**Solutions:**
+
+1. **Check search profile is active** and has titles/locations configured
+2. **Lower min fit score** in search profile (try 30 instead of 50)
+3. **Verify API keys** for Adzuna: `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`
+4. **For LinkedIn/Indeed:** Ensure portal credentials stored and scraping flags enabled
+5. **Check discovery run logs** in the database or application logs
+6. **Run synchronously** in local dev — click "Run Discovery" and wait for completion
+
+### Portal Credentials Not Working
+
+**Symptoms:**
+- Credential test fails on `/apply/credentials`
+- Scraping returns login pages or empty results
+- "Session expired" errors
+
+**Solutions:**
+
+1. **Re-export session:** `python scripts/export_playwright_storage.py linkedin`
+2. **Verify `CREDENTIAL_ENCRYPTION_KEY`** is set in `.env` and app was restarted
+3. **Check session age** — LinkedIn/Indeed sessions expire; re-export periodically
+4. **Paste full JSON** — Include both `storage_state` and `user_agent` from export script
+5. **Test with headed browser** — Set `PLAYWRIGHT_HEADLESS=false` for debugging
+
+### Indeed Scraping Fails
+
+**Symptoms:**
+- Indeed discovery returns no results
+- Browser timeout or blocked page
+
+**Solutions:**
+
+1. **Indeed requires headed Chrome:** `INDEED_PLAYWRIGHT_HEADLESS=false`
+2. **Use system Chrome:** `PLAYWRIGHT_CHANNEL=chrome`
+3. **Check rate limits:** Reduce `SCRAPE_RATE_LIMIT_PER_HOUR`
+4. **Verify Indeed credentials** are stored and session is valid
+5. **Check scrape proofs** in `instance/scrape_proofs/` for error screenshots
+
+### LLM Tailoring Not Working
+
+**Symptoms:**
+- Tailoring produces minimal changes
+- Cover letter is generic template text
+- No AI-generated content
+
+**Solutions:**
+
+1. **Check API key:** `OPENAI_API_KEY` must be set in `.env`
+2. **Verify model:** `OPENAI_MODEL=gpt-4o-mini` (or other available model)
+3. **Check application logs** for API errors (rate limits, invalid key)
+4. **Heuristic fallback is normal** without API key — tailoring still works but is less nuanced
+5. **Restart app** after adding API key to `.env`
+
+### Auto-Apply Batch Failures
+
+**Symptoms:**
+- Batch status `partial_failure`
+- Applications show `submission_status: failed`
+- Items stuck in `running` status
+
+**Solutions:**
+
+1. **Check auto-apply flags** are enabled for the target portal
+2. **Verify portal credentials** are valid (Test button on credentials page)
+3. **Check daily cap:** `DAILY_APPLY_CAP` may be reached
+4. **Review readiness checklist** — All items must have approved resume and complete draft
+5. **Check Celery worker** is running (Docker: `docker compose logs celery_worker`)
+6. **Review error messages** on batch items and application detail
+7. **Check scrape proofs** in `instance/scrape_proofs/`
+
+### ATS Export Score Low
+
+**Symptoms:**
+- ATS parse-test score below 70
+- Missing section warnings
+
+**Solutions:**
+
+1. **Complete all profile sections** — experience, education, skills
+2. **Add email to contact** — Must appear in document body
+3. **Avoid exotic characters** — Copy-paste from web pages can introduce bad bullets
+4. **Re-run parse test** after editing profile
+5. See [ATS_EXPORT_RULES.md](../05-reference/ATS_EXPORT_RULES.md)
+
+### Jobs Schema Tables Missing
+
+**Symptoms:**
+- `relation "discovered_jobs" does not exist`
+- `relation "portal_credentials" does not exist`
+- Discovery or batch features fail
+
+**Solutions:**
+
+1. **Run jobs schema script:** `python scripts/create_jobs_schema.py`
+2. **For existing databases:** `python scripts/migrate_jobs_automation.py`
+3. **Verify tables:** `python scripts/check_database_tables.py`
+
+### Credential Encryption Key Issues
+
+**Symptoms:**
+- Credentials work after save but fail after restart
+- "Invalid token" decryption errors
+
+**Solutions:**
+
+1. **Set persistent key:** Generate and add `CREDENTIAL_ENCRYPTION_KEY` to `.env`
+2. **Restart app** after setting the key
+3. **Re-save credentials** after setting the key (old credentials encrypted with ephemeral key are lost)
+4. **Never change the key** without re-exporting all portal sessions
+
 ## See Also
 
-- [GETTING_STARTED.md](GETTING_STARTED.md) - Initial setup
+- [GETTING_STARTED.md](../01-getting-started/GETTING_STARTED.md) - Initial setup
 - [CONFIGURATION.md](CONFIGURATION.md) - Configuration details
-- [SCHEMA_MIGRATION.md](SCHEMA_MIGRATION.md) - Database migrations
+- [AUTOMATION_SETUP.md](AUTOMATION_SETUP.md) - Automation setup guide
+- [ADMIN_GUIDE.md](ADMIN_GUIDE.md) - Administrator guide
+- [SCHEMA_MIGRATION.md](../05-reference/SCHEMA_MIGRATION.md) - Database migrations
