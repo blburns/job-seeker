@@ -46,10 +46,12 @@ class TailoringService:
 
         summary = cls._select_summary(tailored, jd_keywords)
         if summary:
+            old_summary = cls._primary_summary(master_data)
             diff_log.append({
                 'field': 'summary',
                 'action': 'select_variant',
                 'master_ref': summary.get('id'),
+                'old': old_summary,
                 'new': summary.get('text'),
             })
             tailored['summary_variants'] = [summary]
@@ -67,6 +69,29 @@ class TailoringService:
         diff_log.extend(bullet_diffs)
 
         return tailored, diff_log
+
+    @classmethod
+    def _role_label(cls, entry: Dict[str, Any]) -> str:
+        title = (entry.get('title') or 'Role').strip()
+        company = (entry.get('company') or '').strip()
+        return f'{title} @ {company}' if company else title
+
+    @classmethod
+    def _experience_labels(cls, experience: List[Dict[str, Any]], ids: List[Any]) -> List[str]:
+        lookup = {
+            entry.get('id'): cls._role_label(entry)
+            for entry in experience
+            if entry.get('id')
+        }
+        return [lookup.get(entry_id, str(entry_id)) for entry_id in ids]
+
+    @classmethod
+    def _primary_summary(cls, profile: Dict[str, Any]) -> str:
+        variants = profile.get('summary_variants') or []
+        if variants:
+            first = cls._normalize_summary_variant(variants[0])
+            return first.get('text', '')
+        return profile.get('summary', '') or ''
 
     @classmethod
     def _normalize_summary_variant(cls, variant: Any) -> Dict[str, Any]:
@@ -123,6 +148,8 @@ class TailoringService:
                 'action': 'reorder',
                 'old_order': old_order,
                 'new_order': new_order,
+                'old_labels': cls._experience_labels(experience, old_order),
+                'new_labels': cls._experience_labels(scored, new_order),
                 'master_ref': None,
             })
         return scored, diffs
@@ -180,6 +207,7 @@ class TailoringService:
                         'field': 'experience.bullet',
                         'action': 'rephrase',
                         'master_ref': bullet.get('id'),
+                        'role': cls._role_label(entry),
                         'old': old_text,
                         'new': new_text,
                         'keyword_added': kw,
@@ -203,9 +231,21 @@ class TailoringService:
         job_description: str,
         company: str = '',
     ) -> Tuple[Dict[str, Any], List[Dict[str, Any]], float]:
+        analysis_before = keyword_service.analyze_coverage(job_description, master_data)
         tailored, diff_log = cls.tailor_for_job(master_data, job_title, job_description, company)
-        analysis = keyword_service.analyze_coverage(job_description, tailored)
-        return tailored, diff_log, float(analysis.get('coverage_score', 0))
+        analysis_after = keyword_service.analyze_coverage(job_description, tailored)
+        diff_log.append({
+            '_meta': True,
+            'field': '_meta',
+            'action': 'summary',
+            'coverage_before': analysis_before.get('coverage_score', 0),
+            'coverage_after': analysis_after.get('coverage_score', 0),
+            'matched_before': analysis_before.get('matched_keywords', []),
+            'matched_after': analysis_after.get('matched_keywords', []),
+            'missing_after': analysis_after.get('missing_keywords', []),
+            'jd_keywords': analysis_after.get('jd_keywords', []),
+        })
+        return tailored, diff_log, float(analysis_after.get('coverage_score', 0))
 
     @classmethod
     def generate_cover_letter_for_job(
