@@ -2,295 +2,241 @@
 
 ## Overview
 
-This Flask application follows a modular, scalable architecture designed for enterprise applications. It uses PostgreSQL schemas for logical database organization and implements a comprehensive RBAC system.
+This is a **semi-automated job application platform** built on a Flask boilerplate with RBAC, modular blueprints, and a service-oriented business logic layer. Users manage structured resumes, discover jobs, tailor applications, and track their pipeline — with optional browser automation for discovery and submission.
 
 ## Core Principles
 
-1. **Modular Design** - Features organized into independent modules
-2. **Schema Separation** - Database tables grouped by functional domain
-3. **RBAC Compliance** - Role-based access control throughout
-4. **API-First** - RESTful API alongside web interface
-5. **Scalability** - Designed to grow with your needs
+1. **Human-in-the-loop** — Automation assists; users review before anything is submitted
+2. **Modular Design** — Job seeker features organized into independent blueprints
+3. **Service Layer** — Business logic in `app/services/`, routes stay thin
+4. **RBAC Compliance** — Role-based access control from boilerplate foundation
+5. **API-First** — RESTful API alongside web interface for all job seeker modules
+
+## Job Seeker Module Architecture
+
+```mermaid
+flowchart TB
+    subgraph presentation [Presentation Layer]
+        Templates[Jinja2 Templates]
+        Sidebar[config/modules.py Sidebar]
+        Static[Vuexy + Tailwind CSS]
+    end
+
+    subgraph application [Application Layer - Blueprints]
+        Main[main - Dashboard]
+        Resume[resume - Master Profile]
+        Jobs[jobs - Postings and Discovery]
+        Applications[applications - Pipeline]
+        Apply[apply - Pre-fill Review]
+        Analytics[analytics - Metrics]
+        Auth[auth - Authentication]
+        Admin[admin - RBAC Admin]
+    end
+
+    subgraph services [Business Logic Layer]
+        Discovery[Discovery Services]
+        Tailoring[Tailoring Services]
+        ApplySvc[Apply Services]
+        Scraping[Scraping Services]
+        Export[Export Services]
+    end
+
+    subgraph data [Data Layer]
+        JobsSchema[jobs schema]
+        AuthSchema[auth schema]
+        SQLite[SQLite - local dev]
+        PostgreSQL[PostgreSQL - production]
+    end
+
+    Templates --> Main
+    Templates --> Resume
+    Templates --> Jobs
+    Templates --> Applications
+    Templates --> Apply
+
+    Resume --> Export
+    Jobs --> Discovery
+    Jobs --> Scraping
+    Applications --> Tailoring
+    Applications --> ApplySvc
+    Apply --> ApplySvc
+    Apply --> Scraping
+
+    Discovery --> JobsSchema
+    Tailoring --> JobsSchema
+    ApplySvc --> JobsSchema
+    Auth --> AuthSchema
+
+    JobsSchema --> SQLite
+    JobsSchema --> PostgreSQL
+    AuthSchema --> SQLite
+    AuthSchema --> PostgreSQL
+```
 
 ## Architecture Layers
 
 ### 1. Presentation Layer
 
-**Templates** (`app/templates/`)
-- Base templates: `base.html` (main app with sidebar), `base_auth.html` (login/register), `base_misc.html` (error/misc pages)
-- Component templates: Header, Sidebar, Flash messages
-- Module-specific templates organized by feature (see [TEMPLATES_AND_UI.md](../03-development/TEMPLATES_AND_UI.md))
+**Templates** (`app/templates/modules/`)
+- `resume/` — Profile upload, review, edit, detail
+- `jobs/` — Postings, discovery inbox, search profiles
+- `applications/` — Pipeline kanban, detail, tailoring review, batches
+- `apply/` — Pre-fill review, credentials
+- `analytics/` — Metrics dashboard
+
+**Navigation** — Sidebar driven by [`config/modules.py`](../../config/modules.py):
+- Job Seeker section: Overview, Resume, Jobs, Applications, Analytics
+- Management section: Admin (RBAC)
+- Account section: User profile and settings
 
 **Static Assets** (`app/static/`)
-- CSS (Vuexy theme and vendor styles, `page-misc.css` for error pages)
-- JavaScript (Vuexy/Bootstrap 5 components)
-- Images and media files
-
-**Frontend Framework:**
-- **Vuexy Theme** - Bootstrap 5 admin dashboard theme (vertical menu template)
-- **Bootstrap 5** - Components and utilities
-- **Tabler Icons** - Icon library (icon-base ti)
+- Vuexy admin theme (Bootstrap 5)
+- Custom CSS (`app-custom.css`) for tailoring diff UI
+- Tailwind CSS build
 
 ### 2. Application Layer
 
-**Blueprints** (`app/modules/`)
-Each module is a Flask blueprint with:
-- `routes.py` - Web routes (HTML responses)
-- `api.py` - API routes (JSON responses)
-- `__init__.py` - Blueprint registration
+**Job Seeker Blueprints** (`app/modules/`)
 
-**Current Modules:**
-- `auth` - Authentication (login, register, password reset)
-- `users` - User management (profile, account settings, view user, roles & permissions)
-- `admin` - Admin panel (dashboard, monitoring, roles/permissions, email logs/templates, settings view, system logs, reports, developer sitemap)
-- `main` - Dashboard and index
-- Additional modules (e.g. `accounts`) may be present; see `app/modules/` and `config/modules.py` for the active menu.
+| Module | Prefix | Routes file | API file | Purpose |
+|--------|--------|-------------|----------|---------|
+| `main` | `/` | `main/routes.py` | — | Dashboard overview |
+| `resume` | `/resume` | `resume/routes.py` | `resume/api.py` | Master profile management |
+| `jobs` | `/jobs` | `jobs/routes.py` | `jobs/api.py` | Postings, discovery, inbox |
+| `applications` | `/applications` | `applications/routes.py` | `applications/api.py` | Pipeline, tailoring, batches |
+| `apply` | `/apply` | `apply/routes.py` | `apply/api.py` | Pre-fill review, credentials |
+| `analytics` | `/analytics` | `analytics/routes.py` | — | Pipeline metrics |
+
+**Boilerplate Blueprints** (inherited foundation):
+- `auth` — Login, register, password reset, 2FA, OAuth
+- `users` — Profile, settings, security
+- `admin` — RBAC management, monitoring, developer sitemap
 
 ### 3. Business Logic Layer
 
-**Services** (`app/services/`)
-Business logic separated from routes (if implemented)
+**Services** (`app/services/`) — See [JOB_SEEKER_SERVICES.md](JOB_SEEKER_SERVICES.md) for full reference.
 
-**Models** (`app/models/`)
-Database models organized by schema:
-- `auth.py` - User, Role, Group models
-- Additional model modules as needed; see `app/models/` and migration schemas.
+| Domain | Key services |
+|--------|---------------|
+| Profile | `resume_parser_service`, `profile_form_service`, `resume_export_service` |
+| Discovery | `discovery_orchestrator`, `job_discovery_service`, `keyword_service`, `discovery/*` |
+| Tailoring | `tailoring_service`, `tailoring_diff_service`, `llm_service` |
+| Apply | `apply_draft_service`, `apply_batch_service`, `apply_submission_service`, `apply_adapters/*` |
+| Scraping | `browser_manager`, `job_detail_enrichment`, `scraping/parsers/*`, `rate_limiter` |
+| Tracking | `pipeline_service`, `activity_service`, `analytics_service` |
+| Security | `credential_vault_service` |
+
+**Background Tasks** (`app/tasks/job_tasks.py`):
+- `batch_tailor_applications` — Background tailoring for multiple apps
+- `submit_apply_batch` — Portal submission via Celery
+- `run_scheduled_discovery` — Scheduled discovery runs (Celery beat)
 
 ### 4. Data Layer
 
 **Database Schemas:**
-- `auth` - Authentication and RBAC (6 tables)
-- `accounts` - Business accounts (5 tables)
-- `contacts` - Contacts (4 tables)
-- `documents` - Documents (5 tables)
-- `organizations` - Organizations (3 tables)
-- `tenants` - Multi-tenancy (4 tables)
-- `settings` - Settings (5 tables)
-- `public` - System tables (1 table)
 
-**See [DATABASE_SCHEMAS.md](DATABASE_SCHEMAS.md) for complete schema documentation.**
+| Schema | Tables | Purpose |
+|--------|--------|---------|
+| `auth` | users, roles, groups, permissions | Authentication and RBAC |
+| `jobs` | master_profiles, job_postings, applications, etc. | Job seeker domain |
+
+SQLite (local dev) uses flat tables; PostgreSQL uses schema prefixes.
+
+See [JOB_SEEKER_DATA_MODEL.md](../05-reference/JOB_SEEKER_DATA_MODEL.md) for complete jobs schema reference.
 
 ## Application Factory Pattern
-
-The application uses Flask's application factory pattern:
 
 ```python
 # app/__init__.py
 def create_app(config_name=None):
     app = Flask(__name__)
-    
-    # Initialize configuration
     init_config(app, config_name)
-    
-    # Initialize extensions
-    init_extensions(app)
-    
-    # Register blueprints
-    register_blueprints(app)
-    
+    init_extensions(app)      # DB, login, cache, celery, mail
+    register_blueprints(app)  # All module blueprints
     return app
 ```
 
-**Benefits:**
-- Easy testing (create app instances for tests)
-- Multiple app instances (different configs)
-- Delayed initialization (extensions initialized after app creation)
-
-## Extension System
-
-**Core Extensions** (`app/extensions/`):
-- `core.py` - Database, cache, login manager, etc.
-- `config.py` - Configuration management
-- `blueprints.py` - Blueprint registration
-- `template_context.py` - Template context processors
-- `error_handlers.py` - Error handling
-- `database_config.py` - Multi-database support
-- `database_health.py` - Database monitoring
-- `database_backup.py` - Backup system
+Entry points:
+- `python run.py` — Development server
+- `celery -A celery_app.celery worker` — Background worker
+- `docker compose up` — Full stack (web, db, redis, celery)
 
 ## Request Flow
 
 ```
-1. HTTP Request
-   ↓
-2. Flask App (WSGI)
-   ↓
-3. Middleware (CSRF, Rate Limiting, CORS)
-   ↓
-4. Blueprint Router
-   ↓
-5. Route Handler (routes.py or api.py)
-   ↓
-6. Business Logic (if services exist)
-   ↓
-7. Database Models (app/models/)
-   ↓
-8. Database (PostgreSQL/SQLite)
-   ↓
-9. Response (HTML template or JSON)
+HTTP Request
+  → Flask App (WSGI)
+  → Middleware (CSRF, Rate Limiting)
+  → Blueprint Router (module routes.py or api.py)
+  → Service Layer (app/services/)
+  → SQLAlchemy Models (app/models/)
+  → Database (SQLite or PostgreSQL)
+  → Response (Jinja2 template or JSON)
 ```
 
-## Authentication Flow
+## Job Seeker Data Flow
 
-```
-1. User submits login form
-   ↓
-2. Auth route validates credentials
-   ↓
-3. User model checks password hash
-   ↓
-4. Account lockout check
-   ↓
-5. Flask-Login creates session
-   ↓
-6. User redirected to dashboard
-   ↓
-7. Template context injects user info
+```mermaid
+flowchart LR
+    Upload[Upload Resume] --> Profile[MasterProfile]
+    Profile --> Discovery[Job Discovery]
+    Discovery --> Inbox[Discovery Inbox]
+    Inbox --> Posting[JobPosting]
+    Posting --> App[Application]
+    App --> Tailor[Tailoring]
+    Tailor --> Version[ResumeVersion]
+    Version --> Draft[ApplyDraft]
+    Draft --> Submit[Submit]
+    Submit --> Pipeline[Pipeline Tracking]
 ```
 
-## RBAC Flow
+## Deployment Modes
 
-```
-1. User makes request
-   ↓
-2. Route checks @login_required
-   ↓
-3. Permission check (if needed)
-   ↓
-4. User.has_permission('module.action')
-   ↓
-5. Check direct roles → Check group roles
-   ↓
-6. Permission granted/denied
-   ↓
-7. Route handler executes or returns 403
-```
+| Mode | Stack | Discovery | Batch submit |
+|------|-------|-----------|--------------|
+| Local dev | SQLite, `python run.py` | In-process (sync) | In-process (sync) |
+| Docker | PostgreSQL, Redis, Celery | Celery worker | Celery worker |
 
-## Database Schema Organization
-
-Tables are organized into PostgreSQL schemas:
-
-```
-auth/
-  ├── users
-  ├── roles
-  ├── groups
-  ├── user_roles
-  ├── user_groups
-  └── group_roles
-
-accounts/
-  ├── accounts
-  ├── account_types
-  ├── account_categories
-  ├── account_activities
-  └── account_settings
-
-... (other schemas)
-```
-
-**Benefits:**
-- Logical organization
-- Schema-level permissions possible
-- Easier backup/restore
-- Better security isolation
-
-## Module Structure
-
-Each module follows this structure:
-
-```
-app/modules/module_name/
-├── __init__.py          # Blueprint exports
-├── routes.py            # Web routes
-└── api.py               # API routes (optional)
-
-app/templates/modules/module_name/
-├── list.html            # List view
-├── create.html          # Create form
-├── edit.html            # Edit form
-└── ...                  # Subfolders by feature (e.g. profile/, view/, settings/)
-```
-
-The **users** module uses subfolders: `profile/`, `view/`, `view/includes/`, `settings/`, `settings/includes/`, `access/`. See [TEMPLATES_AND_UI.md](../03-development/TEMPLATES_AND_UI.md). Development docs are in `03-development/` with subfolders: `admin/`, `auth/`, `rbac/`, `email/`.
-
-## Configuration Management
-
-**Environment Variables** (`.env`):
-- Database configuration
-- Secret keys
-- Email settings
-- Feature flags
-
-**Configuration Loading:**
-1. Load from `.env` file
-2. Load from `.env.local` (if exists, overrides)
-3. Load from system environment (overrides all)
-
-**See [CONFIGURATION.md](CONFIGURATION.md) for details.**
+Local dev does not require Redis, Celery, or Docker. See [GETTING_STARTED.md](../01-getting-started/GETTING_STARTED.md).
 
 ## Security Features
 
-1. **Password Hashing** - Bcrypt with salt
-2. **CSRF Protection** - Flask-WTF CSRF tokens
-3. **Account Lockout** - After 5 failed attempts (30 min)
-4. **Password Reset** - Secure token-based
-5. **Email Verification** - Token-based verification
-6. **Session Management** - Flask-Login sessions
-7. **Rate Limiting** - Flask-Limiter on API endpoints
-8. **SQL Injection Protection** - SQLAlchemy ORM
-
-## Scalability Considerations
-
-1. **Database Connection Pooling** - Configured in `database_config.py`
-2. **Caching** - Redis support (optional)
-3. **Horizontal Scaling** - Stateless application design
-4. **Schema Isolation** - Allows tenant-specific schemas if needed
-5. **Module-based** - Easy to add/remove features
+1. **Password Hashing** — Bcrypt with salt
+2. **CSRF Protection** — Flask-WTF CSRF tokens
+3. **Credential Encryption** — Fernet encryption for portal sessions (`CREDENTIAL_ENCRYPTION_KEY`)
+4. **Account Lockout** — After 5 failed attempts (30 min)
+5. **RBAC** — Permission checks on admin routes
+6. **Rate Limiting** — Scrape and discovery rate limits
+7. **Auto-apply gates** — Disabled by default; daily cap enforced
 
 ## Technology Stack
 
-- **Backend:** Flask 3.x, Python 3.x
-- **Database:** PostgreSQL 12+ (primary), SQLite (dev)
-- **ORM:** SQLAlchemy 2.x
-- **Frontend:** Vuexy (Bootstrap 5) admin theme
-- **Authentication:** Flask-Login
-- **API:** Flask-RESTX (optional)
-- **Migrations:** Flask-Migrate (Alembic)
-- **Testing:** Pytest
+| Layer | Technology |
+|-------|-----------|
+| Backend | Flask 2.3, Python 3.12 |
+| Database | PostgreSQL 16 (production), SQLite (dev) |
+| ORM | SQLAlchemy 1.4 |
+| Auth | Flask-Login, Flask-JWT-Extended |
+| Frontend | Vuexy (Bootstrap 5), Jinja2, Tailwind CSS |
+| Resume | python-docx, pdfplumber |
+| Browser automation | Playwright |
+| Background jobs | Celery 5.3 + Redis (optional) |
+| LLM | OpenAI API (optional) |
+| Testing | pytest |
 
-## Design Patterns Used
+## Extension System
 
-1. **Application Factory** - Flask app creation
-2. **Blueprint Pattern** - Modular route organization
-3. **Repository Pattern** - Database abstraction (via SQLAlchemy)
-4. **MVC Pattern** - Models, Views (templates), Controllers (routes)
-5. **Dependency Injection** - Extensions injected via app context
-6. **Template Inheritance** - Base templates with blocks
+**Core Extensions** (`app/extensions/`):
+- `core.py` — Database, cache, login manager
+- `config.py` — Environment variable loading
+- `blueprints.py` — Blueprint registration
+- `database_config.py` — Multi-database URI construction
 
-## Performance Optimizations
+## Related Docs
 
-1. **Database Indexing** - Indexes on frequently queried columns
-2. **Query Optimization** - Eager loading for relationships
-3. **Caching** - Redis for frequently accessed data
-4. **Static File Serving** - Nginx/CDN in production
-5. **Connection Pooling** - Database connection reuse
-
-## Monitoring & Health Checks
-
-- **Database Health** - `/health/database` endpoint
-- **Application Health** - `/health` endpoint
-- **Logging** - Structured logging to `logs/app.log`
-- **Error Tracking** - Error handlers with logging
-
-## Future Enhancements
-
-Potential areas for expansion:
-- GraphQL API (infrastructure exists)
-- WebSocket support
-- Background job processing (Celery)
-- Full-text search (PostgreSQL FTS or Elasticsearch)
-- File storage abstraction (S3, Azure Blob)
-- Advanced caching strategies
-- API versioning
-- Microservices migration path
+- [JOB_SEEKER_SERVICES.md](JOB_SEEKER_SERVICES.md) — Service layer reference
+- [JOB_SEEKER_DATA_MODEL.md](../05-reference/JOB_SEEKER_DATA_MODEL.md) — Database tables
+- [WORKFLOW.md](../02-user-guide/WORKFLOW.md) — End-user workflow
+- [SCRAPING_AND_AUTOMATION.md](../03-development/SCRAPING_AND_AUTOMATION.md) — Browser automation
+- [CONFIGURATION.md](../04-operations/CONFIGURATION.md) — Environment variables
+- [RBAC_GUIDE.md](../03-development/rbac/RBAC_GUIDE.md) — Permission system (boilerplate)
