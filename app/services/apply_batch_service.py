@@ -3,7 +3,7 @@
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import List
+from typing import Dict, List
 
 from app.extensions.core import db
 from app.models.jobs import (
@@ -19,7 +19,7 @@ from app.models.jobs import (
     SubmissionStatus,
 )
 
-logger = logging.getLogger(__name__)
+from app.services.apply_draft_service import apply_draft_service
 
 
 class ApplyBatchService:
@@ -53,7 +53,48 @@ class ApplyBatchService:
         return batch
 
     @classmethod
+    def application_readiness(cls, user_id, app: Application) -> Dict[str, Any]:
+        job = app.job_posting
+        job_label = f'{job.title} @ {job.company}' if job else str(app.id)
+        version = app.resume_version
+        resume_tailored = version is not None
+        resume_approved = bool(
+            version and version.status == ResumeVersionStatus.APPROVED.value
+        )
+        draft = ApplyDraft.query.filter_by(
+            application_id=app.id, user_id=user_id
+        ).order_by(ApplyDraft.created_at.desc()).first()
+        draft_complete = apply_draft_service.is_complete(draft)
+        issues = []
+        if not resume_tailored:
+            issues.append('Tailor resume')
+        elif not resume_approved:
+            issues.append('Approve tailored resume')
+        if not draft_complete:
+            issues.append('Complete apply pre-fill (email required)')
+        return {
+            'application_id': str(app.id),
+            'job_label': job_label,
+            'resume_tailored': resume_tailored,
+            'resume_approved': resume_approved,
+            'draft_complete': draft_complete,
+            'ready': resume_approved and draft_complete,
+            'issues': issues,
+        }
+
+    @classmethod
+    def prepare_batch(cls, user_id, batch: ApplyBatch) -> None:
+        """Auto-create apply drafts where possible before validation."""
+        for app_id in batch.application_ids or []:
+            app = Application.query.filter_by(id=app_id, user_id=user_id).first()
+            if not app:
+                continue
+            apply_draft_service.ensure_draft(app, user_id)
+        db.session.commit()
+
+    @classmethod
     def validate_for_approve(cls, user_id, batch: ApplyBatch) -> List[str]:
+        cls.prepare_batch(user_id, batch)
         errors = []
         profile = MasterProfile.query.filter_by(
             user_id=user_id, is_active=True, is_deleted=False
@@ -86,13 +127,20 @@ class ApplyBatchService:
             if dup:
                 errors.append(f'Duplicate apply blocked for {app.job_posting_id}')
             version = app.resume_version
+            job_label = app.job_posting.title if app.job_posting else str(app_id)
             if not version or version.status != ResumeVersionStatus.APPROVED.value:
-                errors.append(f'Application {app_id} needs approved resume')
+                errors.append(
+                    f'"{job_label}": approve the tailored resume '
+                    f'(Applications → open job → Approve Resume)'
+                )
             draft = ApplyDraft.query.filter_by(
                 application_id=app.id, user_id=user_id
             ).order_by(ApplyDraft.created_at.desc()).first()
-            if not draft or not draft.form_fields.get('email'):
-                errors.append(f'Application {app_id} needs complete apply draft')
+            if not apply_draft_service.is_complete(draft):
+                errors.append(
+                    f'"{job_label}": add email in Review & Apply pre-fill '
+                    f'(or set email on your master profile)'
+                )
         return errors
 
     @classmethod

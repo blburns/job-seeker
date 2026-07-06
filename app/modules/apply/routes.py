@@ -8,6 +8,7 @@ from flask_login import current_user, login_required
 
 from app.extensions.core import db
 from app.models.jobs import Application, ApplicationStage, ApplyDraft, MasterProfile, ResumeVersionStatus
+from app.services.apply_draft_service import apply_draft_service
 from app.services.activity_service import activity_service
 from app.services.job_discovery_service import job_discovery_service
 from app.services.resume_export_service import resume_export_service
@@ -32,33 +33,19 @@ def review(application_id):
     ).order_by(ApplyDraft.created_at.desc()).first()
 
     if not draft and profile:
-        job = app_record.job_posting
-        form_fields = job_discovery_service.build_apply_draft(
-            profile.profile_data or {},
-            {'title': job.title, 'company': job.company, 'url': job.url},
-        )
-        cover_letter = tailoring_service.generate_cover_letter_for_job(
-            profile.profile_data or {},
-            job.title,
-            job.company,
-            f"{job.description or ''} {job.requirements or ''}",
-        )
-        draft = ApplyDraft(
-            application_id=app_record.id,
-            user_id=current_user.id,
-            form_fields=form_fields,
-            cover_letter=cover_letter,
-            status='draft',
-        )
-        db.session.add(draft)
-        db.session.commit()
+        draft = apply_draft_service.ensure_draft(app_record, current_user.id)
+        if draft:
+            db.session.commit()
 
     version = app_record.resume_version
     keyword_analysis = None
+    resume_preview = ''
     if app_record.job_posting and profile:
         from app.services.keyword_service import keyword_service
         jd_text = f"{app_record.job_posting.description or ''} {app_record.job_posting.requirements or ''}"
         keyword_analysis = keyword_service.analyze_coverage(jd_text, profile.profile_data or {})
+    if version:
+        resume_preview = resume_export_service.render_preview_text(version.tailored_data or {})
 
     return render_template(
         'modules/apply/review.html',
@@ -67,6 +54,7 @@ def review(application_id):
         version=version,
         job=app_record.job_posting,
         keyword_analysis=keyword_analysis,
+        resume_preview=resume_preview,
     )
 
 
@@ -85,10 +73,74 @@ def save_draft(application_id):
         if key in request.form:
             form_fields[key] = request.form[key]
     draft.form_fields = form_fields
+    if 'cover_letter' in request.form:
+        draft.cover_letter = request.form['cover_letter']
     draft.status = 'approved'
     db.session.commit()
     flash('Pre-fill draft saved.', 'success')
     return redirect(url_for('apply.review', application_id=application_id))
+
+
+@apply_bp.route('/<uuid:application_id>/regenerate-cover-letter', methods=['POST'])
+@login_required
+def regenerate_cover_letter(application_id):
+    app_record = Application.query.filter_by(
+        id=application_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    profile = MasterProfile.query.filter_by(
+        user_id=current_user.id, is_active=True, is_deleted=False
+    ).first()
+    if not profile:
+        flash('Upload a master profile first.', 'warning')
+        return redirect(url_for('apply.review', application_id=application_id))
+
+    profile_data = (app_record.resume_version.tailored_data if app_record.resume_version else None) or profile.profile_data or {}
+    apply_draft_service.ensure_draft(
+        app_record,
+        current_user.id,
+        profile_data=profile_data,
+        regenerate_cover_letter=True,
+    )
+    db.session.commit()
+    flash('Cover letter regenerated.', 'success')
+    return redirect(request.referrer or url_for('apply.review', application_id=application_id))
+
+
+@apply_bp.route('/<uuid:application_id>/download-cover-letter')
+@login_required
+def download_cover_letter(application_id):
+    import io
+    from flask import send_file
+
+    app_record = Application.query.filter_by(
+        id=application_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    draft = ApplyDraft.query.filter_by(
+        application_id=app_record.id, user_id=current_user.id
+    ).order_by(ApplyDraft.created_at.desc()).first()
+    if not draft or not (draft.cover_letter or '').strip():
+        flash('No cover letter available. Tailor the resume or regenerate the letter.', 'warning')
+        return redirect(url_for('apply.review', application_id=application_id))
+
+    fmt = request.args.get('format', 'docx')
+    job = app_record.job_posting
+    base = f"Cover_Letter_{job.company}_{job.title}".replace(' ', '_')[:80] if job else 'Cover_Letter'
+    if fmt == 'txt':
+        return send_file(
+            io.BytesIO(draft.cover_letter.encode('utf-8')),
+            as_attachment=True,
+            download_name=f'{base}.txt',
+            mimetype='text/plain',
+        )
+    docx_bytes, filename = resume_export_service.export_cover_letter_docx(
+        draft.cover_letter, f'{base}.docx',
+    )
+    return send_file(
+        io.BytesIO(docx_bytes),
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    )
 
 
 @apply_bp.route('/<uuid:application_id>/mark-applied', methods=['POST'])

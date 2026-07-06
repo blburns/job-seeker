@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% from 'macros/page_layout.html' import page_header %}
+{% from 'macros/tailoring.html' import render_diff_log, render_resume_output, render_cover_letter %}
 {% block title %}Review Application{% endblock %}
 {% block content %}
-{% call page_header(job.title ~ ' at ' ~ job.company, 'Review before applying — semi-automated pre-fill') %}
+{% call page_header(job.title ~ ' at ' ~ job.company, 'Review tailored materials before applying') %}
   {% if version %}
   <a href="{{ url_for('apply.download_resume', application_id=application.id) }}" class="btn btn-outline-primary btn-sm">Download Resume</a>
   {% endif %}
+  <a href="{{ url_for('applications.tailoring_review', application_id=application.id) }}" class="btn btn-outline-secondary btn-sm">Tailoring Review</a>
   <form method="post" action="{{ url_for('apply.mark_applied', application_id=application.id) }}" class="d-inline">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="btn btn-primary btn-sm">Mark as Applied</button>
@@ -13,8 +15,13 @@
 {% endcall %}
 
 <div class="row g-4 mb-4">
+  <div class="col-lg-8">
+    {{ render_resume_output(version, resume_preview, application) }}
+    {{ render_cover_letter(draft, application) }}
+  </div>
+
   <div class="col-lg-4">
-    <div class="card h-100">
+    <div class="card h-100 mb-4">
       <div class="card-header border-bottom">
         <h6 class="card-title mb-0">Keywords</h6>
       </div>
@@ -36,41 +43,22 @@
         {% endif %}
       </div>
     </div>
-  </div>
 
-  <div class="col-lg-4">
-    <div class="card h-100">
+    <div class="card">
       <div class="card-header border-bottom">
-        <h6 class="card-title mb-0">Tailored Resume</h6>
-      </div>
-      <div class="card-body">
-        {% if version %}
-        <p class="mb-1">Version {{ version.version_number }} · {{ version.status }}</p>
-        <p class="mb-1">ATS Score: {{ version.ats_score or '-' }}%</p>
-        <p class="small text-muted mb-0">{{ version.export_filename }}</p>
-        {% else %}
-        <p class="text-muted mb-0">No tailored resume. <a href="{{ url_for('applications.detail', application_id=application.id) }}">Tailor first</a>.</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-4">
-    <div class="card h-100">
-      <div class="card-header border-bottom">
-        <h6 class="card-title mb-0">Pre-fill Fields</h6>
+        <h6 class="card-title mb-0">Application pre-fill</h6>
       </div>
       <div class="card-body">
         {% if draft %}
         <form method="post" action="{{ url_for('apply.save_draft', application_id=application.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          {% for key, value in draft.form_fields.items() %}
+          {% for key, value in (draft.form_fields or {}).items() %}
           <div class="mb-2">
             <label class="form-label small text-capitalize">{{ key.replace('_', ' ') }}</label>
             <input type="text" name="{{ key }}" class="form-control form-control-sm" value="{{ value }}">
           </div>
           {% endfor %}
-          <button type="submit" class="btn btn-sm btn-primary mt-2">Save Draft</button>
+          <button type="submit" class="btn btn-sm btn-primary mt-2">Save pre-fill</button>
         </form>
         {% else %}
         <p class="text-muted mb-0">No pre-fill draft.</p>
@@ -80,10 +68,25 @@
   </div>
 </div>
 
-<div class="card">
-  <div class="card-header"><h5 class="card-title mb-0">Job Description</h5></div>
+{% if version and version.diff_log %}
+<div class="card mb-4">
+  <div class="card-header border-bottom">
+    <h5 class="card-title mb-0">Tailoring Changes</h5>
+  </div>
   <div class="card-body">
-    <pre class="code-block">{{ job.description }}</pre>
+    {{ render_diff_log(version.diff_log) }}
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header border-bottom"><h5 class="card-title mb-0">Job Description</h5></div>
+  <div class="card-body">
+    {% if job.description %}
+    <div class="job-description">{{ job.description }}</div>
+    {% else %}
+    <p class="text-muted mb-0">No description captured.</p>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
