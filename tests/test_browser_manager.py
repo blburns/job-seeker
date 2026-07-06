@@ -42,3 +42,11 @@ def test_indeed_blocked_page_detected():
     assert result is not None
     assert result.status.value == 'blocked'
     assert 'Indeed blocked' in result.message
+
+
+def test_scrape_browser_launch_disables_gpu():
+    args = BrowserManager._browser_launch_args()
+    assert '--disable-gpu' in args
+    assert '--disable-gpu-compositing' in args
+    assert '--disable-accelerated-2d-canvas' in args
+    assert '--use-gl=swiftshader' in args

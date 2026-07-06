@@ -67,6 +67,36 @@ def build_search_url(keywords: str, location: str = '', remote: bool = False) ->
     return f'{BASE_URL}/jobs/search/?{"&".join(params)}'
 
 
+def parse_job_detail(html: str) -> Dict[str, Any]:
+    """Extract full job fields from a LinkedIn job detail page."""
+    title = _extract(html, r'class="[^"]*top-card-layout__title[^"]*"[^>]*>([^<]+)')
+    if not title:
+        title = _extract(html, r'class="[^"]*topcard__title[^"]*"[^>]*>([^<]+)')
+
+    company = _extract(html, r'class="[^"]*topcard__org-name-link[^"]*"[^>]*>([^<]+)')
+    if not company:
+        company = _extract(html, r'class="[^"]*topcard__flavor[^"]*"[^>]*>([^<]+)')
+
+    location = _extract(html, r'class="[^"]*topcard__flavor--bullet[^"]*"[^>]*>([^<]+)')
+
+    description = _extract(html, r'class="[^"]*description__text[^"]*"[^>]*>(.*?)</div>')
+    if not description:
+        description = _extract(html, r'class="[^"]*show-more-less-html__markup[^"]*"[^>]*>(.*?)</div>')
+
+    combined = f'{title} {description}'
+    from app.services.job_discovery_service import job_discovery_service
+    seniority = job_discovery_service._detect_seniority(combined)
+
+    return {
+        'title': title,
+        'company': company,
+        'location': location,
+        'description': description,
+        'requirements': description,
+        'seniority': seniority,
+    }
+
+
 def _extract(text: str, pattern: str) -> str:
     m = re.search(pattern, text, re.I | re.S)
     return _clean(m.group(1)) if m else ''

@@ -6,6 +6,7 @@ import tempfile
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional
 
+from app.services.scraping.browser_launch_args import SCRAPE_BROWSER_ARGS
 from app.services.scraping.scrape_result import ScrapeResult, ScrapeStatus
 
 logger = logging.getLogger(__name__)
@@ -136,13 +137,7 @@ class BrowserManager:
 
     @classmethod
     def _browser_launch_args(cls) -> List[str]:
-        return [
-            '--disable-gpu',
-            '--disable-gpu-compositing',
-            '--disable-accelerated-2d-canvas',
-            '--disable-accelerated-video-decode',
-            '--disable-blink-features=AutomationControlled',
-        ]
+        return list(SCRAPE_BROWSER_ARGS)
 
     @classmethod
     def _launch_browser(cls, playwright, portal: str = ''):
@@ -159,7 +154,10 @@ class BrowserManager:
         for ch in channels_to_try:
             try:
                 if ch:
-                    logger.info('Launching Playwright browser channel=%s headless=%s', ch, headless)
+                    logger.info(
+                        'Launching Playwright browser channel=%s headless=%s gpu=disabled',
+                        ch, headless,
+                    )
                     return playwright.chromium.launch(channel=ch, **launch_kwargs)
                 return playwright.chromium.launch(**launch_kwargs)
             except Exception as exc:
@@ -239,6 +237,43 @@ class BrowserManager:
             page.wait_for_timeout(2500)
         except Exception as exc:
             logger.debug('Session warm-up skipped for %s: %s', portal, exc)
+
+    @classmethod
+    def fetch_indeed_detail(
+        cls,
+        url: str,
+        user_id,
+        credentials: Optional[Dict[str, Any]] = None,
+    ) -> ScrapeResult:
+        """Load an Indeed viewjob page and extract fields via DOM selectors."""
+        from app.services.scraping.parsers.indeed_parser import extract_job_detail_from_page
+
+        proof_name = f'{user_id}_indeed_detail'
+        with cls.session_page('indeed', user_id, credentials, proof_name) as page:
+            if isinstance(page, ScrapeResult):
+                return page
+            try:
+                page.goto(url, wait_until='domcontentloaded', timeout=60000)
+                try:
+                    page.wait_for_selector(
+                        '#jobDescriptionText, [data-testid="jobDescriptionText"], h1',
+                        timeout=30000,
+                    )
+                except Exception:
+                    pass
+                page.wait_for_timeout(3000)
+                html = page.content()
+                issue = cls.detect_page_issue(page, html, page.url)
+                if issue:
+                    issue.proof_path = cls.screenshot(page, proof_name)
+                    return issue
+                detail = extract_job_detail_from_page(page)
+                return ScrapeResult.success(html=html, url=page.url, detail=detail)
+            except Exception as exc:
+                proof = cls.screenshot(page, proof_name)
+                return ScrapeResult.failure(
+                    ScrapeStatus.ERROR, str(exc), proof_path=proof, url=url,
+                )
 
     @classmethod
     def fetch_html(

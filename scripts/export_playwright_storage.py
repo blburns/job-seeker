@@ -7,11 +7,15 @@ import socket
 import sys
 import time
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
     pass
+
+from app.services.scraping.browser_launch_args import SCRAPE_BROWSER_ARGS
 
 # Home page is more reliable than /login for DNS + redirects.
 LOGIN_URLS = {
@@ -29,12 +33,7 @@ VERIFY_URLS = {
     'indeed': 'https://www.indeed.com/',
 }
 
-BROWSER_ARGS = [
-    '--disable-gpu',
-    '--disable-gpu-compositing',
-    '--disable-accelerated-2d-canvas',
-    '--disable-accelerated-video-decode',
-]
+BROWSER_ARGS = SCRAPE_BROWSER_ARGS
 
 DNS_ERROR_MARKERS = (
     'dns entry',

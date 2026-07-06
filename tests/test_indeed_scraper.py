@@ -22,3 +22,28 @@ def test_build_indeed_search_url():
     assert 'software' in url
     assert 'fromage=7' in url
     assert 'l=remote' in url
+
+
+def test_parse_indeed_job_detail():
+    from pathlib import Path
+    from app.services.scraping.parsers.indeed_parser import parse_job_detail
+
+    html = Path(__file__).parent.joinpath('fixtures', 'indeed_job_detail.html').read_text()
+    detail = parse_job_detail(html)
+    assert 'Python' in detail['title']
+    assert detail['company'] == 'Acme Corp'
+    assert 'Remote' in detail['location']
+    assert 'Flask' in detail['description']
+    assert len(detail['description']) > 40
+
+
+def test_parse_indeed_job_detail_live_layout():
+    from pathlib import Path
+    from app.services.scraping.parsers.indeed_parser import parse_job_detail
+
+    html = Path(__file__).parent.joinpath('fixtures', 'indeed_job_detail_live.html').read_text()
+    detail = parse_job_detail(html)
+    assert detail['title'] == 'Python Developer'
+    assert detail['company'] == 'Experis'
+    assert 'Chicago' in detail['location']
+    assert 'Flask' in detail['description']
