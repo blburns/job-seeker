@@ -1,290 +1,200 @@
-# Quick Reference Guide
+# Quick Reference
 
-## Common Commands
-
-### Application
+## Application
 
 ```bash
 # Run development server
-python3 run.py
-# or
-flask run
+python run.py
 
-# Run with specific port
-FLASK_RUN_PORT=5001 flask run
+# Run with specific host/port
+FLASK_RUN_HOST=0.0.0.0 FLASK_RUN_PORT=5001 python run.py
 ```
 
-### Database
+## Database Setup
 
 ```bash
-# Run migrations
-flask db upgrade
+# Initial setup (both required)
+python scripts/init_database.py
+python scripts/create_jobs_schema.py
 
-# Create migration
-flask db migrate -m "Description"
+# Create dev admin user
+python scripts/create_dev_user.py
 
-# Rollback migration
-flask db downgrade
+# Migrate existing database
+python scripts/migrate_jobs_automation.py
 
-# Schema migration
-python3 scripts/migrate_to_schemas.py --dry-run
-python3 scripts/migrate_to_schemas.py --confirm
+# Backup
+python scripts/backup_database.py
 
-# Database health check
-flask db-health
+# Inspect tables
+python scripts/check_database_tables.py
 ```
 
-### User Management
+## Job Seeker Automation
 
 ```bash
-# Create user
-python3 scripts/create_user.py
+# Install Playwright
+playwright install chromium
 
-# Create default roles/groups
-python3 scripts/create_default_roles_groups.py
+# Generate credential encryption key
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 
-# Manage permissions
-python3 scripts/manage_permissions.py --show
+# Export portal sessions
+python scripts/export_playwright_storage.py linkedin
+python scripts/export_playwright_storage.py indeed
 ```
 
-### Utilities
+## Testing
 
 ```bash
-# Generate secret key
-python3 scripts/generate_secret_key.py
-
-# Backup database
-python3 scripts/backup_database.py
-
-# Run tests
+# All tests
 pytest
-# or
-python3 scripts/run_tests.py
+
+# Job seeker tests
+pytest tests/test_indeed_scraper.py tests/test_job_detail_enrichment.py -v
+pytest tests/test_tailoring_diff_service.py tests/test_resume_export_service.py -v
+pytest tests/test_apply_draft_service.py -v
 ```
 
-## Common Code Patterns
+## Celery (Docker/production)
 
-### Permission Check
+```bash
+# Worker
+celery -A celery_app.celery worker --loglevel=info -Q scraping,default
 
-```python
-from flask_login import login_required, current_user
+# Beat (scheduled discovery)
+celery -A celery_app.celery beat --loglevel=info
 
-@route('/create')
-@login_required
-def create():
-    if not current_user.has_permission('module.create'):
-        flash('Permission denied', 'danger')
-        return redirect(url_for('module.dashboard'))
-    # Proceed
+# Docker
+docker compose up --build
+docker compose logs celery_worker
 ```
 
-### Database Query
-
-```python
-from app.models.auth import User
-from app.models.accounts import Account
-
-# Query with schema
-users = User.query.all()  # Queries auth.users
-accounts = Account.query.all()  # Queries accounts.accounts
-
-# Filter
-user = User.query.filter_by(username='john').first()
-active_accounts = Account.query.filter_by(status='active').all()
-```
-
-### Create Record
-
-```python
-from app.models.accounts import Account
-from app.extensions.core import db
-
-account = Account(
-    account_name='New Company',
-    status='active'
-)
-db.session.add(account)
-db.session.commit()
-```
-
-### Update Record
-
-```python
-account = Account.query.get(account_id)
-account.account_name = 'Updated Name'
-account.updated_at = datetime.utcnow()
-db.session.commit()
-```
-
-### Delete Record (Soft Delete)
-
-```python
-account = Account.query.get(account_id)
-account.soft_delete()  # Sets is_deleted=True
-db.session.commit()
-```
-
-## Environment Variables Quick Reference
+## Job Seeker Environment Variables
 
 ```env
-# Required
-SECRET_KEY=<generate-with-script>
-DB_TYPE=postgresql
-DB_NAME=your_database
-DB_USER=your_user
-DB_PASSWORD=your_password
+# Required for portal credentials
+CREDENTIAL_ENCRYPTION_KEY=<fernet-key>
 
-# Optional but Recommended
-POSTGRES_SUPERUSER_PASSWORD=postgres_password
-JWT_SECRET_KEY=<generate-with-script>
-MAIL_SERVER=smtp.gmail.com
-REDIS_URL=redis://localhost:6379/0
+# LLM tailoring (optional)
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+
+# Discovery APIs
+ADZUNA_APP_ID=
+ADZUNA_APP_KEY=
+
+# Playwright
+PLAYWRIGHT_HEADLESS=true
+PLAYWRIGHT_CHANNEL=chrome
+INDEED_PLAYWRIGHT_HEADLESS=false
+
+# Scraping (default: disabled)
+LINKEDIN_SCRAPE_ENABLED=false
+INDEED_SCRAPE_ENABLED=false
+SCRAPE_RATE_LIMIT_PER_HOUR=20
+
+# Auto-apply (default: disabled)
+APPLY_AUTOMATION_ENABLED=false
+LINKEDIN_AUTO_APPLY_ENABLED=false
+INDEED_AUTO_APPLY_ENABLED=false
+DAILY_APPLY_CAP=25
 ```
 
-## URL Patterns
+Full reference: [CONFIGURATION.md](04-operations/CONFIGURATION.md)
 
-### Web Routes
+## Job Seeker Routes
 
-```
-/auth/login              → Login page
-/auth/register           → Registration
-/                        → Dashboard (main index)
-/users/list              → List users
-/users/create            → Create user
-/users/profile           → Current user profile
-/users/profile/edit      → Edit profile
-/users/profile/teams    → Profile teams
-/users/settings          → Redirects to /users/settings/account
-/users/settings/account  → Account settings (Account tab)
-/users/settings/security → Account settings (Security tab)
-/users/settings/billing  → Account settings (Billing tab)
-/users/settings/notifications → Account settings (Notifications tab)
-/users/settings/connections  → Account settings (Connections tab)
-/users/view/<user_id>    → View user (Account tab)
-/users/view/<user_id>/security → View user Security tab
-/users/roles-permissions → Roles list
-/users/permissions      → Permissions list
-```
-
-### Admin Routes (admin.access or equivalent)
+### Web UI
 
 ```
-/admin, /admin/dashboard     → Admin dashboard
-/admin/monitoring            → System monitoring
-/admin/permissions           → List permissions
-/admin/permissions/create    → Create permission
-/admin/permissions/<id>/edit → Edit permission
-/admin/roles                → List roles
-/admin/roles/create         → Create role
-/admin/roles/<id>           → View role
-/admin/roles/<id>/edit      → Edit role
-/admin/roles/<id>/permissions → Manage role permissions
-/admin/email/logs           → Email logs
-/admin/email/templates      → List email templates
-/admin/email/templates/create → Create template
-/admin/email/templates/<name>/preview → Preview template (sample context)
-/admin/email/templates/<name>/edit    → Edit template
-/admin/settings             → Read-only config (from env)
-/admin/logs                 → System log viewer
-/admin/reports              → Aggregated reports
-/admin/developer/sitemap     → All routes by blueprint
+/                                    → Dashboard
+/resume/upload                       → Upload resume
+/resume/profiles                     → Master profiles
+/jobs/postings                       → Job postings
+/jobs/search-profiles                → Search profiles
+/jobs/inbox                          → Discovery inbox
+/applications/list                   → All applications
+/applications/pipeline               → Kanban board
+/applications/queue                  → Apply queue
+/applications/batches                → Apply batches
+/applications/<id>/tailoring         → Tailoring review
+/apply/<id>                          → Apply draft review
+/apply/credentials                   → Portal credentials
+/analytics/                          → Metrics dashboard
 ```
 
-### API Routes
+### API
 
 ```
-POST   /api/v1/auth/login      → Authenticate
-GET    /api/v1/users           → List users
-POST   /api/v1/users           → Create user
-GET    /api/v1/users/<id>      → Get user
-PUT    /api/v1/users/<id>      → Update user
-DELETE /api/v1/users/<id>      → Delete user
+GET    /api/v1/resume/profiles                    → List profiles
+POST   /api/v1/resume/upload                      → Parse resume
+POST   /api/v1/resume/profiles                    → Save profile
+GET    /api/v1/jobs/postings                      → List postings
+POST   /api/v1/jobs/search-profiles/<id>/run      → Run discovery
+GET    /api/v1/jobs/inbox                         → Discovery inbox
+POST   /api/v1/jobs/inbox/<id>/accept             → Accept job
+GET    /api/v1/applications/pipeline              → Pipeline view
+POST   /api/v1/applications/<id>/tailor          → Tailor resume
+POST   /api/v1/applications/<id>/approve          → Approve resume
+POST   /api/v1/apply/batches                      → Create batch
+POST   /api/v1/apply/batches/<id>/approve         → Approve batch
 ```
 
-## Permission Format
+Swagger UI: `/api/v1/docs/`
+
+## Application Stages
 
 ```
-{module}.{action}
-
-Examples:
-- users.view
-- users.create
-- accounts.update
-- documents.delete
+saved → tailoring → ready_to_apply → applied → phone_screen → interview → offer
+                                                      ↘ rejected / withdrawn
 ```
 
-## Schema Reference
+## Database Schemas
 
 ```
-auth.users          → User accounts
-auth.roles          → RBAC roles
-auth.groups         → User groups
-accounts.accounts   → Business accounts
-contacts.contacts   → Contacts
-documents.documents → Documents
+auth/                    → users, roles, groups, permissions
+jobs/                    → master_profiles, job_postings, applications,
+                           resume_versions, apply_drafts, discovered_jobs,
+                           portal_credentials, apply_batches
 ```
 
-## Template Blocks
+## User Management
 
-**Main app (base.html):**
-```jinja2
-{% extends "base.html" %}
-
-{% block title %}Page Title{% endblock %}
-{% block content %}
-  <!-- Page content -->
-{% endblock %}
-{% block extra_css %}{% endblock %}
-{% block extra_js %}{% endblock %}
+```bash
+python scripts/create_dev_user.py          # admin@example.com / admin123
+python scripts/create_user.py              # Interactive
+python scripts/create_default_roles_groups.py
+python scripts/manage_permissions.py --show
+python scripts/check_admins.py
 ```
 
-**Error / misc pages (base_misc.html):**  
-Blocks: `title`, `misc_code`, `misc_heading`, `misc_description`, `misc_actions`, `misc_image`.  
-See [TEMPLATES_AND_UI.md](03-development/TEMPLATES_AND_UI.md). Development docs are grouped under `03-development/` (admin/, auth/, rbac/, email/).
+## Health Checks
 
-## Common Imports
-
-```python
-# Flask
-from flask import render_template, redirect, url_for, request, flash, jsonify
-from flask_login import login_required, current_user
-
-# Models
-from app.models.auth import User, Role, Group
-from app.models.accounts import Account
-
-# Database
-from app.extensions.core import db
-
-# Utilities
-from app.utils.security import validate_password_strength, sanitize_input
+```bash
+curl http://localhost:5000/health
+curl http://localhost:5000/health/database
+curl http://localhost:5000/api/v1/health
 ```
 
 ## File Locations
 
 ```
 Configuration:     .env
-Logs:             app/data/logs/ (access.log, app.log, error.log, security.log, audit.log)
-Static Files:     app/static/
-Templates:        app/templates/
-Email Templates:  app/templates/emails/
-Models:           app/models/
-Routes:           app/modules/*/routes.py
-API:              app/modules/*/api.py
-Scripts:          scripts/
-Migrations:       migrations/
-```
-
-## Health Check Endpoints
-
-```
-GET /health              → Application health
-GET /health/database      → Database health
-GET /api/v1/health       → API health
+Logs:              app/data/logs/
+Scrape proofs:     instance/scrape_proofs/
+Models:            app/models/jobs.py
+Services:          app/services/
+Routes:            app/modules/*/routes.py
+API:               app/modules/*/api.py
+Scripts:           scripts/
+Tests:             tests/
+Templates:         app/templates/modules/
 ```
 
 ## See Full Documentation
 
-- [00-OVERVIEW.md](00-OVERVIEW.md) - Complete overview
-- [README.md](README.md) - Documentation index
-- Individual guides in subdirectories
+- [00-OVERVIEW.md](00-OVERVIEW.md) — Application overview
+- [README.md](README.md) — Documentation index
+- [User Guide](02-user-guide/README.md) — End-user guides
+- [JOB_SEEKER_API.md](03-development/JOB_SEEKER_API.md) — API reference

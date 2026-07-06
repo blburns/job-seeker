@@ -1,222 +1,179 @@
-# Application Overview
+# Job Seeker Automation App — Overview
 
-## What is This?
+## What Is This?
 
-This is a **production-ready Flask boilerplate application** designed as the foundation for building scalable, enterprise-grade web applications. It provides a complete RBAC-compliant authentication system, modular architecture, and comprehensive infrastructure for rapid application development.
+A **semi-automated job application platform** that helps you manage your job search from resume to offer. Upload your resume into a structured master profile, discover or add job postings, tailor your resume per job with keyword analysis, review pre-filled application drafts, and track everything in a kanban pipeline.
+
+Built on a Flask boilerplate with RBAC, Vuexy admin UI, and optional browser automation for discovery and submission.
+
+## Core Philosophy
+
+**Human-in-the-loop automation.** The app assists every step but never submits an application without your explicit review and approval.
+
+- You review parsed resume data before saving
+- You accept or skip discovered jobs
+- You review tailored resume changes before approving
+- You edit pre-filled form fields and cover letters
+- You explicitly approve batches before auto-submission
 
 ## Key Features
 
-### 🔐 Enterprise Security
-- **RBAC System** - Complete role-based access control with users, roles, and groups
-- **Multi-factor Authentication Ready** - Infrastructure for MFA implementation
-- **Account Security** - Lockout protection, password strength validation, secure password reset
-- **Session Management** - Secure session handling with Flask-Login
-- **CSRF Protection** - Built-in CSRF token validation
+### Master Profile
+Upload PDF/DOCX, parse into structured JSON, human review before save. One active profile drives all tailoring and keyword analysis.
 
-### 🗄️ Database Architecture
-- **Schema-based Organization** - Tables organized into logical PostgreSQL schemas
-- **Multi-Database Support** - PostgreSQL (production), SQLite (development), MySQL, MS SQL Server
-- **Migration System** - Comprehensive Alembic-based migrations
-- **Health Monitoring** - Database connection and performance monitoring
-- **Automated Backups** - Database backup and recovery system
+### Job Discovery
+Automated search across Adzuna, Remotive, Greenhouse, Lever, RSS, Indeed, and LinkedIn. Jobs ranked by fit score in a review inbox.
 
-### 🏗️ Scalable Architecture
-- **Modular Design** - Blueprint-based module system
-- **API-First** - RESTful API alongside web interface
-- **Service Layer** - Business logic abstraction
-- **Extension System** - Pluggable extensions for features
-- **Multi-tenancy Ready** - Built-in tenant support
+### Keyword Analysis
+Extract keywords from job descriptions. Compare against your profile. See matched and missing terms with coverage scores.
 
-### 🎨 Modern Frontend
-- **Vuexy Theme** - Bootstrap 5 admin dashboard theme (vertical menu)
-- **Responsive Design** - Mobile-first approach
-- **Component Library** - Reusable UI components (cards, tables, nav pills, modals)
+### Constrained Tailoring
+Reorder, rephrase, and emphasize your experience per job. Never invent facts. Full diff audit trail for every change.
 
-### 🚀 Production Ready
-- **Health Checks** - Application and database health endpoints
-- **Logging** - Structured logging (e.g. `app/data/logs/`)
-- **Error Handling** - Comprehensive error handling
-- **Rate Limiting** - API rate limiting
-- **Caching** - Redis support for performance
-- **Admin Panel** - Settings (read-only config), system log viewer, reports, email templates (list, create, edit, preview), developer sitemap
+### ATS Export
+Single-column DOCX with Calibri font, standard sections, and automated parse-test scoring.
+
+### Application Pipeline
+Kanban board tracking: Saved → Tailoring → Ready → Applied → Interview → Offer.
+
+### Apply Pre-fill
+Side-by-side JD keywords, tailored resume preview, editable form fields, and cover letter draft.
+
+### Batch Auto-Apply
+Group approved applications for automated portal submission (LinkedIn, Indeed, Greenhouse, Lever). Disabled by default; requires explicit approval.
+
+### Analytics
+Pipeline funnel, response rates, source effectiveness, and keyword coverage trends.
+
+## Who Uses This?
+
+| Audience | Start here |
+|----------|------------|
+| **Job seeker (end user)** | [User Guide](02-user-guide/README.md) → [Workflow](02-user-guide/WORKFLOW.md) |
+| **Administrator** | [Admin Guide](04-operations/ADMIN_GUIDE.md) → [Automation Setup](04-operations/AUTOMATION_SETUP.md) |
+| **Developer** | [Architecture](02-architecture/ARCHITECTURE.md) → [Services](02-architecture/JOB_SEEKER_SERVICES.md) |
+| **New install** | [Getting Started](01-getting-started/GETTING_STARTED.md) → [First Run Checklist](01-getting-started/FIRST_RUN_CHECKLIST.md) |
 
 ## Architecture at a Glance
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Presentation Layer                    │
-│  Vuexy (Bootstrap 5) │ Jinja2 Templates        │
-└─────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────┐
-│                   Application Layer                      │
-│  Flask Blueprints │ Routes │ API Endpoints               │
-└─────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────┐
-│                  Business Logic Layer                    │
-│  Services │ Models │ Permission Checks                   │
-└─────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────┐
-│                      Data Layer                           │
-│  PostgreSQL Schemas │ SQLAlchemy ORM │ Migrations        │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph ui [Web UI - Vuexy + Jinja2]
+        Dashboard[Overview]
+        Resume[Master Profile]
+        Jobs[Jobs and Discovery]
+        Apps[Applications]
+        Apply[Apply Review]
+    end
+
+    subgraph api [REST API]
+        ResumeAPI["/api/v1/resume"]
+        JobsAPI["/api/v1/jobs"]
+        AppsAPI["/api/v1/applications"]
+        ApplyAPI["/api/v1/apply"]
+    end
+
+    subgraph services [Service Layer]
+        Discovery[Discovery]
+        Tailoring[Tailoring]
+        Export[ATS Export]
+        AutoApply[Auto-Apply]
+    end
+
+    subgraph data [Database]
+        JobsDB[jobs schema]
+        AuthDB[auth schema]
+    end
+
+    ui --> api
+    api --> services
+    services --> data
 ```
 
-## Database Schema Organization
+## End-to-End Workflow
 
+```mermaid
+flowchart LR
+    subgraph setup [Setup]
+        Resume[Master Profile]
+        Creds[Portal Credentials]
+    end
+    subgraph discover [Discover]
+        SearchProfile[Search Profiles]
+        Inbox[Discovery Inbox]
+        Postings[Job Postings]
+    end
+    subgraph apply_flow [Apply]
+        App[Application]
+        Tailor[Tailoring]
+        Draft[Apply Draft]
+        Submit[Submit]
+    end
+    Resume --> SearchProfile
+    SearchProfile --> Inbox
+    Inbox --> Postings
+    Postings --> App
+    App --> Tailor --> Draft --> Submit
+    Creds -.-> Submit
 ```
-auth/          → Authentication & RBAC (users, roles, groups)
-accounts/      → Business account management
-contacts/      → Contact management
-documents/     → Document/file management
-organizations/ → Organization & brand management
-tenants/       → Multi-tenancy support
-settings/      → Application settings
-public/        → System tables
-```
+
+1. **Upload resume** → review parsed JSON → save master profile
+2. **Find jobs** → automated discovery or manual add
+3. **Create application** → tailor resume → review changes
+4. **Approve resume** → review apply draft → download DOCX
+5. **Submit** → manually or via approved batch
+6. **Track** → pipeline kanban and analytics
 
 ## Technology Stack
 
-- **Backend:** Flask 3.x, Python 3.14+
-- **Database:** PostgreSQL 12+ (primary), SQLite (dev)
-- **ORM:** SQLAlchemy 2.x
-- **Frontend:** Metronic Theme, KeenIcons
-- **Authentication:** Flask-Login, JWT
-- **API:** Flask-RESTX
-- **Migrations:** Flask-Migrate (Alembic)
-- **Caching:** Redis (optional)
-- **Testing:** Pytest
+| Layer | Technology |
+|-------|-----------|
+| Backend | Flask 2.3, Python 3.12 |
+| Database | PostgreSQL 16 (production), SQLite (dev) |
+| Frontend | Vuexy (Bootstrap 5), Jinja2, Tailwind CSS |
+| Resume | python-docx, pdfplumber |
+| Browser automation | Playwright (optional) |
+| LLM | OpenAI API (optional) |
+| Background jobs | Celery + Redis (optional) |
+| Auth | Flask-Login, RBAC, JWT |
 
 ## Quick Start
 
-1. **Setup Environment**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
+```bash
+cp env.example .env
+python -m venv venv && source venv/bin/activate
+pip install -r requirements/requirements.txt -r requirements/requirements-jobs.txt
+playwright install chromium
+python scripts/init_database.py
+python scripts/create_jobs_schema.py
+python scripts/create_dev_user.py
+python run.py
+```
 
-2. **Configure Database**
-   ```bash
-   cp env.example .env
-   # Edit .env with your database settings
-   ```
+Open http://localhost:5000 — login: `admin@example.com` / `admin123`
 
-3. **Initialize Database**
-   ```bash
-   python3 scripts/migrate_to_schemas.py --confirm
-   flask db upgrade
-   python3 scripts/create_default_roles_groups.py
-   ```
+Local dev does not require Redis, Celery, or Docker.
 
-4. **Run Application**
-   ```bash
-   python3 run.py
-   ```
+## Documentation Index
 
-See [01-getting-started/GETTING_STARTED.md](01-getting-started/GETTING_STARTED.md) for detailed instructions.
+Full documentation: [docs/README.md](README.md)
 
-## Documentation Structure
+| Section | Contents |
+|---------|----------|
+| [01-getting-started/](01-getting-started/) | Installation, first run |
+| [02-user-guide/](02-user-guide/) | End-user guides |
+| [02-architecture/](02-architecture/) | System design, services |
+| [03-development/](03-development/) | API, scraping, modules |
+| [04-operations/](04-operations/) | Admin, deployment, config |
+| [05-reference/](05-reference/) | Data model, ATS rules |
 
-### 📚 Getting Started
-- **GETTING_STARTED.md** - Setup, installation, first steps
+## Version
 
-### 🏗️ Architecture
-- **ARCHITECTURE.md** - System design, patterns, technology stack
+Application version: **0.2.0** (Phase 2: Core Services)
 
-### 💻 Development
-- **RBAC_GUIDE.md** - Permission system and access control
-- **MODULE_DEVELOPMENT.md** - Creating new modules
-- **API_DOCUMENTATION.md** - REST API reference
-- **AUTHENTICATION.md** - Auth system details
+## Related Docs
 
-### ⚙️ Operations
-- **CONFIGURATION.md** - Configuration management
-- **DEPLOYMENT.md** - Production deployment
-- **TROUBLESHOOTING.md** - Common issues and solutions
-
-### 📖 Reference
-- **DATABASE_SCHEMAS.md** - Complete database structure
-- **SCHEMA_MIGRATION.md** - Database migration procedures
-
-## Use Cases
-
-### Building a New Application
-
-1. Start with this boilerplate
-2. Configure database and environment
-3. Create your custom modules
-4. Customize UI/UX
-5. Deploy to production
-
-### Adding Features
-
-1. Create new module following patterns
-2. Add database models
-3. Create routes and API endpoints
-4. Build templates
-5. Configure permissions
-
-### Multi-Tenant Applications
-
-1. Use built-in tenant system
-2. Configure tenant isolation
-3. Set up tenant-specific settings
-4. Deploy with tenant management
-
-## Key Concepts
-
-### RBAC (Role-Based Access Control)
-
-Users → Roles → Permissions
-Users → Groups → Roles → Permissions
-
-**Permission Format:** `module.action`
-- Example: `users.create`, `accounts.view`
-
-### Module System
-
-Each module is self-contained:
-- Routes (web interface)
-- API endpoints (REST API)
-- Templates (UI)
-- Models (database)
-
-### Schema Organization
-
-Database tables organized by functional domain:
-- Logical separation
-- Schema-level permissions possible
-- Easier maintenance
-- Better security
-
-## Best Practices
-
-1. **Always check permissions** before allowing actions
-2. **Use schema-qualified names** for foreign keys
-3. **Follow module structure** for consistency
-4. **Test migrations** before production
-5. **Use environment variables** for configuration
-6. **Enable caching** in production
-7. **Monitor health** endpoints
-8. **Regular backups** of database
-
-## Support & Resources
-
-- **Documentation:** See `docs/` directory
-- **Logs:** Check `app/data/logs/` (e.g. `app.log`, `error.log`, `security.log`, `audit.log`); admin log viewer at `/admin/logs`
-- **Health:** `/health` endpoint
-- **Database Health:** `/health/database` endpoint
-
-## Next Steps
-
-1. Read [GETTING_STARTED.md](01-getting-started/GETTING_STARTED.md)
-2. Review [ARCHITECTURE.md](02-architecture/ARCHITECTURE.md)
-3. Explore [RBAC_GUIDE.md](03-development/rbac/RBAC_GUIDE.md)
-4. Start building with [MODULE_DEVELOPMENT.md](03-development/MODULE_DEVELOPMENT.md)
-
----
-
-**Version:** 0.2.0 | **Phase:** Core Services & Infrastructure | **Status:** ✅ Production Ready
+- [User Guide](02-user-guide/README.md)
+- [Workflow](02-user-guide/WORKFLOW.md)
+- [Getting Started](01-getting-started/GETTING_STARTED.md)
+- [Admin Guide](04-operations/ADMIN_GUIDE.md)

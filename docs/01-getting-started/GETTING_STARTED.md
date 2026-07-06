@@ -1,227 +1,237 @@
-# Getting Started Guide
+# Getting Started
 
-## Overview
-
-This is a comprehensive Flask boilerplate application with enterprise-grade features including:
-- **RBAC (Role-Based Access Control)** - Complete user, role, and group management
-- **Multi-tenancy Support** - Built-in tenant isolation
-- **Schema-based Database Organization** - Logical separation of database tables
-- **Metronic Theme Integration** - Modern, responsive UI
-- **RESTful API** - Complete API infrastructure
-- **Module-based Architecture** - Scalable, maintainable code structure
+Installation and setup for the Job Seeker Automation App.
 
 ## Prerequisites
 
-- Python 3.14+
-- PostgreSQL 12+ (recommended) or SQLite (development)
+- Python 3.12+ (3.8+ supported)
 - Git
+- PostgreSQL 16 (production/Docker) or SQLite (local dev, default)
 
-## Quick Start
+Optional for automation features:
+- Playwright/Chromium (job scraping and auto-apply)
+- OpenAI API key (LLM tailoring)
+- Redis + Celery (background tasks, Docker deployments)
 
-### 1. Clone and Setup
+## Quick Start (Local — No Docker)
+
+### 1. Clone and set up environment
 
 ```bash
-# Clone the repository
 git clone <repository-url>
-cd boilerplate-python3-flask
+cd boilerplate-job-seeker
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
-pip install -r requirements-dev.txt  # For development
+pip install -r requirements/requirements.txt -r requirements/requirements-jobs.txt
 ```
 
-### 2. Configure Environment
+### 2. Configure environment
 
 ```bash
-# Copy example environment file
 cp env.example .env
-
-# Edit .env with your settings
-# At minimum, configure:
-# - DB_TYPE (postgresql or sqlite)
-# - DB_NAME, DB_USER, DB_PASSWORD (for PostgreSQL)
-# - SECRET_KEY (generate a secure key)
-# - POSTGRES_SUPERUSER_PASSWORD (for schema migrations)
 ```
 
-**Generate a secure SECRET_KEY:**
+Minimum `.env` settings for local dev:
+
+```env
+SECRET_KEY=change-me-in-production
+JWT_SECRET_KEY=change-me-in-production
+DB_TYPE=sqlite
+DB_NAME=app.db
+FLASK_ENV=development
+FLASK_DEBUG=True
+```
+
+Generate secure keys:
 ```bash
-python3 scripts/generate_secret_key.py
+python scripts/generate_secret_key.py
 ```
 
-### 3. Database Setup
-
-#### Option A: PostgreSQL (Recommended)
-
-```bash
-# Create database
-createdb boilerplate_db
-
-# Update .env with database credentials
-# DB_TYPE=postgresql
-# DB_HOST=localhost
-# DB_PORT=5432
-# DB_NAME=boilerplate_db
-# DB_USER=your_user
-# DB_PASSWORD=your_password
-```
-
-#### Option B: SQLite (Development)
+### 3. Install Playwright (recommended)
 
 ```bash
-# SQLite is the default - no setup needed
-# Just ensure DB_TYPE=sqlite in .env (or leave default)
+playwright install chromium
 ```
 
-### 4. Run Database Migrations
+On macOS, use system Chrome:
+```env
+PLAYWRIGHT_CHANNEL=chrome
+```
+
+### 4. Initialize database
+
+**Both scripts are required:**
 
 ```bash
-# Initialize database with schemas
-python3 scripts/migrate_to_schemas.py --confirm --superuser postgres
-
-# Or if you have POSTGRES_SUPERUSER_PASSWORD in .env:
-python3 scripts/migrate_to_schemas.py --confirm
-
-# Create tables (if using Flask-Migrate)
-flask db upgrade
+python scripts/init_database.py      # auth + core tables
+python scripts/create_jobs_schema.py # discovery, credentials, batches
 ```
 
-### 5. Create Initial Data
+### 5. Create admin user
 
 ```bash
-# Create default roles, groups, and users
-python3 scripts/create_default_roles_groups.py
-python3 scripts/create_user.py
+python scripts/create_dev_user.py
 ```
 
-### 6. Run the Application
+Defaults: `admin@example.com` / `admin123`
+
+### 6. Run the application
 
 ```bash
-# Development mode
-python3 run.py
-
-# Or using Flask CLI
-flask run
-
-# The application will be available at:
-# http://localhost:5000
+python run.py
 ```
+
+Open http://localhost:5000 and log in.
+
+**Local dev does not require Redis, Celery, or Docker.**
+
+## Docker Setup (Production-Style)
+
+```bash
+docker compose up --build
+
+# Initialize database (from host or inside container)
+python scripts/init_database.py
+python scripts/create_jobs_schema.py
+python scripts/create_dev_user.py
+```
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| web | 5000 | Flask application |
+| db | 5433 | PostgreSQL |
+| redis | 6380 | Celery broker |
+| celery_worker | — | Background tasks |
+| celery_beat | — | Scheduled discovery |
+
+Docker PostgreSQL: `jobseeker` / `jobseeker` / `jobseeker_db` on port 5433.
 
 ## First Login
 
-1. Navigate to `http://localhost:5000`
-2. Click "Sign Up" to create your first account
-3. Or use the default admin user created by scripts:
-   - Username: `admin` (or as configured in scripts)
-   - Password: Check script output or reset password
+1. Navigate to http://localhost:5000
+2. Log in with `admin@example.com` / `admin123`
+3. Follow the [First Run Checklist](FIRST_RUN_CHECKLIST.md) to verify everything works
+
+## Optional: Enable Automation
+
+### Credential encryption key
+
+Required before storing LinkedIn/Indeed portal sessions:
+
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+Add to `.env`:
+```env
+CREDENTIAL_ENCRYPTION_KEY=<generated-key>
+```
+
+### LLM tailoring
+
+```env
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+```
+
+Works without API key (heuristic fallback).
+
+### Discovery APIs
+
+```env
+ADZUNA_APP_ID=your-app-id
+ADZUNA_APP_KEY=your-app-key
+```
+
+See [Automation Setup](../04-operations/AUTOMATION_SETUP.md) for full configuration.
 
 ## Project Structure
 
 ```
-boilerplate-python3-flask/
+boilerplate-job-seeker/
 ├── app/
-│   ├── __init__.py          # Application factory
-│   ├── main/                # Main blueprint (home, dashboard)
-│   ├── modules/             # Feature modules
-│   │   ├── auth/            # Authentication
-│   │   ├── users/           # User management
-│   │   ├── accounts/        # Business accounts
+│   ├── __init__.py              # Application factory
+│   ├── modules/                 # Feature blueprints
+│   │   ├── resume/            # Master profile
+│   │   ├── jobs/              # Postings and discovery
+│   │   ├── applications/      # Pipeline and tailoring
+│   │   ├── apply/             # Pre-fill review
+│   │   ├── analytics/         # Metrics
+│   │   ├── auth/              # Authentication
+│   │   └── admin/             # RBAC admin
+│   ├── services/                # Business logic
+│   │   ├── discovery/         # Job connectors
+│   │   ├── scraping/          # Playwright automation
+│   │   ├── apply_adapters/    # Portal submission
 │   │   └── ...
-│   ├── models/              # Database models (organized by schema)
-│   │   ├── auth.py          # Auth schema models
-│   │   ├── accounts.py      # Accounts schema models
-│   │   └── ...
-│   ├── api/                 # REST API
-│   ├── extensions/          # Flask extensions
-│   ├── templates/           # Jinja2 templates
-│   ├── static/              # Static files (CSS, JS, images)
-│   └── utils/               # Utility functions
-├── config/                  # Configuration files
-├── docs/                     # Documentation
-├── migrations/              # Database migrations
-├── scripts/                  # Utility scripts
-├── tests/                   # Test files
-├── .env                     # Environment variables (not in git)
-├── requirements.txt         # Python dependencies
-└── run.py                   # Application entry point
+│   ├── models/
+│   │   ├── auth.py            # Auth schema models
+│   │   └── jobs.py            # Jobs schema models
+│   ├── templates/               # Jinja2 templates
+│   └── static/                  # Vuexy + Tailwind assets
+├── config/modules.py            # Sidebar navigation
+├── docs/                        # Documentation
+├── scripts/                     # Setup and utility scripts
+├── tests/                       # pytest suite
+├── requirements/                # Split requirement files
+├── run.py                       # Development server
+├── celery_app.py                # Celery worker entry
+└── docker-compose.yml           # Docker stack
 ```
 
 ## Common Tasks
 
-### Create a New User
-
 ```bash
-python3 scripts/create_user.py
-```
-
-### Backup Database
-
-```bash
-python3 scripts/backup_database.py
-```
-
-### Run Tests
-
-```bash
-# Run all tests
-python3 scripts/run_tests.py
-
-# Or using pytest
+# Run tests
 pytest
-```
 
-### Check Database Health
+# Backup database
+python scripts/backup_database.py
 
-```bash
-flask db-health
+# Export portal session
+python scripts/export_playwright_storage.py linkedin
+
+# Check database tables
+python scripts/check_database_tables.py
+
+# Migrate existing database
+python scripts/migrate_jobs_automation.py
 ```
 
 ## Next Steps
 
-- Read [ARCHITECTURE.md](ARCHITECTURE.md) for system architecture
-- Read [RBAC_GUIDE.md](RBAC_GUIDE.md) for permission system
-- Read [MODULE_DEVELOPMENT.md](MODULE_DEVELOPMENT.md) to create new modules
-- Read [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for API usage
-- Read [SCHEMA_MIGRATION.md](SCHEMA_MIGRATION.md) for database schema info
+### As a job seeker
+1. [Upload your resume](../02-user-guide/MASTER_PROFILE.md)
+2. [Follow the workflow](../02-user-guide/WORKFLOW.md)
+3. [Set up job discovery](../02-user-guide/JOB_DISCOVERY.md)
+
+### As an administrator
+1. [Admin Guide](../04-operations/ADMIN_GUIDE.md)
+2. [Automation Setup](../04-operations/AUTOMATION_SETUP.md)
+3. [First Run Checklist](FIRST_RUN_CHECKLIST.md)
+
+### As a developer
+1. [Architecture](../02-architecture/ARCHITECTURE.md)
+2. [Job Seeker Services](../02-architecture/JOB_SEEKER_SERVICES.md)
+3. [API Reference](../03-development/JOB_SEEKER_API.md)
 
 ## Troubleshooting
 
-### Database Connection Issues
+| Issue | Solution |
+|-------|----------|
+| Database tables missing | Run both `init_database.py` and `create_jobs_schema.py` |
+| Import errors | Activate venv; install `requirements.txt` + `requirements-jobs.txt` |
+| Port in use | `FLASK_RUN_PORT=5001 python run.py` |
+| Playwright not found | `playwright install chromium` |
+| Discovery features fail | Run `create_jobs_schema.py` |
 
-1. Verify PostgreSQL is running: `pg_isready`
-2. Check `.env` file has correct credentials
-3. Test connection: `psql -U your_user -d your_database`
+See [Troubleshooting Guide](../04-operations/TROUBLESHOOTING.md) for more.
 
-### Permission Errors
+## Related Docs
 
-If you get permission errors during schema migration:
-1. Ensure `POSTGRES_SUPERUSER_PASSWORD` is set in `.env`
-2. Or run manually: `python3 scripts/migrate_to_schemas.py --confirm --superuser postgres`
-
-### Import Errors
-
-1. Ensure virtual environment is activated
-2. Verify all dependencies are installed: `pip install -r requirements.txt`
-3. Check Python path includes project root
-
-### Port Already in Use
-
-```bash
-# Find process using port 5000
-lsof -i :5000
-
-# Kill the process or use a different port
-export FLASK_RUN_PORT=5001
-flask run
-```
-
-## Support
-
-For issues or questions:
-1. Check the documentation in `docs/`
-2. Review error logs in `logs/app.log`
-3. Check database health: `flask db-health`
+- [First Run Checklist](FIRST_RUN_CHECKLIST.md)
+- [User Guide](../02-user-guide/README.md)
+- [Configuration](../04-operations/CONFIGURATION.md)
+- [00-OVERVIEW](../00-OVERVIEW.md)
