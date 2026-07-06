@@ -105,3 +105,7 @@ See [ATS export rules](docs/05-reference/ATS_EXPORT_RULES.md).
 ## Version
 
 v0.2.0 — Phase 2: Core Services
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
