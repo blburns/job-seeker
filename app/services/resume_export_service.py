@@ -24,6 +24,86 @@ class ResumeExportService:
     STANDARD_SECTIONS = ['Summary', 'Experience', 'Education', 'Skills']
 
     @classmethod
+    def render_preview_text(cls, profile_data: Dict[str, Any]) -> str:
+        """Plain-text preview of the DOCX export (what you upload to job portals)."""
+        contact = profile_data.get('contact', {})
+        lines = []
+        name = (contact.get('name') or '').strip()
+        if name:
+            lines.append(name.upper())
+        headline = (profile_data.get('headline') or '').strip()
+        if headline:
+            lines.append(headline)
+        contact_parts = [
+            contact.get('email', ''),
+            contact.get('phone', ''),
+            contact.get('location', ''),
+            contact.get('linkedin', ''),
+        ]
+        contact_line = ' | '.join(p for p in contact_parts if p)
+        if contact_line:
+            lines.append(contact_line)
+        lines.append('')
+
+        summary = cls._get_summary_text(profile_data)
+        if summary:
+            lines.extend(['SUMMARY', summary, ''])
+
+        experience = profile_data.get('experience') or []
+        if experience:
+            lines.append('EXPERIENCE')
+            for entry in experience:
+                title = entry.get('title', '')
+                company = entry.get('company', '')
+                start = entry.get('start', '')
+                end = entry.get('end', 'Present')
+                role_line = f"{title} | {company}" if company else title
+                if start:
+                    role_line += f" | {start} - {end}"
+                lines.append(role_line)
+                for bullet in entry.get('bullets', [])[:8]:
+                    text = bullet.get('text', bullet) if isinstance(bullet, dict) else str(bullet)
+                    if text:
+                        lines.append(f"  • {text}")
+                lines.append('')
+
+        education = profile_data.get('education') or []
+        if education:
+            lines.append('EDUCATION')
+            for entry in education:
+                line = entry.get('institution', '')
+                degree = entry.get('degree', '')
+                if degree:
+                    line = f"{degree} - {line}" if line else degree
+                if entry.get('end'):
+                    line += f" | {entry['end']}"
+                if line:
+                    lines.append(line)
+            lines.append('')
+
+        skills = profile_data.get('skills', {})
+        technical = skills.get('technical', []) if isinstance(skills, dict) else []
+        certs = skills.get('certifications', []) if isinstance(skills, dict) else []
+        all_skills = [s for s in (technical + certs) if s]
+        if all_skills:
+            lines.extend(['SKILLS', ', '.join(all_skills)])
+
+        return '\n'.join(lines).strip()
+
+    @classmethod
+    def export_cover_letter_docx(cls, cover_letter: str, filename: str = 'Cover_Letter.docx') -> Tuple[bytes, str]:
+        doc = Document()
+        cls._configure_styles(doc)
+        for paragraph in (cover_letter or '').split('\n\n'):
+            p = doc.add_paragraph(paragraph.strip())
+            if p.runs:
+                p.runs[0].font.name = cls.ATS_FONT
+        buffer = io.BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return buffer.getvalue(), filename
+
+    @classmethod
     def export_docx(cls, profile_data: Dict[str, Any], filename: str = None) -> Tuple[bytes, str]:
         doc = Document()
         cls._configure_styles(doc)
