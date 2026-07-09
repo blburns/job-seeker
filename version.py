@@ -1,28 +1,34 @@
 """
-Version information for Flask Application Boilerplate
+Version information for Job Seeker Automation App
 Semantic versioning: MAJOR.MINOR.PATCH
 - MAJOR: Breaking changes or major architectural changes
 - MINOR: New features, phases, or significant additions
 - PATCH: Bug fixes, documentation updates, minor improvements
 
-Phase-based versioning:
-- v0.1.0: Phase 1 - Core Foundation Infrastructure
-- v0.2.0: Phase 2 - Core Services & Infrastructure  
-- v0.3.0: Phase 3 - Business Application Modules
-- v0.4.0: Phase 4 - Integration Framework
-- v0.5.0: Phase 5 - Advanced Features
-- v0.6.0: Phase 6 - Security & Compliance
-- v0.7.0: Phase 7 - Testing & Quality Assurance
-- v0.8.0: Phase 8 - Deployment & Production
-- v0.9.0: Phase 9 - Documentation & Training
+Phase-based versioning (see ROADMAP.md):
+- v0.1.0: Phase 1 - Platform Foundation
+- v0.2.0: Phase 2 - Core Services & Infrastructure
+- v0.3.0: Phase 3 - Job Seeker Core
+- v0.4.0: Phase 4 - Automation Hardening
+- v0.5.0: Phase 5 - Quality and CI
+- v0.6.0: Phase 6 - Security Hardening
+- v0.7.0: Phase 7 - Operations and Data
+- v0.8.0: Phase 8 - UX, Performance, and Polish
+- v0.9.0: Phase 9 - Release Candidate
 - v1.0.0: Production Ready Release
 """
 
 __version__ = "0.2.0"
-__phase__ = "Phase 2: Core Services & Infrastructure"
-__phase_description__ = "API Infrastructure, Communication Services, Caching & Performance"
-__phase_status__ = "COMPLETED"
-__phase_completion_date__ = "2025-10-19"
+__phase__ = "Phase 3: Job Seeker Core"
+__phase_description__ = (
+    "Master profile, discovery, tailoring, apply drafts, pipeline, and analytics; "
+    "stabilization and exit criteria in progress"
+)
+__phase_status__ = "IN_PROGRESS"
+__phase_completion_date__ = None
+__last_completed_phase__ = "Phase 2: Core Services & Infrastructure"
+__last_completed_version__ = "0.2.0"
+__last_completed_date__ = "2026-07-04"
 
 # Version metadata
 VERSION_INFO = {
@@ -31,17 +37,22 @@ VERSION_INFO = {
     "phase_description": __phase_description__,
     "phase_status": __phase_status__,
     "phase_completion_date": __phase_completion_date__,
+    "last_completed_phase": __last_completed_phase__,
+    "last_completed_version": __last_completed_version__,
+    "last_completed_date": __last_completed_date__,
     "major": 0,
     "minor": 2,
     "patch": 0,
     "is_prerelease": True,
     "is_development": True,
-    "is_production_ready": False
+    "is_production_ready": False,
 }
+
 
 def get_version():
     """Get the current version string"""
     return __version__
+
 
 def get_phase_info():
     """Get current phase information"""
@@ -49,83 +60,101 @@ def get_phase_info():
         "phase": __phase__,
         "description": __phase_description__,
         "status": __phase_status__,
-        "completion_date": __phase_completion_date__
+        "completion_date": __phase_completion_date__,
+        "last_completed_phase": __last_completed_phase__,
+        "last_completed_version": __last_completed_version__,
+        "last_completed_date": __last_completed_date__,
     }
+
 
 def get_version_info():
     """Get complete version information"""
     return VERSION_INFO.copy()
 
+
 def is_phase_complete(phase_number):
     """Check if a specific phase is complete"""
-    phase_map = {
-        1: __phase_status__ == "COMPLETED",
-        2: False,  # Phase 2 not started
-        3: False,  # Phase 3 not started
-        4: False,  # Phase 4 not started
-        5: False,  # Phase 5 not started
-        6: False,  # Phase 6 not started
-        7: False,  # Phase 7 not started
-        8: False,  # Phase 8 not started
-        9: False,  # Phase 9 not started
-    }
-    return phase_map.get(phase_number, False)
+    # Phases 1–2 complete; Phase 3+ not yet exited
+    completed = {1, 2}
+    return phase_number in completed
+
 
 def get_next_version():
-    """Get the next version for the next phase"""
-    return "0.2.0"  # Next phase will be v0.2.0
+    """Get the next version for the next completed phase"""
+    return "0.3.0"
+
 
 def get_roadmap():
-    """Get the complete version roadmap"""
+    """Get the complete version roadmap (mirrors ROADMAP.md)"""
     return {
         "v0.1.0": {
-            "phase": "Phase 1: Core Foundation Infrastructure",
+            "phase": "Phase 1: Platform Foundation",
             "status": "COMPLETED",
-            "description": "Application Architecture, Database Architecture, Authentication & Authorization System"
+            "description": (
+                "Application factory, auth, RBAC, OAuth, 2FA, Vuexy UI shell"
+            ),
         },
         "v0.2.0": {
-            "phase": "Phase 2: Core Services & Infrastructure", 
-            "status": "NEXT",
-            "description": "API Infrastructure, Communication Services, Caching & Performance"
+            "phase": "Phase 2: Core Services & Infrastructure",
+            "status": "COMPLETED",
+            "description": (
+                "API framework, email, Redis, Celery, Docker Compose, health checks"
+            ),
         },
         "v0.3.0": {
-            "phase": "Phase 3: Business Application Modules",
-            "status": "PLANNED",
-            "description": "Multi-Tenant Architecture, Core Business Modules, Application Templates"
+            "phase": "Phase 3: Job Seeker Core",
+            "status": "IN_PROGRESS",
+            "description": (
+                "Master profile, discovery, tailoring, apply drafts, pipeline, analytics"
+            ),
         },
         "v0.4.0": {
-            "phase": "Phase 4: Integration Framework",
-            "status": "PLANNED", 
-            "description": "External System Integration, Integration Management"
+            "phase": "Phase 4: Automation Hardening",
+            "status": "PLANNED",
+            "description": (
+                "Playwright scraping, apply adapters that submit, credentials health"
+            ),
         },
         "v0.5.0": {
-            "phase": "Phase 5: Advanced Features",
+            "phase": "Phase 5: Quality and CI",
             "status": "PLANNED",
-            "description": "Reporting & Analytics, Workflow Automation"
+            "description": (
+                "GitHub Actions, integration tests, coverage, accurate API docs"
+            ),
         },
         "v0.6.0": {
-            "phase": "Phase 6: Security & Compliance",
+            "phase": "Phase 6: Security Hardening",
             "status": "PLANNED",
-            "description": "Advanced Security, Compliance Features"
+            "description": (
+                "Secret validation, OAuth encryption, RBAC for job seeker routes"
+            ),
         },
         "v0.7.0": {
-            "phase": "Phase 7: Testing & Quality Assurance",
+            "phase": "Phase 7: Operations and Data",
             "status": "PLANNED",
-            "description": "Comprehensive Testing, Quality Assurance"
+            "description": (
+                "Alembic migrations, backups, production Docker, runbooks"
+            ),
         },
         "v0.8.0": {
-            "phase": "Phase 8: Deployment & Production",
+            "phase": "Phase 8: UX, Performance, and Polish",
             "status": "PLANNED",
-            "description": "Infrastructure Setup, Production Deployment"
+            "description": (
+                "Onboarding, mobile, pagination, notifications, follow-ups"
+            ),
         },
         "v0.9.0": {
-            "phase": "Phase 9: Documentation & Training",
+            "phase": "Phase 9: Release Candidate",
             "status": "PLANNED",
-            "description": "Comprehensive Documentation, User Guides"
+            "description": (
+                "Feature freeze, staging soak, CHANGELOG, known limitations"
+            ),
         },
         "v1.0.0": {
             "phase": "Production Ready Release",
             "status": "PLANNED",
-            "description": "Complete boilerplate ready for 40+ business applications"
-        }
+            "description": (
+                "Stable self-hosted release for manual workflow with optional automation"
+            ),
+        },
     }

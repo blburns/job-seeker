@@ -109,6 +109,7 @@ Comprehensive documentation for the Job Seeker Automation App.
 | Deploy to production | [Deployment](04-operations/DEPLOYMENT.md) |
 | Fix a problem | [Troubleshooting](04-operations/TROUBLESHOOTING.md) |
 | Look up a command | [Quick Reference](QUICK_REFERENCE.md) |
+| Plan toward production | [ROADMAP.md](../ROADMAP.md) |
 
 ---
 
