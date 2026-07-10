@@ -44,6 +44,14 @@
 </div>
 {% else %}
 
+{% if not llm_configured %}
+<div class="alert alert-info mb-4" role="status">
+  <strong>Heuristic tailoring mode.</strong>
+  No <code>OPENAI_API_KEY</code> is set, so keyword insertion uses rule-based rewrites instead of LLM rephrasing.
+  Cover letters use a short template. Set the key in <code>.env</code> and restart for richer edits.
+</div>
+{% endif %}
+
 <div class="row g-4 mb-4">
   <div class="col-lg-9">
     <div class="alert alert-primary d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">

@@ -14,7 +14,12 @@ class LLMService:
 
     @classmethod
     def is_configured(cls) -> bool:
-        return bool(os.getenv('OPENAI_API_KEY') or os.getenv('ANTHROPIC_API_KEY'))
+        # OpenAI is the only implemented provider. ANTHROPIC_API_KEY is reserved for later.
+        return bool(os.getenv('OPENAI_API_KEY'))
+
+    @classmethod
+    def using_heuristic_fallback(cls) -> bool:
+        return not cls.is_configured()
 
     @classmethod
     def _openai_chat(cls, messages: List[Dict[str, str]], json_mode: bool = False) -> str:
