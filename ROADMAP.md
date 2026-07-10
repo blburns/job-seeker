@@ -7,7 +7,7 @@ This roadmap supersedes the generic CRM boilerplate phases in [`version.py`](ver
 | | |
 |---|---|
 | **Current version** | `0.3.0` (see `version.py`) |
-| **Current phase** | Phase 4 — Automation Hardening (`PLANNED`) |
+| **Current phase** | Phase 4 — Automation Hardening (`IN_PROGRESS`) |
 | **Last completed** | Phase 3 — Job Seeker Core (`v0.3.0`, 2026-07-10) |
 | **Git tags** | `v0.1.0`, `v0.2.0`, `v0.3.0` |
 | **Target release** | `1.0.0` |
@@ -377,44 +377,43 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 ---
 ## Phase 4 — Automation hardening
 
-**Version:** `0.4.0` · **Status:** ⬜ Planned  
+**Version:** `0.4.0` · **Status:** 🟡 In progress  
 **Depends on:** Phase 3 exit  
 **Goal:** Optional automation reliable enough for cautious production use.
 
 ### 4.1 Playwright and scraping
 
-| Task | Priority | Files |
-|------|----------|-------|
-| LinkedIn discovery: handle security checkpoints gracefully | P0 | `browser_manager.py`, `discovery/linkedin.py` |
-| Indeed discovery: enforce headed mode, retry on block | P0 | `browser_launch_args.py`, `discovery/indeed.py` |
-| Job detail enrichment: retry + partial result handling | P1 | `job_detail_enrichment.py` |
-| Scrape proof audit UI (view screenshots from admin) | P2 | New admin route or application detail |
-| Connector tests for LinkedIn/Indeed (mocked browser) | P1 | `tests/test_linkedin_connector.py`, `tests/test_indeed_connector.py` |
-| Align proof paths: `instance/scrape_proofs/` vs `instance/submission_proofs/` | P2 | Docs + code consistency |
+| Task | Priority | Files | Status |
+|------|----------|-------|--------|
+| LinkedIn discovery: handle security checkpoints gracefully | P0 | `browser_manager.py`, `discovery/linkedin.py` | ✅ Re-auth messaging |
+| Indeed discovery: enforce headed mode, retry on block | P0 | `browser_launch_args.py`, `discovery/indeed.py` | ✅ Headed default + 1 retry |
+| Job detail enrichment: retry + partial result handling | P1 | `job_detail_enrichment.py` | ⬜ |
+| Scrape proof audit UI (view screenshots from admin) | P2 | New admin route or application detail | ⬜ |
+| Connector tests for LinkedIn/Indeed (mocked browser) | P1 | `tests/test_linkedin_connector.py`, `tests/test_indeed_connector.py` | ⬜ |
+| Align proof paths: `instance/scrape_proofs/` vs `instance/submission_proofs/` | P2 | Docs + code consistency | ⬜ |
 
 ### 4.2 Portal credentials
 
-| Task | Priority | Files |
-|------|----------|-------|
-| Session expiry detection on credential test | P0 | `session_health.py`, credentials template |
-| Re-auth prompt when session invalid during scrape | P0 | `browser_manager.py`, `discovery_orchestrator.py` |
-| Credential health dashboard (last used, expires, status) | P1 | `app/modules/apply/routes.py`, new template section |
-| Document session refresh cadence in user guide | P1 | `docs/02-user-guide/BATCH_AUTO_APPLY.md` |
+| Task | Priority | Files | Status |
+|------|----------|-------|--------|
+| Session expiry detection on credential test | P0 | `session_health.py`, credentials template | ✅ |
+| Re-auth prompt when session invalid during scrape | P0 | `browser_manager.py`, `discovery_orchestrator.py` | ✅ Via DiscoverySearchError messaging |
+| Credential health dashboard (last used, expires, status) | P1 | `app/modules/apply/routes.py`, credentials template | ✅ Session column |
+| Document session refresh cadence in user guide | P1 | `docs/02-user-guide/BATCH_AUTO_APPLY.md` | ⬜ |
 
 ### 4.3 Apply adapters — critical path
 
-**Current state:** No adapter returns `ApplyResult(success=True, status='submitted')`. Batch auto-apply cannot complete.
+**Current state:** Greenhouse can return `submitted` when confirmation is detected (flag-gated). Lever/LinkedIn/Indeed still `needs_manual`.
 
-| Task | Priority | Files | Target |
-|------|----------|-------|--------|
-| Greenhouse: complete Submit click + confirmation detection | P0 | `apply_adapters/greenhouse.py` | First `submitted` adapter |
-| Lever: complete Submit click + confirmation detection | P1 | `apply_adapters/lever.py` | `submitted` |
-| LinkedIn Easy Apply: multi-step form automation | P1 | `apply_adapters/linkedin.py` | `submitted` or `needs_manual` with proof |
-| Indeed Apply: implement (currently explicit stub) | P2 | `apply_adapters/indeed.py` | `submitted` or `needs_manual` |
-| Ashby apply adapter | P2 | New `apply_adapters/ashby.py` | `needs_manual` minimum |
-| Adapter integration tests with mocked Playwright | P0 | `tests/test_apply_adapters.py` | Assert `submitted` path |
-| Batch completion: handle `partial_failure` with retry UI | P1 | `apply_batch_service.py`, batch detail template |
-
+| Task | Priority | Files | Target | Status |
+|------|----------|-------|--------|--------|
+| Greenhouse: complete Submit click + confirmation detection | P0 | `apply_adapters/greenhouse.py` | First `submitted` adapter | ✅ |
+| Lever: complete Submit click + confirmation detection | P1 | `apply_adapters/lever.py` | `submitted` | ⬜ |
+| LinkedIn Easy Apply: multi-step form automation | P1 | `apply_adapters/linkedin.py` | `submitted` or `needs_manual` with proof | ⬜ |
+| Indeed Apply: implement (currently explicit stub) | P2 | `apply_adapters/indeed.py` | `submitted` or `needs_manual` | ⬜ |
+| Ashby apply adapter | P2 | New `apply_adapters/ashby.py` | `needs_manual` minimum | ⬜ |
+| Adapter integration tests with mocked Playwright | P0 | `tests/test_apply_adapters.py` | Assert `submitted` path | ✅ |
+| Batch completion: handle `partial_failure` with retry UI | P1 | `apply_batch_service.py`, batch detail template | ⬜ |
 ### 4.4 Discovery expansion
 
 | Task | Priority | Files |

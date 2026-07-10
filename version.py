@@ -24,7 +24,7 @@ __phase_description__ = (
     "Playwright scraping reliability, apply adapters that can submit, "
     "and portal credential health"
 )
-__phase_status__ = "PLANNED"
+__phase_status__ = "IN_PROGRESS"
 __phase_completion_date__ = None
 __last_completed_phase__ = "Phase 3: Job Seeker Core"
 __last_completed_version__ = "0.3.0"
@@ -110,7 +110,7 @@ def get_roadmap():
         },
         "v0.4.0": {
             "phase": "Phase 4: Automation Hardening",
-            "status": "PLANNED",
+            "status": "IN_PROGRESS",
             "description": (
                 "Playwright scraping, apply adapters that submit, credentials health"
             ),
