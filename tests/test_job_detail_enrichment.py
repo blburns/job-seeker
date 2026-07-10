@@ -1,54 +1,71 @@
-"""Tests for job detail enrichment helpers."""
+"""Tests for job detail enrichment retry behavior."""
 
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from app.services.scraping.job_detail_enrichment import JobDetailEnrichment
+from app.services.scraping.scrape_result import ScrapeResult, ScrapeStatus
 
 
-def test_needs_enrichment_always_for_indeed_without_full_description():
-    job = SimpleNamespace(
-        source='indeed',
-        url='https://www.indeed.com/viewjob?jk=abc',
-        description='Short snippet from search results card.',
+def test_enrichment_retries_playwright_fetch():
+    discovered = SimpleNamespace(
+        title='Engineer',
         company='Acme',
-        location='Austin, TX',
-    )
-    assert JobDetailEnrichment.needs_enrichment(job) is True
-
-
-def test_needs_enrichment_skips_indeed_with_full_description():
-    job = SimpleNamespace(
-        source='indeed',
-        url='https://www.indeed.com/viewjob?jk=abc',
-        description='x' * 500,
-        company='Acme',
-        location='Austin, TX',
-    )
-    assert JobDetailEnrichment.needs_enrichment(job) is False
-
-
-def test_merge_prefers_longer_description():
-    base = {'description': 'short snippet'}
-    enriched = {'description': 'x' * 200}
-    merged = JobDetailEnrichment._merge(base, enriched)
-    assert len(merged['description']) == 200
-
-
-def test_keyword_text_includes_title_and_company():
-    text = JobDetailEnrichment.keyword_text(
-        title='Python Developer',
-        company='Acme Corp',
         location='Remote',
-        description='',
+        description='short',
+        url='https://www.linkedin.com/jobs/view/1',
+        source='linkedin',
     )
-    assert 'Python Developer' in text
-    assert 'Acme Corp' in text
+    calls = {'n': 0}
+
+    def once(*_a, **_k):
+        calls['n'] += 1
+        if calls['n'] == 1:
+            return None
+        return {'description': 'A' * 500, 'title': 'Engineer', 'company': 'Acme'}
+
+    with patch.object(JobDetailEnrichment, '_fetch_playwright_once', side_effect=once):
+        with patch(
+            'app.services.scraping.job_detail_enrichment.credential_vault_service.retrieve',
+            return_value={},
+        ):
+            result = JobDetailEnrichment._fetch_with_playwright(discovered, 'user-1')
+    assert calls['n'] == 2
+    assert result and len(result['description']) >= 400
 
 
-def test_needs_posting_enrichment_for_sparse_indeed_posting():
-    posting = SimpleNamespace(
+def test_enrichment_returns_none_after_exhausted_retries():
+    discovered = SimpleNamespace(
+        title='Engineer',
+        company='Acme',
+        location='',
+        description='',
+        url='https://www.indeed.com/viewjob?jk=1',
         source='indeed',
-        url='https://www.indeed.com/viewjob?jk=abc',
-        description='',
     )
-    assert JobDetailEnrichment.needs_posting_enrichment(posting) is True
+    with patch.object(JobDetailEnrichment, '_fetch_playwright_once', return_value=None):
+        with patch(
+            'app.services.scraping.job_detail_enrichment.credential_vault_service.retrieve',
+            return_value={},
+        ):
+            assert JobDetailEnrichment._fetch_with_playwright(discovered, 'user-1') is None
+
+
+def test_enrich_discovered_keeps_partial_on_failure():
+    discovered = SimpleNamespace(
+        title='Engineer',
+        company='Acme',
+        location='Remote',
+        description='partial blurb',
+        url='https://www.linkedin.com/jobs/view/1',
+        source='linkedin',
+    )
+    with patch.object(JobDetailEnrichment, '_fetch_with_playwright', return_value=None):
+        with patch(
+            'app.services.scraping.job_detail_enrichment.job_discovery_service.fetch_from_url',
+            side_effect=Exception('network'),
+        ):
+            result = JobDetailEnrichment.enrich_discovered_job(discovered, 'user-1')
+    assert result['title'] == 'Engineer'
+    assert result['company'] == 'Acme'
+    assert result['description'] == 'partial blurb'

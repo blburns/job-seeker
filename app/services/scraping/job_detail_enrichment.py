@@ -121,7 +121,32 @@ class JobDetailEnrichment:
     @classmethod
     def _fetch_with_playwright(cls, discovered, user_id) -> Optional[Dict[str, Any]]:
         credentials = credential_vault_service.retrieve(user_id, discovered.source)
+        attempts = 2
+        last_error = ''
 
+        for attempt in range(1, attempts + 1):
+            try:
+                detail = cls._fetch_playwright_once(discovered, user_id, credentials)
+                if detail:
+                    return detail
+            except Exception as exc:
+                last_error = str(exc)
+                logger.warning(
+                    'Detail enrichment attempt %s/%s failed for %s: %s',
+                    attempt, attempts, discovered.url, exc,
+                )
+            if attempt < attempts:
+                logger.info('Retrying job detail enrichment for %s', discovered.url)
+
+        if last_error:
+            logger.warning(
+                'Detail enrichment exhausted retries for %s (%s); returning partial data',
+                discovered.url, last_error,
+            )
+        return None
+
+    @classmethod
+    def _fetch_playwright_once(cls, discovered, user_id, credentials) -> Optional[Dict[str, Any]]:
         if discovered.source == 'indeed':
             fetch = browser_manager.fetch_indeed_detail(
                 discovered.url, user_id, credentials,
@@ -139,6 +164,7 @@ class JobDetailEnrichment:
                 parsed = parse_indeed_detail(fetch.html)
                 if parsed.get('description'):
                     return parsed
+            # Partial: title/company without full description still useful
             if detail:
                 return detail
             return None
