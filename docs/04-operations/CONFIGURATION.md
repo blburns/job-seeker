@@ -497,7 +497,7 @@ OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o-mini
 # Or use Google AI Studio / Gemini instead (preferred when set):
 # GEMINI_API_KEY=...   # from https://aistudio.google.com/apikey
-# GEMINI_MODEL=gemini-2.0-flash
+# GEMINI_MODEL=gemini-3.5-flash
 # LLM_PROVIDER=auto    # auto | gemini | openai
 ANTHROPIC_API_KEY=          # Reserved / not implemented
 ```

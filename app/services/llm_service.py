@@ -8,6 +8,25 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+# gemini-1.5-* and gemini-2.0-* were shut down; map common aliases to current models.
+_GEMINI_MODEL_ALIASES = {
+    'gemini-1.5-flash': 'gemini-3.5-flash',
+    'gemini-1.5-flash-latest': 'gemini-3.5-flash',
+    'gemini-1.5-pro': 'gemini-3.5-flash',
+    'gemini-1.5-pro-latest': 'gemini-3.5-flash',
+    'gemini-2.0-flash': 'gemini-3.5-flash',
+    'gemini-2.0-flash-001': 'gemini-3.5-flash',
+    'gemini-2.0-flash-lite': 'gemini-3.1-flash-lite',
+    'gemini-2.0-flash-lite-001': 'gemini-3.1-flash-lite',
+}
+
+_DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash'
+_GEMINI_FALLBACK_MODELS = (
+    'gemini-3.5-flash',
+    'gemini-2.5-flash',
+    'gemini-3.1-flash-lite',
+)
+
 
 class LLMService:
     """Multi-provider LLM wrapper (OpenAI, Gemini) with heuristic fallback."""
@@ -50,6 +69,33 @@ class LLMService:
         )
 
     @classmethod
+    def _redact(cls, text: str) -> str:
+        """Strip API keys from error strings so they never hit logs."""
+        redacted = text
+        for key in (
+            cls._gemini_api_key(),
+            os.getenv('OPENAI_API_KEY', '').strip(),
+        ):
+            if key and key in redacted:
+                redacted = redacted.replace(key, '[REDACTED]')
+        # Also scrub query-string key=... patterns
+        redacted = re.sub(r'([?&]key=)[^&\s]+', r'\1[REDACTED]', redacted, flags=re.I)
+        return redacted
+
+    @classmethod
+    def _resolve_gemini_models(cls) -> List[str]:
+        """Primary model (with deprecation aliases) plus fallbacks for 404s."""
+        raw = (os.getenv('GEMINI_MODEL') or _DEFAULT_GEMINI_MODEL).strip()
+        primary = _GEMINI_MODEL_ALIASES.get(raw, raw) or _DEFAULT_GEMINI_MODEL
+        if primary != raw:
+            logger.info('Gemini model %s is retired; using %s', raw, primary)
+        models: List[str] = [primary]
+        for candidate in _GEMINI_FALLBACK_MODELS:
+            if candidate not in models:
+                models.append(candidate)
+        return models
+
+    @classmethod
     def _chat(cls, messages: List[Dict[str, str]], json_mode: bool = False) -> str:
         provider = cls.provider()
         if provider == 'gemini':
@@ -74,7 +120,10 @@ class LLMService:
             json=body,
             timeout=60,
         )
-        resp.raise_for_status()
+        if not resp.ok:
+            raise RuntimeError(
+                f'OpenAI HTTP {resp.status_code}: {cls._redact(resp.text[:300])}'
+            )
         return resp.json()['choices'][0]['message']['content']
 
     @classmethod
@@ -86,7 +135,6 @@ class LLMService:
         if not api_key:
             raise RuntimeError('GEMINI_API_KEY / GOOGLE_API_KEY not configured')
 
-        model = os.getenv('GEMINI_MODEL', 'gemini-2.0-flash')
         # Convert OpenAI-style messages to Gemini contents.
         # System messages are folded into the first user turn.
         system_bits: List[str] = []
@@ -112,24 +160,44 @@ class LLMService:
         if json_mode:
             body['generationConfig']['responseMimeType'] = 'application/json'
 
-        url = (
-            f'https://generativelanguage.googleapis.com/v1beta/models/'
-            f'{model}:generateContent'
+        headers = {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': api_key,
+        }
+        last_error = ''
+        for model in cls._resolve_gemini_models():
+            url = (
+                f'https://generativelanguage.googleapis.com/v1beta/models/'
+                f'{model}:generateContent'
+            )
+            resp = requests.post(url, headers=headers, json=body, timeout=60)
+            if resp.status_code == 404:
+                last_error = f'model {model} not found'
+                logger.info('Gemini model unavailable (%s); trying next fallback', model)
+                continue
+            if resp.status_code == 429:
+                raise RuntimeError(
+                    'Gemini rate limit / quota exceeded (HTTP 429). '
+                    'Wait a minute or check usage at https://aistudio.google.com/'
+                )
+            if not resp.ok:
+                raise RuntimeError(
+                    f'Gemini HTTP {resp.status_code} ({model}): '
+                    f'{cls._redact(resp.text[:400])}'
+                )
+            data = resp.json()
+            try:
+                parts = data['candidates'][0]['content']['parts']
+                return ''.join(part.get('text', '') for part in parts).strip()
+            except (KeyError, IndexError, TypeError) as exc:
+                raise RuntimeError(
+                    f'Unexpected Gemini response: {cls._redact(str(data)[:400])}'
+                ) from exc
+
+        raise RuntimeError(
+            f'No working Gemini model found ({last_error or "all failed"}). '
+            f'Set GEMINI_MODEL=gemini-3.5-flash in .env'
         )
-        resp = requests.post(
-            url,
-            params={'key': api_key},
-            headers={'Content-Type': 'application/json'},
-            json=body,
-            timeout=60,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        try:
-            parts = data['candidates'][0]['content']['parts']
-            return ''.join(part.get('text', '') for part in parts).strip()
-        except (KeyError, IndexError, TypeError) as exc:
-            raise RuntimeError(f'Unexpected Gemini response: {data}') from exc
 
     @classmethod
     def rephrase_bullet(cls, bullet_text: str, keyword: str, job_title: str = '') -> str:
@@ -145,7 +213,7 @@ class LLMService:
         try:
             return cls._chat([{'role': 'user', 'content': prompt}]).strip()
         except Exception as exc:
-            logger.warning('LLM rephrase failed (%s): %s', cls.provider(), exc)
+            logger.warning('LLM rephrase failed (%s): %s', cls.provider(), cls._redact(str(exc)))
             return bullet_text
 
     @classmethod
@@ -173,7 +241,9 @@ class LLMService:
         try:
             return cls._chat([{'role': 'user', 'content': prompt}])
         except Exception as exc:
-            logger.warning('LLM cover letter failed (%s): %s', cls.provider(), exc)
+            logger.warning(
+                'LLM cover letter failed (%s): %s', cls.provider(), cls._redact(str(exc))
+            )
             return ''
 
     @classmethod
