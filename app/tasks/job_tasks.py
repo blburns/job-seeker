@@ -100,10 +100,12 @@ def batch_tailor_applications(application_ids, user_id):
 
 
 @shared_task(name='app.tasks.job_tasks.submit_apply_batch')
-def submit_apply_batch(batch_id, user_id):
+def submit_apply_batch(batch_id, user_id, application_ids=None):
     from app.services.apply_submission_service import apply_submission_service
     try:
-        batch = apply_submission_service.process_batch(batch_id, user_id)
+        batch = apply_submission_service.process_batch(
+            batch_id, user_id, application_ids=application_ids
+        )
         return {'success': True, 'batch_id': str(batch.id), 'status': batch.status}
     except Exception as exc:
         logger.exception('Apply batch failed')

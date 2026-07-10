@@ -16,6 +16,7 @@ from app.services.keyword_service import keyword_service
 from app.services.tailoring_service import tailoring_service
 from app.services.tailoring_diff_service import tailoring_diff_service
 from app.services.resume_export_service import resume_export_service
+from app.services.llm_service import llm_service
 from . import applications_bp
 
 logger = logging.getLogger(__name__)
@@ -193,6 +194,27 @@ def approve_batch(batch_id):
     return redirect(url_for('applications.batch_detail', batch_id=batch_id))
 
 
+@applications_bp.route('/batches/<uuid:batch_id>/retry', methods=['POST'])
+@login_required
+def retry_batch(batch_id):
+    from app.services.apply_batch_service import apply_batch_service
+    from app.tasks.job_tasks import submit_apply_batch
+    try:
+        batch = apply_batch_service.prepare_retry(current_user.id, batch_id)
+        from app.models.jobs import ApplyBatchItem
+        pending = [
+            str(i.application_id)
+            for i in ApplyBatchItem.query.filter_by(batch_id=batch.id, status='pending').all()
+        ]
+        submit_apply_batch.delay(str(batch.id), str(current_user.id), pending)
+        flash(f'Retrying {len(pending)} application(s).', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+    except RuntimeError as exc:
+        flash(str(exc), 'danger')
+    return redirect(url_for('applications.batch_detail', batch_id=batch_id))
+
+
 @applications_bp.route('/batch-tailor', methods=['POST'])
 @login_required
 def batch_tailor():
@@ -312,6 +334,7 @@ def tailoring_review(application_id):
         version_history=version_history,
         draft=draft,
         resume_preview=resume_preview,
+        llm_configured=llm_service.is_configured(),
         diff_summary=tailoring_diff_service.summarize(diff_log),
         coverage_delta=tailoring_diff_service.coverage_delta(diff_log),
         keyword_impact=tailoring_diff_service.keyword_impact(diff_log),

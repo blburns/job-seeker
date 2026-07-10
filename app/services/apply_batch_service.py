@@ -3,7 +3,7 @@
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from app.extensions.core import db
 from app.models.jobs import (
@@ -178,11 +178,59 @@ class ApplyBatchService:
             return
         items = ApplyBatchItem.query.filter_by(batch_id=batch_id).all()
         failed = [i for i in items if i.status in ('failed', 'needs_manual')]
-        batch.status = (
-            ApplyBatchStatus.PARTIAL_FAILURE.value if failed else ApplyBatchStatus.COMPLETED.value
-        )
+        submitted = [i for i in items if i.status == 'submitted']
+        if failed and submitted:
+            batch.status = ApplyBatchStatus.PARTIAL_FAILURE.value
+        elif failed and not submitted:
+            batch.status = ApplyBatchStatus.PARTIAL_FAILURE.value
+        else:
+            batch.status = ApplyBatchStatus.COMPLETED.value
         batch.completed_at = datetime.utcnow()
         db.session.commit()
+
+    @classmethod
+    def retryable_item_ids(cls, batch_id) -> List[str]:
+        items = ApplyBatchItem.query.filter_by(batch_id=batch_id).all()
+        return [
+            str(i.application_id)
+            for i in items
+            if i.status in ('failed', 'needs_manual')
+        ]
+
+    @classmethod
+    def prepare_retry(cls, user_id, batch_id) -> ApplyBatch:
+        """Reset failed/needs_manual items so process_batch can re-run them."""
+        batch = ApplyBatch.query.filter_by(id=batch_id, user_id=user_id).first_or_404()
+        if batch.status not in (
+            ApplyBatchStatus.PARTIAL_FAILURE.value,
+            ApplyBatchStatus.COMPLETED.value,
+        ):
+            raise ValueError(
+                f'Batch status "{batch.status}" cannot be retried. '
+                'Wait for the batch to finish or create a new batch.'
+            )
+        retry_ids = cls.retryable_item_ids(batch_id)
+        if not retry_ids:
+            raise ValueError('No failed or needs_manual items to retry.')
+
+        for app_id in retry_ids:
+            item = ApplyBatchItem.query.filter_by(
+                batch_id=batch_id, application_id=app_id
+            ).first()
+            if item:
+                item.status = 'pending'
+                item.error_message = None
+                item.proof_path = None
+                item.submission_status = SubmissionStatus.PENDING.value
+            app = Application.query.filter_by(id=app_id, user_id=user_id).first()
+            if app and app.stage != ApplicationStage.APPLIED.value:
+                app.submission_status = SubmissionStatus.PENDING.value
+                app.submission_error = None
+
+        batch.status = ApplyBatchStatus.APPROVED.value
+        batch.completed_at = None
+        db.session.commit()
+        return batch
 
 
 apply_batch_service = ApplyBatchService()

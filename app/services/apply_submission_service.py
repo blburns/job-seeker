@@ -27,6 +27,18 @@ logger = logging.getLogger(__name__)
 
 class ApplySubmissionService:
     @classmethod
+    def automation_blocked(cls) -> str:
+        """Return a reason string if automation must not run, else empty."""
+        if os.getenv('AUTOMATION_DISABLED', 'false').lower() in ('true', '1', 'yes'):
+            return (
+                'Automation kill switch is on (AUTOMATION_DISABLED=true). '
+                'Clear it in the environment and restart to re-enable.'
+            )
+        if os.getenv('APPLY_AUTOMATION_ENABLED', 'false').lower() != 'true':
+            return 'Apply automation disabled. Set APPLY_AUTOMATION_ENABLED=true.'
+        return ''
+
+    @classmethod
     def _resume_file_path(cls, application: Application) -> str:
         version = application.resume_version
         if not version:
@@ -42,6 +54,11 @@ class ApplySubmissionService:
 
     @classmethod
     def submit_application_record(cls, application_id, user_id) -> dict:
+        blocked = cls.automation_blocked()
+        # Kill switch always blocks; APPLY_AUTOMATION_ENABLED is also checked in adapters.
+        if blocked and 'kill switch' in blocked.lower():
+            raise RuntimeError(blocked)
+
         app_record = Application.query.filter_by(
             id=application_id, user_id=user_id, is_deleted=False
         ).first_or_404()
@@ -93,10 +110,15 @@ class ApplySubmissionService:
         activity_service.log(
             app_record.id,
             user_id,
-            'submit',
-            subject=f'Submission {result.status}',
+            'auto_submit' if result.status == 'submitted' else 'submit',
+            subject=f'Automated submission: {result.status}',
             description=result.message,
-            metadata={'proof_path': result.proof_path},
+            metadata={
+                'proof_path': result.proof_path,
+                'portal': portal,
+                'automated': True,
+                'success': result.success,
+            },
         )
         db.session.commit()
         return {
@@ -107,14 +129,18 @@ class ApplySubmissionService:
         }
 
     @classmethod
-    def process_batch(cls, batch_id, user_id):
+    def process_batch(cls, batch_id, user_id, application_ids=None):
         from app.models.jobs import ApplyBatch
+
+        if cls.automation_blocked():
+            raise RuntimeError(cls.automation_blocked())
 
         batch = ApplyBatch.query.filter_by(id=batch_id, user_id=user_id).first_or_404()
         batch.status = ApplyBatchStatus.RUNNING.value
         db.session.commit()
 
-        for app_id in batch.application_ids or []:
+        targets = application_ids or batch.application_ids or []
+        for app_id in targets:
             try:
                 result = cls.submit_application_record(app_id, user_id)
                 apply_batch_service.mark_item_result(
@@ -122,7 +148,7 @@ class ApplySubmissionService:
                     app_id,
                     result['status'],
                     result.get('proof_path', ''),
-                    '' if result['success'] or result['status'] == 'needs_manual' else result.get('message', ''),
+                    '' if result['success'] else result.get('message', ''),
                 )
             except Exception as exc:
                 logger.exception('Batch submit failed for %s', app_id)

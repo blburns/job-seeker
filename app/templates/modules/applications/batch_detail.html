@@ -11,12 +11,23 @@
       Approve &amp; Submit
     </button>
   </form>
+  {% elif batch.status == 'partial_failure' %}
+  <form method="post" action="{{ url_for('applications.retry_batch', batch_id=batch.id) }}" class="d-inline" onsubmit="return confirm('Retry failed and needs_manual items?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-warning btn-sm">Retry Failed Items</button>
+  </form>
   {% endif %}
 {% endcall %}
 
 {% if batch.status == 'draft' and readiness and not all_ready %}
 <div class="alert alert-warning mb-4">
   Complete the checklist below for each application before submitting this batch.
+</div>
+{% endif %}
+
+{% if batch.status == 'partial_failure' %}
+<div class="alert alert-warning mb-4">
+  Some applications need manual finish or failed. Use <strong>Retry Failed Items</strong> after fixing credentials or drafts, or open each application to mark applied manually.
 </div>
 {% endif %}
 
@@ -81,6 +92,7 @@
           <th>Company</th>
           <th>Status</th>
           <th>Error</th>
+          <th class="text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -90,10 +102,18 @@
           <td>{{ item.application.job_posting.company if item.application and item.application.job_posting else '-' }}</td>
           <td><span class="badge bg-label-secondary">{{ item.status }}</span></td>
           <td class="small text-danger">{{ item.error_message or '' }}</td>
+          <td class="text-end">
+            {% if item.application %}
+            <a href="{{ url_for('applications.detail', application_id=item.application.id) }}" class="btn btn-sm btn-outline-secondary">Open</a>
+            {% if item.status in ['needs_manual', 'failed'] %}
+            <a href="{{ url_for('apply.review', application_id=item.application.id) }}" class="btn btn-sm btn-outline-primary">Review</a>
+            {% endif %}
+            {% endif %}
+          </td>
         </tr>
         {% else %}
         <tr class="table-empty">
-          <td colspan="4" class="text-center text-muted">No items in batch.</td>
+          <td colspan="5" class="text-center text-muted">No items in batch.</td>
         </tr>
         {% endfor %}
       </tbody>
