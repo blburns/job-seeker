@@ -50,3 +50,44 @@ def test_profile_to_text_includes_skills(sample_master_profile):
     assert 'python' in text
     assert 'flask' in text
     assert 'acme' in text
+
+
+def test_extract_prefers_skills_section_over_fluff():
+    jd = """
+About Us
+We are a passionate collaborative company with a great culture and benefits.
+
+Requirements
+• Python
+• Flask
+• PostgreSQL
+• Docker
+
+Responsibilities
+• Help ensure excellent communication across the team
+• Join meetings and collaborate with stakeholders
+"""
+    keywords = keyword_service.extract_keywords(jd)
+    lower = [k.lower() for k in keywords]
+    # High-signal tech should appear early
+    top = lower[:15]
+    assert 'python' in top
+    assert 'flask' in top
+    assert 'postgresql' in top or 'postgres' in top
+    # Fluff should be filtered or ranked low
+    assert 'passionate' not in lower
+    assert 'culture' not in lower
+    assert 'benefits' not in lower
+
+
+def test_extract_comma_separated_skills_list():
+    jd = """
+Skills:
+Python, Flask, PostgreSQL, AWS, Docker, Kubernetes
+"""
+    keywords = keyword_service.extract_keywords(jd)
+    lower = {k.lower() for k in keywords}
+    assert 'python' in lower
+    assert 'flask' in lower
+    assert 'aws' in lower
+    assert 'kubernetes' in lower
