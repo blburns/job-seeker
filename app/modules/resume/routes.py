@@ -82,9 +82,13 @@ def upload():
 
         try:
             file_bytes = file.read()
-            profile_data, confidence = resume_parser_service.parse_file(file_bytes, file.filename)
+            profile_data, confidence, extract_warnings = resume_parser_service.parse_file(
+                file_bytes, file.filename
+            )
             errors = resume_parser_service.validate_profile(profile_data)
-            diagnostics = resume_parser_service.get_parse_diagnostics(profile_data)
+            diagnostics = resume_parser_service.get_parse_diagnostics(
+                profile_data, extract_warnings
+            )
             return render_template(
                 'modules/resume/review.html',
                 profile_data=profile_data,

@@ -105,12 +105,19 @@ class ResumeParserService:
     )
 
     @classmethod
-    def parse_file(cls, file_bytes: bytes, filename: str) -> Tuple[Dict[str, Any], float]:
+    def parse_file(
+        cls, file_bytes: bytes, filename: str
+    ) -> Tuple[Dict[str, Any], float, List[str]]:
+        """Parse a resume file.
+
+        Returns ``(profile, confidence, extraction_warnings)``.
+        """
+        warnings: List[str] = []
         ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
         if ext == 'docx':
             text = cls._extract_docx(file_bytes)
         elif ext == 'pdf':
-            text = cls._extract_pdf(file_bytes)
+            text, warnings = cls._extract_pdf(file_bytes)
         elif ext in ('txt', 'text'):
             text = file_bytes.decode('utf-8', errors='replace')
         else:
@@ -118,7 +125,7 @@ class ResumeParserService:
 
         profile = cls.parse_text(text)
         confidence = cls._estimate_confidence(profile)
-        return profile, confidence
+        return profile, confidence, warnings
 
     @classmethod
     def _normalize_text(cls, text: str) -> str:
@@ -155,21 +162,97 @@ class ResumeParserService:
         return cls._normalize_text('\n'.join(lines))
 
     @classmethod
-    def _extract_pdf(cls, file_bytes: bytes) -> str:
+    def _extract_pdf(cls, file_bytes: bytes) -> Tuple[str, List[str]]:
         import pdfplumber
 
         parts: List[str] = []
-        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-            for page in pdf.pages:
-                text = page.extract_text(x_tolerance=2, y_tolerance=2, layout=False)
-                if text:
-                    parts.append(text)
-                else:
-                    words = page.extract_words(x_tolerance=2, y_tolerance=2, keep_blank_chars=False)
-                    if words:
-                        parts.append(cls._words_to_lines(words))
+        warnings: List[str] = []
+        multi_column_pages = 0
 
-        return cls._normalize_text('\n'.join(parts))
+        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+            for page_index, page in enumerate(pdf.pages, start=1):
+                words = page.extract_words(
+                    x_tolerance=2, y_tolerance=2, keep_blank_chars=False
+                ) or []
+                is_multi = cls._detect_multi_column(words, page.width or 0)
+                if is_multi:
+                    multi_column_pages += 1
+                    page_text = cls._extract_pdf_columns(words, page.width or 0)
+                else:
+                    page_text = page.extract_text(
+                        x_tolerance=2, y_tolerance=2, layout=False
+                    ) or ''
+                    if not page_text and words:
+                        page_text = cls._words_to_lines(words)
+
+                table_text = cls._extract_pdf_tables(page)
+                if table_text:
+                    if page_text:
+                        page_text = f'{page_text}\n{table_text}'
+                    else:
+                        page_text = table_text
+                        warnings.append(
+                            f'Page {page_index}: used table extraction because body text was empty.'
+                        )
+
+                if page_text:
+                    parts.append(page_text)
+
+        if multi_column_pages:
+            warnings.append(
+                f'Detected multi-column layout on {multi_column_pages} page(s). '
+                'Review parsed sections carefully — column order may be imperfect.'
+            )
+
+        return cls._normalize_text('\n'.join(parts)), warnings
+
+    @classmethod
+    def _detect_multi_column(cls, words: List[dict], page_width: float) -> bool:
+        """Heuristic: two dense x-clusters separated by a wide gap."""
+        if len(words) < 40 or page_width < 200:
+            return False
+        mid = page_width / 2
+        left = [w for w in words if w.get('x0', 0) < mid - 20]
+        right = [w for w in words if w.get('x0', 0) > mid + 20]
+        if len(left) < 15 or len(right) < 15:
+            return False
+        # Require a sparse middle band (gutter)
+        gutter = [
+            w for w in words
+            if mid - 25 <= w.get('x0', 0) <= mid + 25
+        ]
+        return len(gutter) < max(8, int(0.08 * len(words)))
+
+    @classmethod
+    def _extract_pdf_columns(cls, words: List[dict], page_width: float) -> str:
+        """Read left column top-to-bottom, then right column."""
+        mid = page_width / 2
+        left = [w for w in words if w.get('x0', 0) < mid]
+        right = [w for w in words if w.get('x0', 0) >= mid]
+        chunks = []
+        for column in (left, right):
+            if column:
+                chunks.append(cls._words_to_lines(column))
+        return '\n'.join(chunks)
+
+    @classmethod
+    def _extract_pdf_tables(cls, page) -> str:
+        """Fallback: flatten table cells into readable lines."""
+        try:
+            tables = page.extract_tables() or []
+        except Exception:
+            return ''
+        lines: List[str] = []
+        for table in tables:
+            for row in table or []:
+                cells = [
+                    re.sub(r'\s+', ' ', (cell or '').strip())
+                    for cell in row
+                    if cell and str(cell).strip()
+                ]
+                if cells:
+                    lines.append(' | '.join(cells))
+        return '\n'.join(lines)
 
     @classmethod
     def _words_to_lines(cls, words: List[dict], line_tolerance: float = 3.0) -> str:
@@ -684,9 +767,13 @@ class ResumeParserService:
         return min(round(score, 1), 100.0)
 
     @classmethod
-    def get_parse_diagnostics(cls, profile: Dict[str, Any]) -> List[str]:
+    def get_parse_diagnostics(
+        cls,
+        profile: Dict[str, Any],
+        extraction_warnings: Optional[List[str]] = None,
+    ) -> List[str]:
         """Human-readable hints about what was extracted."""
-        hints = []
+        hints = list(extraction_warnings or [])
         contact = profile.get('contact', {})
         if not contact.get('email'):
             hints.append('Email not detected — add it to the contact block.')

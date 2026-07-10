@@ -52,13 +52,17 @@ def upload_resume():
 
     try:
         file_bytes = file.read()
-        profile_data, confidence = resume_parser_service.parse_file(file_bytes, file.filename)
+        profile_data, confidence, extract_warnings = resume_parser_service.parse_file(
+            file_bytes, file.filename
+        )
         errors = resume_parser_service.validate_profile(profile_data)
         return jsonify({
             'profile_data': profile_data,
             'parse_confidence': confidence,
             'validation_errors': errors,
-            'parse_diagnostics': resume_parser_service.get_parse_diagnostics(profile_data),
+            'parse_diagnostics': resume_parser_service.get_parse_diagnostics(
+                profile_data, extract_warnings
+            ),
             'source_filename': secure_filename(file.filename),
         })
     except Exception as exc:
