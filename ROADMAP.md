@@ -387,9 +387,9 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 |------|----------|-------|--------|
 | LinkedIn discovery: handle security checkpoints gracefully | P0 | `browser_manager.py`, `discovery/linkedin.py` | ✅ Re-auth messaging |
 | Indeed discovery: enforce headed mode, retry on block | P0 | `browser_launch_args.py`, `discovery/indeed.py` | ✅ Headed default + 1 retry |
-| Job detail enrichment: retry + partial result handling | P1 | `job_detail_enrichment.py` | ⬜ |
+| Job detail enrichment: retry + partial result handling | P1 | `job_detail_enrichment.py` | ✅ |
 | Scrape proof audit UI (view screenshots from admin) | P2 | New admin route or application detail | ⬜ |
-| Connector tests for LinkedIn/Indeed (mocked browser) | P1 | `tests/test_linkedin_connector.py`, `tests/test_indeed_connector.py` | ⬜ |
+| Connector tests for LinkedIn/Indeed (mocked browser) | P1 | `tests/test_linkedin_indeed_connectors.py` | ✅ |
 | Align proof paths: `instance/scrape_proofs/` vs `instance/submission_proofs/` | P2 | Docs + code consistency | ⬜ |
 
 ### 4.2 Portal credentials
@@ -399,30 +399,30 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 | Session expiry detection on credential test | P0 | `session_health.py`, credentials template | ✅ |
 | Re-auth prompt when session invalid during scrape | P0 | `browser_manager.py`, `discovery_orchestrator.py` | ✅ Via DiscoverySearchError messaging |
 | Credential health dashboard (last used, expires, status) | P1 | `app/modules/apply/routes.py`, credentials template | ✅ Session column |
-| Document session refresh cadence in user guide | P1 | `docs/02-user-guide/BATCH_AUTO_APPLY.md` | ⬜ |
+| Document session refresh cadence in user guide | P1 | `docs/02-user-guide/BATCH_AUTO_APPLY.md` | ✅ |
 
 ### 4.3 Apply adapters — critical path
 
-**Current state:** Greenhouse and Lever can return `submitted` when confirmation is detected (flag-gated). LinkedIn/Indeed apply still `needs_manual`.
+**Current state:** Greenhouse, Lever, and LinkedIn Easy Apply can return `submitted` when confirmation is detected (flag-gated). Indeed apply still stub/`needs_manual`.
 
 | Task | Priority | Files | Target | Status |
 |------|----------|-------|--------|--------|
 | Greenhouse: complete Submit click + confirmation detection | P0 | `apply_adapters/greenhouse.py` | First `submitted` adapter | ✅ |
 | Lever: complete Submit click + confirmation detection | P1 | `apply_adapters/lever.py` | `submitted` | ✅ |
-| LinkedIn Easy Apply: multi-step form automation | P1 | `apply_adapters/linkedin.py` | `submitted` or `needs_manual` with proof | ⬜ |
+| LinkedIn Easy Apply: multi-step form automation | P1 | `apply_adapters/linkedin.py` | `submitted` or `needs_manual` with proof | ✅ |
 | Indeed Apply: implement (currently explicit stub) | P2 | `apply_adapters/indeed.py` | `submitted` or `needs_manual` | ⬜ |
 | Ashby apply adapter | P2 | New `apply_adapters/ashby.py` | `needs_manual` minimum | ⬜ |
 | Adapter integration tests with mocked Playwright | P0 | `tests/test_apply_adapters.py` | Assert `submitted` path | ✅ |
 | Batch completion: handle `partial_failure` with retry UI | P1 | `apply_batch_service.py`, batch detail template | ✅ |
 ### 4.4 Discovery expansion
 
-| Task | Priority | Files |
-|------|----------|-------|
-| Ashby discovery connector | P2 | New `discovery/ashby.py`, register in `__init__.py` |
-| Adzuna connector tests | P1 | `tests/test_adzuna_connector.py` |
-| Remotive + RSS connector tests | P2 | `tests/test_remotive_connector.py`, `tests/test_rss_connector.py` |
-| Company blocklist CRUD UI + API | P1 | New routes, `jobs/api.py`, template |
-| Celery beat: verify scheduled discovery runs | P1 | `celery_config.py`, `job_tasks.py` |
+| Task | Priority | Files | Status |
+|------|----------|-------|--------|
+| Ashby discovery connector | P2 | New `discovery/ashby.py`, register in `__init__.py` | ⬜ |
+| Adzuna connector tests | P1 | `tests/test_adzuna_connector.py` | ✅ |
+| Remotive + RSS connector tests | P2 | `tests/test_remotive_connector.py`, `tests/test_rss_connector.py` | ⬜ |
+| Company blocklist CRUD UI + API | P1 | New routes, `jobs/api.py`, template | ⬜ |
+| Celery beat: verify scheduled discovery runs | P1 | `celery_config.py`, `job_tasks.py` | ⬜ |
 
 ### 4.5 LLM
 
@@ -439,7 +439,7 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 - [x] `DAILY_APPLY_CAP` enforced in `apply_batch_service.py`
 - [x] Audit log entry for every automated submission (`auto_submit` activity)
 - [x] Kill switch via `AUTOMATION_DISABLED` env (restart required; shown in Admin → Settings)
-- [ ] Scrape rate limits enforced with Redis in Docker deployments
+- [x] Scrape rate limits enforced with Redis in Docker deployments (`SCRAPE_USE_REDIS=true` in compose)
 - [ ] True no-restart admin toggle (DB/file flag) — deferred; env kill switch covers ops for now
 
 ### 4.7 Exit criteria
