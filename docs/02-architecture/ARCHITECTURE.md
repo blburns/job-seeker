@@ -112,6 +112,9 @@ flowchart TB
 - `users` — Profile, settings, security
 - `admin` — RBAC management, monitoring, developer sitemap
 
+**Archived (not registered):** legacy CRM and account demo modules live under
+`app/modules/ARCHIVE/` — see that folder's README. They are not loaded at runtime.
+
 ### 3. Business Logic Layer
 
 **Services** (`app/services/`) — See [JOB_SEEKER_SERVICES.md](JOB_SEEKER_SERVICES.md) for full reference.

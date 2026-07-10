@@ -65,7 +65,7 @@ Legend: ✅ Complete · 🟡 Partial · ❌ Missing · 🚫 Stub / not functiona
 
 | Feature | Status | Key files | Gap |
 |---------|--------|-----------|-----|
-| PDF/DOCX upload + parse | ✅ | `resume_parser_service.py`, `routes.py` | Edge-case PDFs untested |
+| PDF/DOCX upload + parse | ✅ | `resume_parser_service.py`, `routes.py` | Multi-column warning + table fallback |
 | Manual profile CRUD | ✅ | `profile_form_service.py`, templates | — |
 | ATS DOCX export | ✅ | `resume_export_service.py` | — |
 | ATS parse-test | ✅ | `resume_export_service.py` | — |
@@ -81,7 +81,7 @@ Legend: ✅ Complete · 🟡 Partial · ❌ Missing · 🚫 Stub / not functiona
 | RSS discovery | ✅ | `discovery/rss_connector.py` | Untested |
 | Search profiles | ✅ | `JobSearchProfile` model, routes | — |
 | Discovery inbox | ✅ | `discovery_orchestrator.py` | — |
-| Keyword analysis | ✅ | `keyword_service.py` | Unit tests added; tuning still P2 |
+| Keyword analysis | ✅ | `keyword_service.py` | Section-weighted extraction |
 | Posting DELETE | ✅ | `jobs/api.py`, `routes.py` | Soft delete |
 | Company blocklist UI | ❌ | `CompanyBlocklist` model only | Orchestrator uses it; no CRUD UI |
 | Job detail enrichment | 🟡 | `job_detail_enrichment.py` | Indeed/LinkedIn fragile |
@@ -340,16 +340,14 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 
 #### P2 — Nice to have for phase exit
 
-- [ ] **Resume parser edge cases**
+- [x] **Resume parser edge cases**
   - Multi-column PDF detection warning
   - Table extraction fallback
-  - File: `app/services/resume_parser_service.py`
-  - Deferred to Phase 8 / post-1.0
+  - File: `app/services/resume_parser_service.py` (2026-07-10)
 
-- [ ] **Keyword tuning**
-  - Review extraction for common JD formats (bullet lists, skills sections)
-  - File: `app/services/keyword_service.py`
-  - Deferred to Phase 8
+- [x] **Keyword tuning**
+  - Prefer Requirements/Skills sections and bullet lists; filter JD fluff
+  - File: `app/services/keyword_service.py` (2026-07-10)
 
 - [x] **Link credentials page from settings**
   - Added under Applications submenu
@@ -359,11 +357,10 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
   - `POST /api/v1/applications/<id>/notes`
   - File: `app/modules/applications/api.py`
 
-- [ ] **Archive legacy CRM code**
-  - Move `app/modules/crm/`, unregistered `app/modules/account/` to `ARCHIVE/`
-  - Update docs to note removal
+- [x] **Archive legacy CRM code**
+  - Moved `app/modules/crm/` and `app/modules/account/` to `app/modules/ARCHIVE/`
+  - See `app/modules/ARCHIVE/README.md`
   - No functional change (already unregistered)
-  - Deferred to Phase 8
 
 ### 3.3 Exit criteria
 
