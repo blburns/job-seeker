@@ -190,15 +190,22 @@ def download_resume(application_id):
 @apply_bp.route('/credentials')
 @login_required
 def credentials_list():
+    from app.services.scraping.session_health import session_health
+
     creds = credential_vault_service.list_credentials(current_user.id)
     active_portals = {
         portal: credential_vault_service.has_active(current_user.id, portal)
         for portal in ('linkedin', 'indeed', 'greenhouse', 'lever')
     }
+    session_health_labels = {
+        str(cred.id): session_health.credential_health_label(cred)
+        for cred in creds
+    }
     return render_template(
         'modules/apply/credentials.html',
         credentials=creds,
         active_portals=active_portals,
+        session_health_labels=session_health_labels,
         encryption_key_configured=credential_vault_service.encryption_key_configured(),
     )
 

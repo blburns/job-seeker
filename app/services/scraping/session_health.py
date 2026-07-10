@@ -1,6 +1,7 @@
 """Portal session health checks."""
 
 import logging
+from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from app.services.credential_vault_service import credential_vault_service
@@ -14,8 +15,41 @@ PORTAL_CHECK_URLS = {
     'indeed': 'https://www.indeed.com/',
 }
 
+# How long a successful session check is considered valid for UI display.
+SESSION_VALIDITY = timedelta(days=7)
+
+REAUTH_HINTS = {
+    ScrapeStatus.AUTH_REQUIRED: (
+        'Session expired or logged out. Re-export Playwright storage_state '
+        'and replace the credential at Portal Credentials.'
+    ),
+    ScrapeStatus.CAPTCHA: (
+        'Security checkpoint detected. Complete verification in a headed browser, '
+        're-export storage_state, and update Portal Credentials.'
+    ),
+    ScrapeStatus.BLOCKED: (
+        'Portal blocked this session. Wait, try headed Chrome, then re-export '
+        'and update Portal Credentials if needed.'
+    ),
+}
+
 
 class SessionHealthService:
+    @classmethod
+    def reauth_message(cls, portal: str, status: ScrapeStatus, detail: str = '') -> str:
+        """User-facing guidance when scrape/auth fails."""
+        hint = REAUTH_HINTS.get(status, 'Session check failed. Update Portal Credentials and retry.')
+        label = {
+            'linkedin': 'LinkedIn',
+            'indeed': 'Indeed',
+            'greenhouse': 'Greenhouse',
+            'lever': 'Lever',
+        }.get((portal or '').lower(), (portal or 'Portal').title())
+        base = f'{label}: {hint}'
+        if detail and detail not in base:
+            return f'{base} ({detail})'
+        return base
+
     @classmethod
     def check(cls, user_id, portal: str, credentials: Optional[Dict[str, Any]] = None) -> ScrapeResult:
         if credentials is None:
@@ -64,15 +98,40 @@ class SessionHealthService:
         cred = PortalCredential.query.filter_by(
             user_id=user_id, portal=portal, is_active=True, is_deleted=False
         ).order_by(PortalCredential.created_at.desc()).first()
-        if cred and not result.ok and result.status in (
+        if not cred:
+            return result
+
+        now = datetime.utcnow()
+        if result.ok:
+            cred.last_used_at = now
+            cred.expires_at = now + SESSION_VALIDITY
+            db.session.commit()
+            return result
+
+        if result.status in (
             ScrapeStatus.AUTH_REQUIRED, ScrapeStatus.CAPTCHA, ScrapeStatus.BLOCKED
         ):
-            # Do not auto-deactivate — user can delete and re-add from credentials UI.
+            # Mark expired so the credentials UI prompts re-auth. Do not soft-delete.
+            cred.expires_at = now
+            db.session.commit()
             logger.warning(
                 'Session check failed for %s (user=%s): %s',
                 portal, user_id, result.message,
             )
+            result.message = cls.reauth_message(portal, result.status, result.message)
         return result
+
+    @classmethod
+    def credential_health_label(cls, cred) -> str:
+        """UI label: healthy | expired | untested | inactive."""
+        if not getattr(cred, 'is_active', True):
+            return 'inactive'
+        expires = getattr(cred, 'expires_at', None)
+        if expires is None:
+            return 'untested'
+        if expires <= datetime.utcnow():
+            return 'expired'
+        return 'healthy'
 
 
 session_health = SessionHealthService()
