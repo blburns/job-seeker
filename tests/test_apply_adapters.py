@@ -164,3 +164,36 @@ def test_lever_run_on_page_submitted(tmp_path, monkeypatch):
     result = adapter._run_on_page(page, _context(job_url='https://jobs.lever.co/acme/1'), str(tmp_path / 'p.png'))
     assert result.status == 'submitted'
     assert result.success is True
+
+
+def test_linkedin_detect_confirmation():
+    assert LinkedInAdapter.detect_confirmation(
+        'https://www.linkedin.com/jobs/view/1/',
+        'Your application was submitted successfully.',
+    )
+    assert not LinkedInAdapter.detect_confirmation(
+        'https://www.linkedin.com/jobs/view/1/',
+        'Easy Apply to this job',
+    )
+
+
+def test_linkedin_run_on_page_needs_manual_without_easy_apply(tmp_path, monkeypatch):
+    monkeypatch.setenv('LINKEDIN_AUTO_APPLY_ENABLED', 'true')
+    monkeypatch.setenv('APPLY_AUTOMATION_ENABLED', 'true')
+    adapter = LinkedInAdapter()
+    page = MagicMock()
+    page.url = 'https://www.linkedin.com/jobs/view/1/'
+    page.inner_text.return_value = 'Apply on company website'
+    page.locator.return_value.first.count.return_value = 0
+    page.locator.return_value.first.click.side_effect = Exception('missing')
+
+    result = adapter._run_on_page(
+        page,
+        _context(
+            job_url='https://www.linkedin.com/jobs/view/1/',
+            portal_credentials={'storage_state': {'cookies': [], 'origins': []}},
+        ),
+        str(tmp_path / 'li.png'),
+    )
+    assert result.status == 'needs_manual'
+    assert 'Easy Apply' in result.message
