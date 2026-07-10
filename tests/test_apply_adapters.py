@@ -140,3 +140,27 @@ def test_submit_application_uses_registry(monkeypatch):
     monkeypatch.setenv('APPLY_AUTOMATION_ENABLED', 'false')
     result = submit_application(_context())
     assert result.status in ('needs_manual', 'failed', 'submitted')
+
+
+def test_lever_can_handle():
+    from app.services.apply_adapters.lever import LeverAdapter
+    adapter = LeverAdapter()
+    assert adapter.can_handle('https://jobs.lever.co/acme/abc')
+    assert not adapter.can_handle('https://example.com')
+
+
+def test_lever_run_on_page_submitted(tmp_path, monkeypatch):
+    from app.services.apply_adapters.lever import LeverAdapter
+
+    monkeypatch.setenv('APPLY_AUTOMATION_ENABLED', 'true')
+    adapter = LeverAdapter()
+    page = MagicMock()
+    page.url = 'https://jobs.lever.co/acme/thanks'
+    page.inner_text.return_value = 'Thank you for applying'
+    loc = MagicMock()
+    loc.count.return_value = 1
+    page.locator.return_value.first = loc
+
+    result = adapter._run_on_page(page, _context(job_url='https://jobs.lever.co/acme/1'), str(tmp_path / 'p.png'))
+    assert result.status == 'submitted'
+    assert result.success is True
