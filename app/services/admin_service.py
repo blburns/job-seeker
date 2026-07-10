@@ -973,6 +973,31 @@ class AdminService:
                 ('Log level', get_('LOG_LEVEL') or '—'),
                 ('Log file', get_('LOG_FILE') or '—'),
             ],
+            'automation': [
+                (
+                    'Apply automation enabled',
+                    yes_no(os.getenv('APPLY_AUTOMATION_ENABLED', 'false').lower() in ('true', '1', 'yes')),
+                ),
+                (
+                    'Automation kill switch (AUTOMATION_DISABLED)',
+                    'ON — all auto-submit blocked'
+                    if os.getenv('AUTOMATION_DISABLED', 'false').lower() in ('true', '1', 'yes')
+                    else 'Off',
+                ),
+                ('Daily apply cap', os.getenv('DAILY_APPLY_CAP', '25')),
+                (
+                    'LinkedIn scrape',
+                    yes_no(os.getenv('LINKEDIN_SCRAPE_ENABLED', 'false').lower() in ('true', '1', 'yes')),
+                ),
+                (
+                    'Indeed scrape',
+                    yes_no(os.getenv('INDEED_SCRAPE_ENABLED', 'false').lower() in ('true', '1', 'yes')),
+                ),
+                (
+                    'OpenAI API key',
+                    'Set' if os.getenv('OPENAI_API_KEY') else 'Not set (heuristic tailoring)',
+                ),
+            ],
         }
 
     # ============================================================================
