@@ -403,17 +403,17 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 
 ### 4.3 Apply adapters — critical path
 
-**Current state:** Greenhouse can return `submitted` when confirmation is detected (flag-gated). Lever/LinkedIn/Indeed still `needs_manual`.
+**Current state:** Greenhouse and Lever can return `submitted` when confirmation is detected (flag-gated). LinkedIn/Indeed apply still `needs_manual`.
 
 | Task | Priority | Files | Target | Status |
 |------|----------|-------|--------|--------|
 | Greenhouse: complete Submit click + confirmation detection | P0 | `apply_adapters/greenhouse.py` | First `submitted` adapter | ✅ |
-| Lever: complete Submit click + confirmation detection | P1 | `apply_adapters/lever.py` | `submitted` | ⬜ |
+| Lever: complete Submit click + confirmation detection | P1 | `apply_adapters/lever.py` | `submitted` | ✅ |
 | LinkedIn Easy Apply: multi-step form automation | P1 | `apply_adapters/linkedin.py` | `submitted` or `needs_manual` with proof | ⬜ |
 | Indeed Apply: implement (currently explicit stub) | P2 | `apply_adapters/indeed.py` | `submitted` or `needs_manual` | ⬜ |
 | Ashby apply adapter | P2 | New `apply_adapters/ashby.py` | `needs_manual` minimum | ⬜ |
 | Adapter integration tests with mocked Playwright | P0 | `tests/test_apply_adapters.py` | Assert `submitted` path | ✅ |
-| Batch completion: handle `partial_failure` with retry UI | P1 | `apply_batch_service.py`, batch detail template | ⬜ |
+| Batch completion: handle `partial_failure` with retry UI | P1 | `apply_batch_service.py`, batch detail template | ✅ |
 ### 4.4 Discovery expansion
 
 | Task | Priority | Files |
@@ -426,20 +426,21 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 
 ### 4.5 LLM
 
-| Task | Priority | Files |
-|------|----------|-------|
-| Implement Anthropic provider in `llm_service` | P2 | `app/services/llm_service.py` |
-| Or: remove `ANTHROPIC_API_KEY` from `is_configured()` if not implementing | P2 | `app/services/llm_service.py` |
-| LLM fallback messaging in tailoring UI when no API key | P1 | `tailoring_review.html` |
+| Task | Priority | Files | Status |
+|------|----------|-------|--------|
+| Implement Anthropic provider in `llm_service` | P2 | `app/services/llm_service.py` | ⬜ Deferred |
+| Or: remove `ANTHROPIC_API_KEY` from `is_configured()` if not implementing | P2 | `app/services/llm_service.py` | ✅ |
+| LLM fallback messaging in tailoring UI when no API key | P1 | `tailoring_review.html` | ✅ |
 
 ### 4.6 Safety gates (non-negotiable)
 
 - [x] Auto-apply flags default `false` in `env.example`
 - [x] Human batch approval required
 - [x] `DAILY_APPLY_CAP` enforced in `apply_batch_service.py`
-- [ ] Audit log entry for every automated submission
-- [ ] Admin toggle to disable all automation without restart
+- [x] Audit log entry for every automated submission (`auto_submit` activity)
+- [x] Kill switch via `AUTOMATION_DISABLED` env (restart required; shown in Admin → Settings)
 - [ ] Scrape rate limits enforced with Redis in Docker deployments
+- [ ] True no-restart admin toggle (DB/file flag) — deferred; env kill switch covers ops for now
 
 ### 4.7 Exit criteria
 
