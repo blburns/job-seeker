@@ -32,6 +32,8 @@ services:
       LINKEDIN_SCRAPE_ENABLED: "false"
       INDEED_SCRAPE_ENABLED: "false"
       SCRAPE_RATE_LIMIT_PER_HOUR: "20"
+      # Shared rate limits across web + celery workers
+      SCRAPE_USE_REDIS: "true"
     volumes:
       - .:/app
     depends_on:
@@ -51,6 +53,7 @@ services:
       DB_PASSWORD: jobseeker
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+      SCRAPE_USE_REDIS: "true"
     volumes:
       - .:/app
     depends_on:
@@ -73,6 +76,7 @@ services:
       DB_PASSWORD: jobseeker
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+      SCRAPE_USE_REDIS: "true"
     volumes:
       - .:/app
     depends_on:

@@ -50,6 +50,23 @@ This opens the portal in Chrome, waits for you to log in, and saves session cook
 
 Credentials are encrypted at rest using Fernet encryption.
 
+### Session refresh cadence
+
+Portal sessions expire. Plan to refresh them regularly:
+
+| Portal | Typical refresh | When to re-export |
+|--------|-----------------|-------------------|
+| LinkedIn | Every 3–7 days | Test Session shows **Re-auth needed**, discovery fails with checkpoint/login errors, or `expires_at` is past |
+| Indeed | Weekly or after blocks | Headed scrape blocked, or Test Session fails |
+
+Recommended habit:
+
+1. Before a discovery or batch day, open **Portal Credentials** and click **Test Session**
+2. If status is **Re-auth needed** or **Untested**, re-run `export_playwright_storage.py` and replace the credential
+3. After a successful test, status shows **Healthy** for about 7 days (`expires_at`)
+
+Emergency stop: set `AUTOMATION_DISABLED=true` and restart to block all automated submits.
+
 ## Supported Portals
 
 | Portal | Auto-apply flag | Scrape flag | Notes |
@@ -148,8 +165,9 @@ For Playwright-based submissions, screenshots are saved to `instance/scrape_proo
 2. **Start with one application** — Submit manually first to verify the portal works
 3. **Review readiness carefully** — Failed submissions waste daily cap slots
 4. **Check proofs** — Verify screenshots match expected submission
-5. **Monitor partial failures** — Retry failed items manually or in a new batch
+5. **Monitor partial failures** — Use **Retry Failed Items** on the batch detail page, or finish manually
 6. **Indeed needs headed Chrome** — Ensure `INDEED_PLAYWRIGHT_HEADLESS=false`
+7. **Docker uses Redis rate limits** — Compose sets `SCRAPE_USE_REDIS=true` so web and Celery share caps
 
 ## Troubleshooting
 
