@@ -132,6 +132,17 @@ def update_posting(posting_id):
     return jsonify(posting.to_dict())
 
 
+@jobs_api_bp.route('/postings/<uuid:posting_id>', methods=['DELETE'])
+@login_required
+def delete_posting(posting_id):
+    posting = JobPosting.query.filter_by(
+        id=posting_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    posting.soft_delete()
+    db.session.commit()
+    return jsonify({'success': True, 'id': str(posting.id)})
+
+
 @jobs_api_bp.route('/discover/rss', methods=['POST'])
 @login_required
 def discover_rss():

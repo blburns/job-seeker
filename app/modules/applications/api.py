@@ -124,6 +124,7 @@ def tailor_resume(application_id):
         export_filename=filename,
     )
     db.session.add(version)
+    db.session.flush()
     app_record.resume_version_id = version.id
     app_record.stage = ApplicationStage.TAILORING.value
     db.session.commit()
@@ -165,3 +166,38 @@ def get_application(application_id):
         result['resume_version'] = app_record.resume_version.to_dict()
         result['resume_version']['tailored_data'] = app_record.resume_version.tailored_data
     return jsonify(result)
+
+
+@applications_api_bp.route('/<uuid:application_id>', methods=['DELETE'])
+@login_required
+def delete_application(application_id):
+    app_record = Application.query.filter_by(
+        id=application_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    app_record.soft_delete()
+    db.session.commit()
+    return jsonify({'success': True, 'id': str(app_record.id)})
+
+
+@applications_api_bp.route('/<uuid:application_id>/notes', methods=['POST'])
+@login_required
+def save_notes_api(application_id):
+    from app.services.activity_service import activity_service
+
+    app_record = Application.query.filter_by(
+        id=application_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    data = request.get_json() or {}
+    notes = (data.get('notes') or '').strip()
+    previous = (app_record.notes or '').strip()
+    app_record.notes = notes or None
+    if notes != previous:
+        activity_service.log(
+            app_record.id,
+            current_user.id,
+            'note',
+            subject='Notes updated',
+            description=notes[:200] if notes else 'Notes cleared',
+        )
+    db.session.commit()
+    return jsonify(app_record.to_dict())

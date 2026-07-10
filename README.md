@@ -32,7 +32,6 @@ python -m venv venv && source venv/bin/activate
 pip install -r requirements/requirements.txt -r requirements/requirements-jobs.txt
 playwright install chromium   # or use PLAYWRIGHT_CHANNEL=chrome with Google Chrome installed
 python scripts/init_database.py
-python scripts/create_jobs_schema.py
 python scripts/create_dev_user.py   # admin@example.com / admin123
 python run.py
 ```
@@ -41,8 +40,9 @@ Open http://localhost:5000 and log in.
 
 **Local dev does not require Redis, Celery, or Docker.** Discovery runs in the Flask process when you click "Run discovery" on a search profile.
 
-### Docker (optional)
+`python scripts/init_database.py` creates auth **and** the full jobs schema. `create_jobs_schema.py` is still safe to run (idempotent) for upgrades.
 
+### Docker (optional)
 For production-style deployments with Redis, Celery workers, and scheduled discovery:
 
 ```bash
@@ -104,7 +104,7 @@ See [ATS export rules](docs/05-reference/ATS_EXPORT_RULES.md).
 
 ## Version
 
-v0.2.0 — Phase 2: Core Services
+v0.3.0 — Phase 3: Job Seeker Core (complete); Phase 4 planned
 
 ## License
 

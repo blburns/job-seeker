@@ -226,6 +226,18 @@ def detail(application_id):
     )
 
 
+@applications_bp.route('/<uuid:application_id>/delete', methods=['POST'])
+@login_required
+def delete_application(application_id):
+    app_record = Application.query.filter_by(
+        id=application_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    app_record.soft_delete()
+    db.session.commit()
+    flash('Application deleted.', 'success')
+    return redirect(url_for('applications.list_view'))
+
+
 @applications_bp.route('/<uuid:application_id>/notes', methods=['POST'])
 @login_required
 def save_notes(application_id):
@@ -386,6 +398,7 @@ def tailor(application_id):
         export_filename=filename,
     )
     db.session.add(version)
+    db.session.flush()
     app_record.resume_version_id = version.id
     app_record.stage = ApplicationStage.TAILORING.value
     apply_draft_service.ensure_draft(

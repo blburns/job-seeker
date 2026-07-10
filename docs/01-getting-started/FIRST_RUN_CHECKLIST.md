@@ -112,6 +112,8 @@ python scripts/check_database_tables.py
 
 If any jobs tables are missing:
 ```bash
+python scripts/init_database.py
+# or (idempotent upgrade path):
 python scripts/create_jobs_schema.py
 ```
 
@@ -192,7 +194,7 @@ You're ready to use the application. Next steps:
 
 | Symptom | Fix |
 |---------|-----|
-| Tables missing | `python scripts/create_jobs_schema.py` |
+| Tables missing | `python scripts/init_database.py` |
 | Upload fails | Check file is PDF/DOCX; check logs |
 | Tailoring empty | Ensure active master profile exists |
 | Styles broken | Check `app/static/` assets present |

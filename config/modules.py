@@ -82,6 +82,13 @@ MODULES = [
             {'name': 'queue', 'display_name': 'Apply Queue', 'route': 'apply_queue', 'icon': 'queue'},
             {'name': 'batches', 'display_name': 'Apply Batches', 'route': 'batches_list', 'icon': 'batch'},
             {'name': 'new', 'display_name': 'New Application', 'route': 'new_application', 'icon': 'add'},
+            {
+                'name': 'credentials',
+                'display_name': 'Portal Credentials',
+                'route': 'credentials_list',
+                'icon': 'key',
+                'blueprint_name': 'apply',
+            },
         ]
     },
     {
@@ -166,6 +173,7 @@ ICONS = {
     'inbox': 'tabler-inbox',
     'queue': 'tabler-list-check',
     'batch': 'tabler-stack-2',
+    'key': 'tabler-key',
 }
 
 COLOR_CLASSES = {

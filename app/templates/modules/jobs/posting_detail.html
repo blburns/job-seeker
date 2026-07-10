@@ -28,6 +28,13 @@
     <i class="icon-base ti tabler-send me-1"></i>Create Application
   </a>
   {% endif %}
+  <form method="post" action="{{ url_for('jobs.posting_delete', posting_id=posting.id) }}" class="d-inline"
+        onsubmit="return confirm('Delete this job posting?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-danger btn-sm">
+      <i class="icon-base ti tabler-trash me-1"></i>Delete
+    </button>
+  </form>
 {% endcall %}
 
 {% if existing_application %}

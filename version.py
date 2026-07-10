@@ -18,17 +18,17 @@ Phase-based versioning (see ROADMAP.md):
 - v1.0.0: Production Ready Release
 """
 
-__version__ = "0.2.0"
-__phase__ = "Phase 3: Job Seeker Core"
+__version__ = "0.3.0"
+__phase__ = "Phase 4: Automation Hardening"
 __phase_description__ = (
-    "Master profile, discovery, tailoring, apply drafts, pipeline, and analytics; "
-    "stabilization and exit criteria in progress"
+    "Playwright scraping reliability, apply adapters that can submit, "
+    "and portal credential health"
 )
-__phase_status__ = "IN_PROGRESS"
+__phase_status__ = "PLANNED"
 __phase_completion_date__ = None
-__last_completed_phase__ = "Phase 2: Core Services & Infrastructure"
-__last_completed_version__ = "0.2.0"
-__last_completed_date__ = "2026-07-04"
+__last_completed_phase__ = "Phase 3: Job Seeker Core"
+__last_completed_version__ = "0.3.0"
+__last_completed_date__ = "2026-07-10"
 
 # Version metadata
 VERSION_INFO = {
@@ -41,7 +41,7 @@ VERSION_INFO = {
     "last_completed_version": __last_completed_version__,
     "last_completed_date": __last_completed_date__,
     "major": 0,
-    "minor": 2,
+    "minor": 3,
     "patch": 0,
     "is_prerelease": True,
     "is_development": True,
@@ -74,14 +74,14 @@ def get_version_info():
 
 def is_phase_complete(phase_number):
     """Check if a specific phase is complete"""
-    # Phases 1–2 complete; Phase 3+ not yet exited
-    completed = {1, 2}
+    # Phases 1–3 complete; Phase 4+ not yet exited
+    completed = {1, 2, 3}
     return phase_number in completed
 
 
 def get_next_version():
     """Get the next version for the next completed phase"""
-    return "0.3.0"
+    return "0.4.0"
 
 
 def get_roadmap():
@@ -103,7 +103,7 @@ def get_roadmap():
         },
         "v0.3.0": {
             "phase": "Phase 3: Job Seeker Core",
-            "status": "IN_PROGRESS",
+            "status": "COMPLETED",
             "description": (
                 "Master profile, discovery, tailoring, apply drafts, pipeline, analytics"
             ),

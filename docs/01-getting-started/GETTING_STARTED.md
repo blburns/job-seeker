@@ -62,13 +62,13 @@ PLAYWRIGHT_CHANNEL=chrome
 
 ### 4. Initialize database
 
-**Both scripts are required:**
-
 ```bash
-python scripts/init_database.py      # auth + core tables
-python scripts/create_jobs_schema.py # discovery, credentials, batches
+python scripts/init_database.py
 ```
 
+This creates **auth + full jobs schema** (discovery, credentials, batches, etc.) in one step.
+
+`python scripts/create_jobs_schema.py` remains safe to run afterward (idempotent) for upgrades.
 ### 5. Create admin user
 
 ```bash
@@ -221,11 +221,11 @@ python scripts/migrate_jobs_automation.py
 
 | Issue | Solution |
 |-------|----------|
-| Database tables missing | Run both `init_database.py` and `create_jobs_schema.py` |
+| Database tables missing | Run `python scripts/init_database.py` |
+| Discovery features fail | Re-run `init_database.py` or `create_jobs_schema.py` |
 | Import errors | Activate venv; install `requirements.txt` + `requirements-jobs.txt` |
 | Port in use | `FLASK_RUN_PORT=5001 python run.py` |
 | Playwright not found | `playwright install chromium` |
-| Discovery features fail | Run `create_jobs_schema.py` |
 
 See [Troubleshooting Guide](../04-operations/TROUBLESHOOTING.md) for more.
 

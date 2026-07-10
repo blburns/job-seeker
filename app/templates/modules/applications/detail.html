@@ -24,6 +24,13 @@
     <i class="icon-base ti tabler-list-details me-1"></i>Tailoring Review
   </a>
   {% endif %}
+  <form method="post" action="{{ url_for('applications.delete_application', application_id=application.id) }}" class="d-inline"
+        onsubmit="return confirm('Delete this application?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-danger btn-sm">
+      <i class="icon-base ti tabler-trash me-1"></i>Delete
+    </button>
+  </form>
 {% endcall %}
 
 {% if version %}

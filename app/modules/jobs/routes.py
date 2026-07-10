@@ -215,6 +215,18 @@ def posting_detail(posting_id):
     )
 
 
+@jobs_bp.route('/postings/<uuid:posting_id>/delete', methods=['POST'])
+@login_required
+def posting_delete(posting_id):
+    posting = JobPosting.query.filter_by(
+        id=posting_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    posting.soft_delete()
+    db.session.commit()
+    flash('Job posting deleted.', 'success')
+    return redirect(url_for('jobs.postings_list'))
+
+
 @jobs_bp.route('/postings/<uuid:posting_id>/refresh-details', methods=['POST'])
 @login_required
 def posting_refresh_details(posting_id):

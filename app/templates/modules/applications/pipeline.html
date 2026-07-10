@@ -47,6 +47,16 @@ new jKanban({
   <a href="{{ url_for('applications.list_view') }}" class="btn btn-outline-primary btn-sm">List View</a>
   <a href="{{ url_for('applications.new_application') }}" class="btn btn-primary btn-sm">New Application</a>
 {% endcall %}
+{% set total_apps = pipeline.summary.total if pipeline and pipeline.summary else 0 %}
+{% if total_apps == 0 %}
+<div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+  <i class="icon-base ti tabler-info-circle me-2"></i>
+  <div class="flex-grow-1">
+    No applications yet. Add a job posting and create an application to start tracking your pipeline.
+  </div>
+  <a href="{{ url_for('applications.new_application') }}" class="btn btn-sm btn-primary ms-3">New Application</a>
+</div>
+{% endif %}
 <div class="card">
   <div class="card-body">
     <div id="kanban-board" class="kanban-board"></div>
