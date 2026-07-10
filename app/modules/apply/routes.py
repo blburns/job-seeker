@@ -106,11 +106,18 @@ def regenerate_cover_letter(application_id):
     db.session.commit()
 
     if result.get('ok'):
-        flash('Cover letter regenerated.', 'success')
+        if result.get('retried'):
+            flash(
+                f'Cover letter regenerated after {result.get("attempts", "?")} attempt(s) '
+                '(automatic retries handled a temporary rate limit).',
+                'success',
+            )
+        else:
+            flash('Cover letter regenerated.', 'success')
     elif result.get('rate_limited'):
         flash(
-            'AI rate limit hit (Gemini free tier). Your previous cover letter was kept — '
-            'wait about a minute, then try Regenerate again.',
+            'AI rate limit persisted after automatic retries. Your previous cover letter was kept — '
+            'wait a couple of minutes, then try Regenerate again.',
             'warning',
         )
     else:

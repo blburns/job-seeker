@@ -242,7 +242,7 @@
         <div class="flex-grow-1">
           <strong class="js-wait-title">Generating cover letter…</strong>
           <div class="small mt-1 js-wait-detail">
-            Contacting the AI provider. On Gemini free tier this can take a while, and rate limits may pause the request.
+            Contacting the AI provider. On Gemini free tier we automatically retry when rate-limited — keep this tab open.
           </div>
           <div class="small text-muted mt-2">
             Elapsed: <span class="js-wait-elapsed">0</span>s
@@ -264,12 +264,13 @@
   if (window.__coverLetterRegenBound) return;
   window.__coverLetterRegenBound = true;
 
-  var MESSAGES = [
-    'Contacting the AI provider…',
-    'Still working — free-tier models can be slow under load.',
-    'If the free-tier quota is busy, this may take longer or need a retry.',
-    'Almost there — keep this tab open while the letter is generated.',
-  ];
+    var MESSAGES = [
+      'Contacting the AI provider…',
+      'Still working — free-tier models can be slow under load.',
+      'Rate limited? We retry automatically — no need to click again.',
+      'Waiting for the next retry window (this can take a minute or two)…',
+      'Keep this tab open — retries continue until the letter is ready or attempts are exhausted.',
+    ];
 
   document.addEventListener('submit', function (event) {
     var form = event.target;
