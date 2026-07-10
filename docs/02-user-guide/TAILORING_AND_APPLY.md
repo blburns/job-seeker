@@ -185,7 +185,7 @@ Without an API key, the app uses heuristic fallbacks:
 - Summary variant selection by keyword overlap
 - Experience/skills reordering by keyword relevance
 
-Set `GEMINI_API_KEY` or `OPENAI_API_KEY` for natural bullet rephrasing. Use **Reject** on any bad edit.
+With an LLM configured, bullet inserts still require **Approved Tailoring Keywords** on the master profile. JD terms not on that list are never woven into bullets. Use **Reject** on any bad edit.
 
 ## Tips
 
@@ -201,9 +201,10 @@ Set `GEMINI_API_KEY` or `OPENAI_API_KEY` for natural bullet rephrasing. Use **Re
 | Issue | Solution |
 |-------|----------|
 | Tailoring seems unchanged | Check if master profile has relevant experience for the JD |
-| Low keyword coverage | Add skills to master profile; rephrase bullets manually in review |
+| Low keyword coverage | Add skills / approved keywords on master profile; reject bad inserts; edit cover letter |
+| No bullet edits after tailor | Add terms under **Approved Tailoring Keywords** on the master profile |
 | ATS score dropped | Ensure all sections present; check for exotic characters |
-| Cover letter generic | Configure OPENAI_API_KEY; edit manually; regenerate |
+| Cover letter generic | Configure GEMINI_API_KEY or OPENAI_API_KEY; edit manually; regenerate |
 | Can't approve | Ensure tailoring completed; check for pending_approval status |
 
 ## Related Docs

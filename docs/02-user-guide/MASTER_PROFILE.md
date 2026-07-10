@@ -148,18 +148,22 @@ Download DOCX from profile detail or from the apply review page after tailoring.
   "skills": {
     "technical": ["Python", "PostgreSQL", "AWS"],
     "certifications": ["AWS Solutions Architect"]
-  }
+  },
+  "approved_keywords": ["Kubernetes", "CI/CD", "Terraform"]
 }
 ```
+
+`approved_keywords` is an allowlist for tailoring: JD terms may only be woven into bullets when they appear here. They are **not** printed as their own resume section. Leave the list empty to disable keyword insertion entirely.
 
 ## Tips
 
 1. **Upload the simplest format** — Single-column resumes parse best
 2. **Review immediately after upload** — Fix parsing errors before saving
 3. **Add summary variants** — Tailoring selects the best variant per job
-4. **Keep skills comprehensive** — More skills = better keyword coverage
-5. **Run parse-test after edits** — Verify ATS score stays above 70
-6. **One active profile** — Ensure the right profile is active before discovery or tailoring
+4. **Keep skills comprehensive** — More skills = better keyword coverage on the exported resume
+5. **Curate approved keywords** — Only list terms you can honestly claim; this gates bullet inserts
+6. **Run parse-test after edits** — Verify ATS score stays above 70
+7. **One active profile** — Ensure the right profile is active before discovery or tailoring
 
 ## Troubleshooting
 

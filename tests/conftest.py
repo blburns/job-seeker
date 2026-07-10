@@ -106,4 +106,5 @@ def sample_master_profile():
             'technical': ['Python', 'Flask', 'SQL', 'AWS'],
             'certifications': [],
         },
+        'approved_keywords': [],
     }

@@ -38,6 +38,7 @@ class ProfileFormService:
                 'how_did_you_hear': 'Job board',
             },
             'skills': {'technical': '', 'soft': '', 'certifications': ''},
+            'approved_keywords': '',
             'experience': [cls._empty_experience_row()],
             'education': [cls._empty_education_row()],
             'projects': [],
@@ -136,6 +137,7 @@ class ProfileFormService:
                 'soft': ', '.join(skills.get('soft') or []),
                 'certifications': ', '.join(skills.get('certifications') or []),
             },
+            'approved_keywords': ', '.join(profile_data.get('approved_keywords') or []),
             'experience': experience,
             'education': education,
             'projects': projects,
@@ -253,6 +255,7 @@ class ProfileFormService:
                 'soft': _csv_list(form.get('skills_soft', '')),
                 'certifications': _csv_list(form.get('skills_certifications', '')),
             },
+            'approved_keywords': _csv_list(form.get('approved_keywords', '')),
             'projects': projects,
         }
         return profile

@@ -65,10 +65,47 @@ class TailoringService:
         if skill_diff:
             diff_log.append(skill_diff)
 
-        bullet_diffs = cls._rephrase_bullets(tailored, missing[:cls.MAX_BULLET_CHANGES])
+        bullet_diffs = cls._rephrase_bullets(
+            tailored,
+            cls.filter_insertable_keywords(missing, master_data)[:cls.MAX_BULLET_CHANGES],
+        )
         diff_log.extend(bullet_diffs)
 
         return tailored, diff_log
+
+    @classmethod
+    def approved_keyword_set(cls, profile_data: Dict[str, Any]) -> set:
+        """Normalized allowlist of keywords the user authorizes for bullet inserts."""
+        return {
+            str(kw).strip().lower()
+            for kw in (profile_data.get('approved_keywords') or [])
+            if str(kw).strip()
+        }
+
+    @classmethod
+    def filter_insertable_keywords(
+        cls,
+        missing_keywords: List[str],
+        profile_data: Dict[str, Any],
+    ) -> List[str]:
+        """
+        Only JD keywords the user approved may be woven into bullets.
+
+        Empty approved_keywords → no inserts (avoids inventing claims).
+        """
+        allow = cls.approved_keyword_set(profile_data)
+        if not allow:
+            return []
+        insertable = []
+        for kw in missing_keywords:
+            lower = (kw or '').strip().lower()
+            if not lower:
+                continue
+            if lower in allow or any(
+                lower in approved or approved in lower for approved in allow
+            ):
+                insertable.append(kw)
+        return insertable
 
     @classmethod
     def _role_label(cls, entry: Dict[str, Any]) -> str:

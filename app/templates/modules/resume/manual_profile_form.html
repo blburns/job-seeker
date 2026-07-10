@@ -158,7 +158,7 @@
         <div class="col-12">
           <label class="form-label" for="skills_technical">Technical Skills</label>
           <textarea class="form-control" id="skills_technical" name="skills_technical" rows="2" placeholder="Python, Flask, PostgreSQL, AWS, Docker">{{ form.skills.technical }}</textarea>
-          <small class="text-muted">Comma-separated. These power keyword matching and tailoring.</small>
+          <small class="text-muted">Comma-separated. Shown on the exported resume and used for keyword matching.</small>
         </div>
         <div class="col-md-6">
           <label class="form-label" for="skills_soft">Soft Skills</label>
@@ -167,6 +167,15 @@
         <div class="col-md-6">
           <label class="form-label" for="skills_certifications">Certifications</label>
           <textarea class="form-control" id="skills_certifications" name="skills_certifications" rows="2" placeholder="AWS Solutions Architect, PMP">{{ form.skills.certifications }}</textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="approved_keywords">Approved Tailoring Keywords</label>
+          <textarea class="form-control" id="approved_keywords" name="approved_keywords" rows="2" placeholder="Kubernetes, CI/CD, GraphQL, Terraform">{{ form.approved_keywords }}</textarea>
+          <small class="text-muted">
+            Terms you are comfortable claiming that may not already appear in bullets.
+            Tailoring will only weave JD keywords into bullets when they appear here.
+            Leave empty to skip keyword insertion (safer — no invented claims).
+          </small>
         </div>
       </div>
     </div>
