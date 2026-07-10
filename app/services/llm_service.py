@@ -1,4 +1,4 @@
-"""LLM service with provider abstraction and structured JSON outputs."""
+"""LLM service with OpenAI + Google AI Studio (Gemini) providers and heuristic fallback."""
 
 import json
 import logging
@@ -10,16 +10,53 @@ logger = logging.getLogger(__name__)
 
 
 class LLMService:
-    """OpenAI-compatible LLM wrapper with heuristic fallback."""
+    """Multi-provider LLM wrapper (OpenAI, Gemini) with heuristic fallback."""
+
+    @classmethod
+    def provider(cls) -> Optional[str]:
+        """Return active provider name: 'openai', 'gemini', or None."""
+        forced = (os.getenv('LLM_PROVIDER') or '').strip().lower()
+        has_openai = bool(os.getenv('OPENAI_API_KEY', '').strip())
+        has_gemini = bool(
+            os.getenv('GEMINI_API_KEY', '').strip()
+            or os.getenv('GOOGLE_API_KEY', '').strip()
+        )
+        if forced in ('openai', 'gemini'):
+            if forced == 'openai' and has_openai:
+                return 'openai'
+            if forced == 'gemini' and has_gemini:
+                return 'gemini'
+            return None
+        # auto: prefer Gemini when configured, else OpenAI
+        if has_gemini:
+            return 'gemini'
+        if has_openai:
+            return 'openai'
+        return None
 
     @classmethod
     def is_configured(cls) -> bool:
-        # OpenAI is the only implemented provider. ANTHROPIC_API_KEY is reserved for later.
-        return bool(os.getenv('OPENAI_API_KEY'))
+        return cls.provider() is not None
 
     @classmethod
     def using_heuristic_fallback(cls) -> bool:
         return not cls.is_configured()
+
+    @classmethod
+    def _gemini_api_key(cls) -> str:
+        return (
+            os.getenv('GEMINI_API_KEY', '').strip()
+            or os.getenv('GOOGLE_API_KEY', '').strip()
+        )
+
+    @classmethod
+    def _chat(cls, messages: List[Dict[str, str]], json_mode: bool = False) -> str:
+        provider = cls.provider()
+        if provider == 'gemini':
+            return cls._gemini_chat(messages, json_mode=json_mode)
+        if provider == 'openai':
+            return cls._openai_chat(messages, json_mode=json_mode)
+        raise RuntimeError('No LLM provider configured')
 
     @classmethod
     def _openai_chat(cls, messages: List[Dict[str, str]], json_mode: bool = False) -> str:
@@ -41,6 +78,60 @@ class LLMService:
         return resp.json()['choices'][0]['message']['content']
 
     @classmethod
+    def _gemini_chat(cls, messages: List[Dict[str, str]], json_mode: bool = False) -> str:
+        """Call Google AI Studio Generative Language API (Gemini)."""
+        import requests
+
+        api_key = cls._gemini_api_key()
+        if not api_key:
+            raise RuntimeError('GEMINI_API_KEY / GOOGLE_API_KEY not configured')
+
+        model = os.getenv('GEMINI_MODEL', 'gemini-2.0-flash')
+        # Convert OpenAI-style messages to Gemini contents.
+        # System messages are folded into the first user turn.
+        system_bits: List[str] = []
+        contents: List[Dict[str, Any]] = []
+        for msg in messages:
+            role = (msg.get('role') or 'user').lower()
+            text = msg.get('content') or ''
+            if role == 'system':
+                system_bits.append(text)
+                continue
+            gemini_role = 'model' if role == 'assistant' else 'user'
+            if system_bits and gemini_role == 'user':
+                text = '\n\n'.join(system_bits + [text])
+                system_bits = []
+            contents.append({'role': gemini_role, 'parts': [{'text': text}]})
+        if system_bits and not contents:
+            contents.append({'role': 'user', 'parts': [{'text': '\n\n'.join(system_bits)}]})
+
+        body: Dict[str, Any] = {
+            'contents': contents,
+            'generationConfig': {'temperature': 0.2},
+        }
+        if json_mode:
+            body['generationConfig']['responseMimeType'] = 'application/json'
+
+        url = (
+            f'https://generativelanguage.googleapis.com/v1beta/models/'
+            f'{model}:generateContent'
+        )
+        resp = requests.post(
+            url,
+            params={'key': api_key},
+            headers={'Content-Type': 'application/json'},
+            json=body,
+            timeout=60,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        try:
+            parts = data['candidates'][0]['content']['parts']
+            return ''.join(part.get('text', '') for part in parts).strip()
+        except (KeyError, IndexError, TypeError) as exc:
+            raise RuntimeError(f'Unexpected Gemini response: {data}') from exc
+
+    @classmethod
     def rephrase_bullet(cls, bullet_text: str, keyword: str, job_title: str = '') -> str:
         if not cls.is_configured():
             if keyword.lower() in bullet_text.lower():
@@ -53,9 +144,9 @@ class LLMService:
             f'Return only the rephrased bullet text.\n\nBullet: {bullet_text}'
         )
         try:
-            return cls._openai_chat([{'role': 'user', 'content': prompt}]).strip()
+            return cls._chat([{'role': 'user', 'content': prompt}]).strip()
         except Exception as exc:
-            logger.warning('LLM rephrase failed: %s', exc)
+            logger.warning('LLM rephrase failed (%s): %s', cls.provider(), exc)
             return bullet_text
 
     @classmethod
@@ -81,9 +172,9 @@ class LLMService:
             f'{json.dumps(profile_data)[:4000]}. Job description excerpt: {job_description[:2000]}'
         )
         try:
-            return cls._openai_chat([{'role': 'user', 'content': prompt}])
+            return cls._chat([{'role': 'user', 'content': prompt}])
         except Exception as exc:
-            logger.warning('LLM cover letter failed: %s', exc)
+            logger.warning('LLM cover letter failed (%s): %s', cls.provider(), exc)
             return ''
 
     @classmethod
@@ -109,7 +200,7 @@ class LLMService:
             f'suggest 3 coaching tips (do not invent experience). Return JSON: {{"tips": []}}'
         )
         try:
-            raw = cls._openai_chat(
+            raw = cls._chat(
                 [{'role': 'user', 'content': prompt + json.dumps(profile_data)[:3000]}],
                 json_mode=True,
             )

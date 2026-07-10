@@ -994,8 +994,33 @@ class AdminService:
                     yes_no(os.getenv('INDEED_SCRAPE_ENABLED', 'false').lower() in ('true', '1', 'yes')),
                 ),
                 (
+                    'LLM provider',
+                    (
+                        'Gemini (Google AI Studio)'
+                        if (
+                            (os.getenv('LLM_PROVIDER', 'auto').lower() == 'gemini'
+                             and (os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')))
+                            or (
+                                os.getenv('LLM_PROVIDER', 'auto').lower() in ('auto', '')
+                                and (os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY'))
+                            )
+                        )
+                        else (
+                            'OpenAI'
+                            if os.getenv('OPENAI_API_KEY')
+                            else 'None (heuristic)'
+                        )
+                    ),
+                ),
+                (
                     'OpenAI API key',
-                    'Set' if os.getenv('OPENAI_API_KEY') else 'Not set (heuristic tailoring)',
+                    'Set' if os.getenv('OPENAI_API_KEY') else 'Not set',
+                ),
+                (
+                    'Gemini / Google AI Studio key',
+                    'Set'
+                    if (os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY'))
+                    else 'Not set',
                 ),
             ],
         }

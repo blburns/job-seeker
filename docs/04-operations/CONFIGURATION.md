@@ -495,7 +495,11 @@ DISCOVERY_RATE_LIMIT_PER_HOUR=100
 ```env
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o-mini
-ANTHROPIC_API_KEY=          # Checked but not yet implemented
+# Or use Google AI Studio / Gemini instead (preferred when set):
+# GEMINI_API_KEY=...   # from https://aistudio.google.com/apikey
+# GEMINI_MODEL=gemini-2.0-flash
+# LLM_PROVIDER=auto    # auto | gemini | openai
+ANTHROPIC_API_KEY=          # Reserved / not implemented
 ```
 
 Without `OPENAI_API_KEY`, tailoring uses heuristic fallbacks (no configuration needed).

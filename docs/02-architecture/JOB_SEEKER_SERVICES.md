@@ -249,7 +249,7 @@ OpenAI-compatible LLM wrapper with heuristic fallback when no API key is configu
 | **Inputs** | Prompts for bullet rephrasing, cover letter generation |
 | **Outputs** | Rephrased text, cover letter draft |
 | **Called by** | `tailoring_service`, `apply_draft_service` |
-| **Env** | `OPENAI_API_KEY`, `OPENAI_MODEL` (default `gpt-4o-mini`) |
+| **Env** | `GEMINI_API_KEY` / `GOOGLE_API_KEY` + `GEMINI_MODEL`, or `OPENAI_API_KEY` + `OPENAI_MODEL`; `LLM_PROVIDER=auto\|gemini\|openai` |
 
 Without API keys, uses rule-based fallbacks (simple keyword insertion, template cover letters).
 

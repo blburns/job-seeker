@@ -47,8 +47,9 @@
 {% if not llm_configured %}
 <div class="alert alert-info mb-4" role="status">
   <strong>Heuristic tailoring mode.</strong>
-  No <code>OPENAI_API_KEY</code> is set, so keyword insertion uses rule-based rewrites instead of LLM rephrasing.
-  Cover letters use a short template. Set the key in <code>.env</code> and restart for richer edits.
+  No LLM API key is set, so keyword insertion uses rule-based rewrites instead of model rephrasing.
+  Cover letters use a short template. Set <code>GEMINI_API_KEY</code> (Google AI Studio) or
+  <code>OPENAI_API_KEY</code> in <code>.env</code> and restart for richer edits.
 </div>
 {% endif %}
 
