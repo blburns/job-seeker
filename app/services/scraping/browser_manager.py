@@ -80,8 +80,8 @@ class BrowserManager:
             return True
         if portal_override in ('false', '0', 'no'):
             return False
-        # Indeed serves a bot block page to headless Chromium.
-        if portal == 'indeed':
+        # Indeed and MyGreenhouse often fail in headless Chromium.
+        if portal in ('indeed', 'greenhouse'):
             return False
         return os.getenv('PLAYWRIGHT_HEADLESS', 'true').lower() == 'true'
 
@@ -107,16 +107,31 @@ class BrowserManager:
 
         if 'authwall' in lower_url or ('login' in lower_url and 'linkedin.com' in lower_url):
             return ScrapeResult.failure(ScrapeStatus.AUTH_REQUIRED, 'Login required', url=url)
-        if 'my.greenhouse.io' in lower_url and (
-            'sign in' in visible[:3000]
-            or 'enter your email' in visible[:3000]
-            or 'security code' in visible[:3000]
-        ):
-            return ScrapeResult.failure(
-                ScrapeStatus.AUTH_REQUIRED,
-                'MyGreenhouse login required — export session and update Portal Credentials.',
-                url=url,
+        if 'my.greenhouse.io' in lower_url:
+            login_wall = (
+                'enter your email address to continue' in visible
+                or 'send security code' in visible
+                or ('sign in' in visible[:1500] and 'looking for your organization' in visible)
             )
+            # Logged-in jobs UI usually has search/results chrome, not the email OTP gate.
+            logged_in = any(
+                marker in visible
+                for marker in (
+                    'saved jobs',
+                    'job alerts',
+                    'applications',
+                    'filter by',
+                    'sort by',
+                )
+            ) or ('/jobs' in lower_url and 'query=' in lower_url and not login_wall)
+            if login_wall and not logged_in:
+                return ScrapeResult.failure(
+                    ScrapeStatus.AUTH_REQUIRED,
+                    'MyGreenhouse login required — export a fresh session with '
+                    'python scripts/export_playwright_storage.py greenhouse '
+                    'and replace the credential.',
+                    url=url,
+                )
         if 'checkpoint' in lower_url or 'challenge' in lower_url:
             return ScrapeResult.failure(
                 ScrapeStatus.CAPTCHA,

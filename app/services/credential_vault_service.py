@@ -94,6 +94,8 @@ class CredentialVaultService:
             label=label or portal,
             encrypted_data=encrypted,
             is_active=True,
+            expires_at=None,
+            last_used_at=None,
         )
         db.session.add(cred)
         db.session.commit()

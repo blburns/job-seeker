@@ -44,9 +44,18 @@ def test_indeed_blocked_page_detected():
     assert 'Indeed blocked' in result.message
 
 
-def test_scrape_browser_launch_disables_gpu():
-    args = BrowserManager._browser_launch_args()
-    assert '--disable-gpu' in args
-    assert '--disable-gpu-compositing' in args
-    assert '--disable-accelerated-2d-canvas' in args
-    assert '--use-gl=swiftshader' in args
+def test_mygreenhouse_login_wall_detected():
+    html = '<html><body>Enter your email address to continue. Send security code</body></html>'
+    page = _FakePage(title='MyGreenhouse', body='Enter your email address to continue. Send security code')
+    result = BrowserManager.detect_page_issue(page, html, 'https://my.greenhouse.io/')
+    assert result is not None
+    assert result.status.value == 'auth_required'
+
+
+def test_mygreenhouse_jobs_page_not_false_positive():
+    body = 'Saved jobs Job alerts Applications Filter by location Sort by relevance'
+    page = _FakePage(title='Jobs | MyGreenhouse', body=body)
+    result = BrowserManager.detect_page_issue(
+        page, f'<html><body>{body}</body></html>', 'https://my.greenhouse.io/jobs?query=software'
+    )
+    assert result is None

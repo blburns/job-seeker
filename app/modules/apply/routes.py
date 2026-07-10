@@ -201,11 +201,13 @@ def credentials_list():
         str(cred.id): session_health.credential_health_label(cred)
         for cred in creds
     }
+    needs_reauth = any(label == 'expired' for label in session_health_labels.values())
     return render_template(
         'modules/apply/credentials.html',
         credentials=creds,
         active_portals=active_portals,
         session_health_labels=session_health_labels,
+        needs_reauth=needs_reauth,
         encryption_key_configured=credential_vault_service.encryption_key_configured(),
     )
 
@@ -219,6 +221,21 @@ def credentials_test(portal):
         flash(f'{portal.title()} session is valid.', 'success')
     else:
         flash(f'{portal.title()} session check failed: {result.message}', 'danger')
+    return redirect(url_for('apply.credentials_list'))
+
+
+@apply_bp.route('/credentials/<portal>/reset-health', methods=['POST'])
+@login_required
+def credentials_reset_health(portal):
+    from app.services.scraping.session_health import session_health
+    if session_health.clear_health(current_user.id, portal):
+        flash(
+            f'{portal.title()} health reset to Untested. '
+            'Replace the session JSON if needed, then click Test Session.',
+            'info',
+        )
+    else:
+        flash(f'No active {portal} credential to reset.', 'warning')
     return redirect(url_for('apply.credentials_list'))
 
 
