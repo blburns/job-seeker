@@ -17,8 +17,19 @@ class TailoringDiffService:
         return {}
 
     @classmethod
-    def get_changes(cls, diff_log: Optional[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
-        return [c for c in (diff_log or []) if not cls.is_meta(c)]
+    def get_changes(
+        cls,
+        diff_log: Optional[List[Dict[str, Any]]],
+        include_rejected: bool = False,
+    ) -> List[Dict[str, Any]]:
+        changes = []
+        for change in diff_log or []:
+            if cls.is_meta(change):
+                continue
+            if change.get('rejected') and not include_rejected:
+                continue
+            changes.append(change)
+        return changes
 
     @classmethod
     def summarize(cls, diff_log: Optional[List[Dict[str, Any]]]) -> Dict[str, Any]:
@@ -29,6 +40,10 @@ class TailoringDiffService:
             for change in changes
             if change.get('keyword_added')
         ]
+        rejected_count = sum(
+            1 for change in (diff_log or [])
+            if not cls.is_meta(change) and change.get('rejected')
+        )
         return {
             'total_changes': len(changes),
             'rephrased_bullets': counts.get('rephrase', 0),
@@ -36,6 +51,7 @@ class TailoringDiffService:
             'summary_updates': counts.get('select_variant', 0),
             'field_updates': counts.get('set', 0),
             'keywords_added': keywords_added,
+            'rejected_changes': rejected_count,
         }
 
     @classmethod

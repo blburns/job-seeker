@@ -330,25 +330,39 @@
 </div>
 {% endmacro %}
 
-{% macro render_diff_log(diff_log, filter_action='') %}
-{% set changes = diff_log or [] %}
-{% if filter_action %}
-  {% set changes = changes | selectattr('action', 'equalto', filter_action) | list %}
-{% endif %}
-{% if changes %}
+{% macro render_diff_log(diff_log, filter_action='', application=None, can_reject=false, active_tab='changes') %}
+{% set all_changes = diff_log or [] %}
+{% set ns = namespace(shown=false) %}
+{% if all_changes %}
 <div class="list-group list-group-flush tailoring-diff-list">
-  {% for change in changes %}
+  {% for change in all_changes %}
+    {% set change_index = loop.index0 %}
     {% if not (change.get('_meta') or change.field == '_meta') %}
-    {% if not (change.action == 'set' and change.field == 'headline' and change.old == change.new) %}
-    <div class="list-group-item px-0 py-3">
+    {% if not filter_action or change.action == filter_action %}
+    {% if not (change.action == 'set' and change.field == 'headline' and change.old == change.new and not change.rejected) %}
+    {% set ns.shown = true %}
+    <div class="list-group-item px-0 py-3 {% if change.rejected %}opacity-75{% endif %}">
       <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
         <span class="badge bg-label-primary">{{ diff_action_label(change) }}</span>
         <strong class="small">{{ diff_field_label(change) }}</strong>
         {% if change.role %}
         <span class="badge bg-label-secondary">{{ change.role }}</span>
         {% endif %}
-        {% if change.keyword_added %}
+        {% if change.keyword_added and not change.rejected %}
         <span class="badge bg-label-warning">+ {{ change.keyword_added }}</span>
+        {% endif %}
+        {% if change.rejected %}
+        <span class="badge bg-label-danger">Rejected</span>
+        {% endif %}
+        {% if can_reject and application and not change.rejected %}
+        <form method="post" action="{{ url_for('applications.reject_tailoring_change', application_id=application.id) }}" class="ms-auto">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="change_index" value="{{ change_index }}">
+          <input type="hidden" name="tab" value="{{ active_tab }}">
+          <button type="submit" class="btn btn-sm btn-outline-danger" title="Restore original text for this change">
+            Reject
+          </button>
+        </form>
         {% endif %}
       </div>
 
@@ -358,16 +372,22 @@
         <del class="text-muted small">{{ change.old }}</del>
       </div>
       <div class="tailoring-diff-block">
-        <span class="text-muted small d-block mb-1">After</span>
-        <span class="small">{{ change.new }}</span>
+        <span class="text-muted small d-block mb-1">{% if change.rejected %}Rejected after{% else %}After{% endif %}</span>
+        <span class="small {% if change.rejected %}text-muted text-decoration-line-through{% endif %}">{{ change.new }}</span>
       </div>
+      {% if change.rejected %}
+      <div class="small text-success mt-1">Restored: {{ change.old }}</div>
+      {% endif %}
 
       {% elif change.action == 'set' and change.old is not none and change.new is not none %}
       <div class="small">
         <span class="text-muted">{{ change.old or '—' }}</span>
         <i class="icon-base ti tabler-arrow-right mx-1 text-muted"></i>
-        <span>{{ change.new }}</span>
+        <span class="{% if change.rejected %}text-decoration-line-through text-muted{% endif %}">{{ change.new }}</span>
       </div>
+      {% if change.rejected %}
+      <div class="small text-success mt-1">Restored: {{ change.old or '—' }}</div>
+      {% endif %}
 
       {% elif change.action == 'select_variant' %}
       {% if change.old %}
@@ -379,8 +399,11 @@
       {% if change.new %}
       <div class="tailoring-diff-block">
         <span class="text-muted small d-block mb-1">Selected summary</span>
-        <span class="small">{{ change.new[:300] }}{% if change.new|length > 300 %}…{% endif %}</span>
+        <span class="small {% if change.rejected %}text-decoration-line-through text-muted{% endif %}">{{ change.new[:300] }}{% if change.new|length > 300 %}…{% endif %}</span>
       </div>
+      {% endif %}
+      {% if change.rejected %}
+      <div class="small text-success mt-1">Restored previous summary</div>
       {% endif %}
 
       {% elif change.action == 'reorder' and change.field == 'skills.technical' %}
@@ -388,6 +411,9 @@
         <span class="text-muted">Was:</span> {{ (change.old or [])|join(', ') or '—' }}<br>
         <span class="text-muted">Now:</span> {{ (change.new or [])|join(', ') or '—' }}
       </div>
+      {% if change.rejected %}
+      <div class="small text-success mt-1">Restored original skills order</div>
+      {% endif %}
 
       {% elif change.action == 'reorder' and change.field == 'experience' %}
       {% if change.old_labels and change.new_labels %}
@@ -396,6 +422,9 @@
       {% else %}
       <p class="small text-muted mb-0">Experience entries reordered to prioritize roles matching job keywords.</p>
       {% endif %}
+      {% if change.rejected %}
+      <div class="small text-success mt-1">Restored original experience order</div>
+      {% endif %}
 
       {% else %}
       <p class="small text-muted mb-0">{{ change.action }} — {{ change.field }}</p>
@@ -403,8 +432,12 @@
     </div>
     {% endif %}
     {% endif %}
+    {% endif %}
   {% endfor %}
 </div>
+{% if not ns.shown %}
+<p class="text-muted mb-0">No tailoring changes match this filter.</p>
+{% endif %}
 {% else %}
 <p class="text-muted mb-0">No tailoring changes match this filter.</p>
 {% endif %}

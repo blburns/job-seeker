@@ -59,9 +59,21 @@ Open `/applications/<id>/tailoring` for the full review interface.
 | **Overview** | Change summary, keyword impact score, ATS score |
 | **Resume** | Rendered preview of tailored resume |
 | **Cover Letter** | Generated cover letter draft |
-| **Changes** | Detailed diff log — every field change with before/after |
+| **Changes** | Detailed diff log — every field change with before/after; **Reject** restores the original |
 | **Compare** | Side-by-side master profile vs tailored version |
 | **Keywords** | Matched, missing, and synonym-matched keywords |
+| **Bullet edits** | Rephrase-only view with per-change **Reject** |
+
+### Reject a change
+
+On **All changes** or **Bullet edits** (while the version is still `pending_approval`):
+
+1. Click **Reject** next to any inaccurate edit
+2. That field is restored to the pre-tailor text
+3. The DOCX preview is regenerated
+4. Rejected entries stay in the log (marked Rejected) for audit
+
+You can reject bullets, headline, summary selection, and reorder changes individually before approving.
 
 ### Diff log
 
@@ -168,15 +180,16 @@ OPENAI_MODEL=gpt-4o-mini
 ```
 
 Without an API key, the app uses heuristic fallbacks:
-- Simple keyword insertion in bullets
+- Bullet keyword insertion is **skipped** (avoids inventing claims like “including X”)
 - Template-based cover letters
 - Summary variant selection by keyword overlap
+- Experience/skills reordering by keyword relevance
 
-Heuristic tailoring is functional but less nuanced than LLM tailoring.
+Set `GEMINI_API_KEY` or `OPENAI_API_KEY` for natural bullet rephrasing. Use **Reject** on any bad edit.
 
 ## Tips
 
-1. **Review the diff log carefully** — Verify no facts were misrepresented
+1. **Review the diff log carefully** — Reject any change that misrepresents experience
 2. **Check ATS score** — Should be ≥ 70 after tailoring
 3. **Edit cover letter** — Always personalize before submitting
 4. **Save draft before downloading** — Ensures latest edits are captured

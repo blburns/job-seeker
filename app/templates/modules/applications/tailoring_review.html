@@ -47,9 +47,17 @@
 {% if not llm_configured %}
 <div class="alert alert-info mb-4" role="status">
   <strong>Heuristic tailoring mode.</strong>
-  No LLM API key is set, so keyword insertion uses rule-based rewrites instead of model rephrasing.
+  No LLM API key is set, so keyword insertion into bullets is skipped (to avoid inventing claims).
   Cover letters use a short template. Set <code>GEMINI_API_KEY</code> (Google AI Studio) or
   <code>OPENAI_API_KEY</code> in <code>.env</code> and restart for richer edits.
+  On the <strong>All changes</strong> or <strong>Bullet edits</strong> tab, use <strong>Reject</strong>
+  to undo any individual change before approving.
+</div>
+{% else %}
+<div class="alert alert-light border mb-4" role="status">
+  Review each change on the <strong>All changes</strong> or <strong>Bullet edits</strong> tab.
+  Use <strong>Reject</strong> to restore the original text for any edit that looks inaccurate,
+  then approve when the resume looks right.
 </div>
 {% endif %}
 
@@ -104,9 +112,20 @@
         {% elif active_tab == 'keywords' %}
           {{ render_keyword_impact(keyword_impact) }}
         {% elif active_tab == 'rephrase' %}
-          {{ render_diff_log(version.diff_log or [], filter_action='rephrase') }}
+          {{ render_diff_log(
+            version.diff_log or [],
+            filter_action='rephrase',
+            application=application,
+            can_reject=version.status == 'pending_approval',
+            active_tab='rephrase',
+          ) }}
         {% else %}
-          {{ render_diff_log(version.diff_log or []) }}
+          {{ render_diff_log(
+            version.diff_log or [],
+            application=application,
+            can_reject=version.status == 'pending_approval',
+            active_tab='changes',
+          ) }}
         {% endif %}
       </div>
     </div>

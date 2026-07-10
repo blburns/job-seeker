@@ -133,10 +133,9 @@ class LLMService:
 
     @classmethod
     def rephrase_bullet(cls, bullet_text: str, keyword: str, job_title: str = '') -> str:
+        # Without an LLM, do not invent claims by appending keywords.
         if not cls.is_configured():
-            if keyword.lower() in bullet_text.lower():
-                return bullet_text
-            return f"{bullet_text.rstrip('.')}, including {keyword}." if bullet_text else bullet_text
+            return bullet_text
 
         prompt = (
             f'Rephrase this resume bullet to naturally include the keyword "{keyword}" '

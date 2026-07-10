@@ -455,6 +455,84 @@ def tailor(application_id):
     return redirect(url_for('applications.tailoring_review', application_id=application_id))
 
 
+@applications_bp.route('/<uuid:application_id>/tailoring/reject-change', methods=['POST'])
+@login_required
+def reject_tailoring_change(application_id):
+    from sqlalchemy.orm.attributes import flag_modified
+
+    app_record = Application.query.filter_by(
+        id=application_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    version = app_record.resume_version
+    if not version:
+        flash('No tailored resume to edit.', 'warning')
+        return redirect(url_for('applications.tailoring_review', application_id=application_id))
+
+    from app.models.jobs import ResumeVersionStatus
+    if version.status != ResumeVersionStatus.PENDING_APPROVAL.value:
+        flash('Only pending versions can be edited. Re-tailor to make changes.', 'warning')
+        return redirect(url_for('applications.tailoring_review', application_id=application_id))
+
+    try:
+        change_index = int(request.form.get('change_index', ''))
+    except (TypeError, ValueError):
+        flash('Invalid change selection.', 'danger')
+        return redirect(url_for('applications.tailoring_review', application_id=application_id))
+
+    try:
+        tailored, diff_log = tailoring_service.reject_change(
+            version.tailored_data or {},
+            list(version.diff_log or []),
+            change_index,
+        )
+    except ValueError as exc:
+        flash(str(exc), 'warning')
+        return redirect(
+            url_for(
+                'applications.tailoring_review',
+                application_id=application_id,
+                tab=request.form.get('tab') or 'changes',
+            )
+        )
+
+    docx_bytes, filename = resume_export_service.export_docx(tailored)
+    ats_result = resume_export_service.run_ats_parse_test(docx_bytes)
+    job = app_record.job_posting
+    jd_text = f"{job.description or ''} {job.requirements or ''}"
+    coverage = keyword_service.analyze_coverage(jd_text, tailored).get('coverage_score', 0)
+
+    version.tailored_data = tailored
+    version.diff_log = diff_log
+    version.ats_score = ats_result['score']
+    version.keyword_coverage = coverage
+    version.export_filename = filename
+    flag_modified(version, 'tailored_data')
+    flag_modified(version, 'diff_log')
+
+    apply_draft_service.ensure_draft(
+        app_record,
+        current_user.id,
+        profile_data=tailored,
+        regenerate_cover_letter=False,
+    )
+    activity_service.log(
+        app_record.id,
+        current_user.id,
+        'tailor_reject',
+        subject='Rejected a tailoring change',
+        description=f'Rejected change index {change_index}',
+    )
+    db.session.commit()
+    flash('Change rejected — original text restored.', 'success')
+    return redirect(
+        url_for(
+            'applications.tailoring_review',
+            application_id=application_id,
+            tab=request.form.get('tab') or 'changes',
+        )
+    )
+
+
 @applications_bp.route('/<uuid:application_id>/approve', methods=['POST'])
 @login_required
 def approve(application_id):

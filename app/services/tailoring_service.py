@@ -258,6 +258,86 @@ class TailoringService:
         return llm_service.generate_cover_letter(master_data, job_title, company, job_description)
 
     @classmethod
+    def reject_change(
+        cls,
+        tailored_data: Dict[str, Any],
+        diff_log: List[Dict[str, Any]],
+        change_index: int,
+    ) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
+        """Revert one diff entry in tailored_data and mark it rejected in the log."""
+        if change_index < 0 or change_index >= len(diff_log):
+            raise ValueError('Invalid change index')
+
+        change = diff_log[change_index]
+        if change.get('_meta') or change.get('field') == '_meta':
+            raise ValueError('Cannot reject metadata entries')
+        if change.get('rejected'):
+            raise ValueError('Change already rejected')
+
+        tailored = copy.deepcopy(tailored_data)
+        action = change.get('action')
+        field = change.get('field')
+
+        if action == 'rephrase' and field == 'experience.bullet':
+            cls._restore_bullet(tailored, change)
+        elif action == 'set' and field == 'headline':
+            tailored['headline'] = change.get('old') or ''
+        elif action == 'select_variant' and field == 'summary':
+            old_text = change.get('old') or ''
+            if old_text:
+                tailored['summary_variants'] = [{
+                    'id': change.get('master_ref'),
+                    'text': old_text,
+                    'tags': [],
+                }]
+                tailored['summary'] = old_text
+        elif action == 'reorder' and field == 'experience':
+            cls._restore_experience_order(tailored, change.get('old_order') or [])
+        elif action == 'reorder' and field == 'skills.technical':
+            skills = tailored.get('skills') or {}
+            if not isinstance(skills, dict):
+                skills = {'technical': [], 'certifications': []}
+            skills['technical'] = list(change.get('old') or [])
+            tailored['skills'] = skills
+        else:
+            raise ValueError(f"Cannot reject change type: {action}/{field}")
+
+        updated_log = list(diff_log)
+        updated_change = dict(change)
+        updated_change['rejected'] = True
+        updated_log[change_index] = updated_change
+        return tailored, updated_log
+
+    @classmethod
+    def _restore_bullet(cls, tailored: Dict[str, Any], change: Dict[str, Any]) -> None:
+        bullet_id = change.get('master_ref')
+        old_text = change.get('old')
+        new_text = change.get('new')
+        for entry in tailored.get('experience', []):
+            for bullet in entry.get('bullets', []):
+                if not isinstance(bullet, dict):
+                    continue
+                if bullet_id and bullet.get('id') == bullet_id:
+                    bullet['text'] = old_text if old_text is not None else bullet.get('text', '')
+                    return
+                if new_text is not None and bullet.get('text') == new_text:
+                    bullet['text'] = old_text if old_text is not None else bullet.get('text', '')
+                    return
+        raise ValueError('Could not find bullet to restore')
+
+    @classmethod
+    def _restore_experience_order(cls, tailored: Dict[str, Any], old_order: List[Any]) -> None:
+        experience = tailored.get('experience') or []
+        if not old_order or not experience:
+            return
+        by_id = {entry.get('id'): entry for entry in experience if entry.get('id')}
+        restored = [by_id[entry_id] for entry_id in old_order if entry_id in by_id]
+        # Keep any entries missing from old_order at the end
+        seen = set(old_order)
+        restored.extend(entry for entry in experience if entry.get('id') not in seen)
+        tailored['experience'] = restored
+
+    @classmethod
     def validate_diff(cls, diff_log: List[Dict[str, Any]], master_data: Dict[str, Any]) -> List[str]:
         """Ensure all changes reference valid master profile IDs."""
         errors = []
@@ -268,6 +348,8 @@ class TailoringService:
                     master_bullet_ids.add(bullet['id'])
 
         for change in diff_log:
+            if change.get('rejected'):
+                continue
             ref = change.get('master_ref')
             if change.get('field') == 'experience.bullet' and ref and ref not in master_bullet_ids:
                 errors.append(f"Orphan bullet reference: {ref}")
