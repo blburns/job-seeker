@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 WARM_UP_URLS = {
     'linkedin': 'https://www.linkedin.com/feed/',
     'indeed': 'https://www.indeed.com/',
+    'greenhouse': 'https://my.greenhouse.io/jobs',
 }
 
 # Phrases on visible challenge pages — not script bundle names like "recaptcha".
@@ -106,6 +107,16 @@ class BrowserManager:
 
         if 'authwall' in lower_url or ('login' in lower_url and 'linkedin.com' in lower_url):
             return ScrapeResult.failure(ScrapeStatus.AUTH_REQUIRED, 'Login required', url=url)
+        if 'my.greenhouse.io' in lower_url and (
+            'sign in' in visible[:3000]
+            or 'enter your email' in visible[:3000]
+            or 'security code' in visible[:3000]
+        ):
+            return ScrapeResult.failure(
+                ScrapeStatus.AUTH_REQUIRED,
+                'MyGreenhouse login required — export session and update Portal Credentials.',
+                url=url,
+            )
         if 'checkpoint' in lower_url or 'challenge' in lower_url:
             return ScrapeResult.failure(
                 ScrapeStatus.CAPTCHA,

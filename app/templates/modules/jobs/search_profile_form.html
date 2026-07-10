@@ -63,8 +63,14 @@
           </div>
         </div>
         <div class="col-12">
-          <label class="form-label" for="greenhouse_boards">Greenhouse Boards (comma-separated tokens or URLs)</label>
-          <input type="text" id="greenhouse_boards" name="greenhouse_boards" class="form-control" value="{{ (profile.greenhouse_boards or [])|join(', ') if profile else '' }}" placeholder="stripe, airbnb">
+          <label class="form-label" for="greenhouse_boards">Greenhouse Boards</label>
+          <input type="text" id="greenhouse_boards" name="greenhouse_boards" class="form-control" value="{{ (profile.greenhouse_boards or [])|join(', ') if profile else '' }}" placeholder="stripe, airbnb, my">
+          <small class="text-muted">
+            Company boards: tokens from <code>boards.greenhouse.io/&#123;token&#125;</code> (public API, no login).
+            Aggregated search: add <code>my</code> to query <a href="https://my.greenhouse.io/jobs?query=" target="_blank" rel="noopener">MyGreenhouse</a>
+            (requires Portal Credentials — export with <code>python scripts/export_playwright_storage.py greenhouse</code>).
+            Do not paste the MyGreenhouse URL as a board token.
+          </small>
         </div>
         <div class="col-12">
           <label class="form-label" for="lever_boards">Lever Boards (comma-separated)</label>

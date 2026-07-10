@@ -46,7 +46,7 @@ Configure:
 |--------|------|---------------------|
 | `adzuna` | API | `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` in `.env` |
 | `remotive` | API | None (public API) |
-| `greenhouse` | API | Board slugs in search profile (e.g. `["stripe", "airbnb"]`) |
+| `greenhouse` | API + optional MyGreenhouse | Company board tokens (e.g. `stripe`) **or** `my` for [MyGreenhouse](https://my.greenhouse.io/jobs?query=) search (requires portal credentials) |
 | `lever` | API | Board slugs in search profile (e.g. `["netflix", "dropbox"]`) |
 | `rss` | RSS feeds | Feed URLs in search profile |
 | `indeed` | Playwright scrape | Portal credentials, `INDEED_SCRAPE_ENABLED=true` |
@@ -157,7 +157,7 @@ For Indeed/LinkedIn postings, click **Refresh Details** (`POST /jobs/postings/<i
 3. **Use keywords exclude** — Filter out "intern", "junior", or unwanted technologies
 4. **Review inbox regularly** — Discovery runs don't auto-accept; you control what enters your pipeline
 5. **Check keyword coverage on posting detail** — Before creating an application, see if the job is a good match
-6. **Greenhouse/Lever boards** — Find board slugs from company career page URLs (e.g. `boards.greenhouse.io/stripe` → slug is `stripe`)
+6. **Greenhouse boards** — Use company tokens from career URLs (`boards.greenhouse.io/stripe` → `stripe`). For aggregated search on [MyGreenhouse](https://my.greenhouse.io/jobs?query=), add `my` to the boards list and store a Greenhouse portal session (`python scripts/export_playwright_storage.py greenhouse`). Do not paste the MyGreenhouse URL as a board token.
 
 ## Troubleshooting
 

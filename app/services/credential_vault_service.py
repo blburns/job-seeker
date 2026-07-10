@@ -52,7 +52,7 @@ class CredentialVaultService:
     def validate_portal_data(cls, portal: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Ensure scraped portal credentials have a usable Playwright storage_state."""
         data = cls.normalize_credential_data(data)
-        if portal not in ('linkedin', 'indeed'):
+        if portal not in ('linkedin', 'indeed', 'greenhouse'):
             return data
 
         storage_state = data.get('storage_state')
@@ -60,6 +60,11 @@ class CredentialVaultService:
             raise ValueError(
                 'LinkedIn requires Playwright storage_state JSON '
                 '(object with "cookies" and "origins"). Paste the full export file.'
+            )
+        if portal == 'greenhouse' and not storage_state:
+            raise ValueError(
+                'MyGreenhouse requires Playwright storage_state JSON. '
+                'Run: python scripts/export_playwright_storage.py greenhouse'
             )
         if not storage_state:
             return data

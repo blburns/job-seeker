@@ -21,16 +21,20 @@ from app.services.scraping.browser_launch_args import SCRAPE_BROWSER_ARGS
 LOGIN_URLS = {
     'linkedin': 'https://www.linkedin.com/',
     'indeed': 'https://www.indeed.com/',
+    'greenhouse': 'https://my.greenhouse.io/',
 }
 
 SESSION_COOKIES = {
     'linkedin': ('li_at',),
     'indeed': ('PPID', 'CTK'),
+    # MyGreenhouse (Rails) — any of these after email OTP login
+    'greenhouse': ('_job_seeker_session', '_session_id', 'remember_user_token', '_gh_session'),
 }
 
 VERIFY_URLS = {
     'linkedin': 'https://www.linkedin.com/jobs/',
     'indeed': 'https://www.indeed.com/',
+    'greenhouse': 'https://my.greenhouse.io/jobs',
 }
 
 BROWSER_ARGS = SCRAPE_BROWSER_ARGS
@@ -93,6 +97,21 @@ def _has_session_cookie(context, portal: str) -> bool:
     required = SESSION_COOKIES[portal]
     if portal == 'linkedin':
         return 'li_at' in names
+    if portal == 'greenhouse':
+        # Prefer known session cookies; also accept any cookie on my.greenhouse.io after login
+        if any(name in names for name in required):
+            return True
+        try:
+            for cookie in context.cookies():
+                domain = (cookie.get('domain') or '').lower()
+                if 'greenhouse.io' in domain and cookie.get('name'):
+                    # Ignore analytics-only crumbs
+                    if cookie['name'].startswith(('_ga', '_gid', '_fbp', 'ajs_')):
+                        continue
+                    return True
+        except Exception:
+            pass
+        return False
     return any(name in names for name in required)
 
 
@@ -105,12 +124,16 @@ def _page_has_dns_error(page) -> bool:
 
 
 def _print_dns_help(portal: str):
-    host = 'www.linkedin.com' if portal == 'linkedin' else 'www.indeed.com'
+    host = {
+        'linkedin': 'www.linkedin.com',
+        'indeed': 'www.indeed.com',
+        'greenhouse': 'my.greenhouse.io',
+    }.get(portal, 'www.linkedin.com')
     print('\nBrowser could not resolve the portal hostname.')
     print('Try these fixes:')
     print(f'  1. Open https://{host}/ in your normal Chrome/Safari — confirm it loads')
-    print('  2. Re-run with system Chrome: PLAYWRIGHT_CHANNEL=chrome python scripts/export_playwright_storage.py linkedin')
-    print('  3. Disable VPN/proxy or add split-tunnel for LinkedIn')
+    print(f'  2. Re-run with system Chrome: PLAYWRIGHT_CHANNEL=chrome python scripts/export_playwright_storage.py {portal}')
+    print('  3. Disable VPN/proxy or add split-tunnel for the portal')
     print('  4. Flush DNS: sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder')
     print('  5. If Playwright Chromium fails, install Google Chrome and use channel=chrome')
 
@@ -150,6 +173,11 @@ def _wait_for_login(context, page, portal: str, timeout_sec: int = 600) -> bool:
 
 def _validate_state(state: dict, portal: str) -> list:
     names = {c.get('name') for c in state.get('cookies', [])}
+    if portal == 'greenhouse':
+        # Soft check — MyGreenhouse cookie names vary; warn only if zero cookies
+        if not state.get('cookies'):
+            return ['(any MyGreenhouse session cookie)']
+        return []
     return [name for name in SESSION_COOKIES[portal] if name not in names]
 
 
@@ -163,10 +191,14 @@ def export_session(portal: str, output_path: str):
         sys.exit(1)
 
     if portal not in LOGIN_URLS:
-        print(f'Unsupported portal: {portal}. Use: linkedin, indeed')
+        print(f'Unsupported portal: {portal}. Use: linkedin, indeed, greenhouse')
         sys.exit(1)
 
-    host = 'www.linkedin.com' if portal == 'linkedin' else 'www.indeed.com'
+    host = {
+        'linkedin': 'www.linkedin.com',
+        'indeed': 'www.indeed.com',
+        'greenhouse': 'my.greenhouse.io',
+    }[portal]
     if not _check_dns(host):
         print(f'\nYour machine cannot resolve {host} before the browser opens.')
         _print_dns_help(portal)

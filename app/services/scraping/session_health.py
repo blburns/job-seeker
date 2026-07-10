@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 PORTAL_CHECK_URLS = {
     'linkedin': 'https://www.linkedin.com/feed/',
     'indeed': 'https://www.indeed.com/',
+    'greenhouse': 'https://my.greenhouse.io/jobs',
 }
 
 # How long a successful session check is considered valid for UI display.
