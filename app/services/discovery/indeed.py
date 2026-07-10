@@ -63,9 +63,39 @@ class IndeedConnector:
                         url, self.source_name, user_id, credentials,
                         wait_selector='[data-jk], .job_seen_beacon',
                     )
+                    if not fetch.ok and fetch.status == ScrapeStatus.BLOCKED:
+                        logger.warning(
+                            'Indeed blocked once; retrying once after delay (headed Chrome) (%s)',
+                            url,
+                        )
+                        scrape_rate_limiter.random_delay()
+                        prev_channel = os.environ.get('PLAYWRIGHT_CHANNEL')
+                        os.environ['PLAYWRIGHT_CHANNEL'] = 'chrome'
+                        try:
+                            fetch = browser_manager.fetch_html(
+                                url, self.source_name, user_id, credentials,
+                                wait_selector='[data-jk], .job_seen_beacon',
+                            )
+                        finally:
+                            if prev_channel is None:
+                                os.environ.pop('PLAYWRIGHT_CHANNEL', None)
+                            else:
+                                os.environ['PLAYWRIGHT_CHANNEL'] = prev_channel
+
                     if not fetch.ok:
                         if fetch.status == ScrapeStatus.DISABLED:
                             return []
+                        from app.services.scraping.session_health import session_health
+                        if fetch.status in (
+                            ScrapeStatus.AUTH_REQUIRED,
+                            ScrapeStatus.CAPTCHA,
+                            ScrapeStatus.BLOCKED,
+                        ):
+                            raise DiscoverySearchError(
+                                session_health.reauth_message(
+                                    self.source_name, fetch.status, fetch.message
+                                )
+                            )
                         raise DiscoverySearchError(fetch.message)
 
                     for job in parse_search_results(fetch.html, limit=limit - len(results)):

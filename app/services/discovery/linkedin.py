@@ -60,6 +60,17 @@ class LinkedInConnector:
                         wait_selector='.jobs-search-results-list, .base-search-card',
                     )
                     if not fetch.ok:
+                        from app.services.scraping.session_health import session_health
+                        if fetch.status in (
+                            ScrapeStatus.AUTH_REQUIRED,
+                            ScrapeStatus.CAPTCHA,
+                            ScrapeStatus.BLOCKED,
+                        ):
+                            raise DiscoverySearchError(
+                                session_health.reauth_message(
+                                    self.source_name, fetch.status, fetch.message
+                                )
+                            )
                         raise DiscoverySearchError(fetch.message)
 
                     for job in parse_search_results(fetch.html, limit=limit - len(results)):
