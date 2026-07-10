@@ -90,20 +90,36 @@ def regenerate_cover_letter(application_id):
     profile = MasterProfile.query.filter_by(
         user_id=current_user.id, is_active=True, is_deleted=False
     ).first()
+    redirect_target = request.referrer or url_for('apply.review', application_id=application_id)
     if not profile:
         flash('Upload a master profile first.', 'warning')
-        return redirect(url_for('apply.review', application_id=application_id))
+        return redirect(redirect_target)
 
-    profile_data = (app_record.resume_version.tailored_data if app_record.resume_version else None) or profile.profile_data or {}
-    apply_draft_service.ensure_draft(
+    profile_data = (
+        app_record.resume_version.tailored_data if app_record.resume_version else None
+    ) or profile.profile_data or {}
+    result = apply_draft_service.regenerate_cover_letter(
         app_record,
         current_user.id,
         profile_data=profile_data,
-        regenerate_cover_letter=True,
     )
     db.session.commit()
-    flash('Cover letter regenerated.', 'success')
-    return redirect(request.referrer or url_for('apply.review', application_id=application_id))
+
+    if result.get('ok'):
+        flash('Cover letter regenerated.', 'success')
+    elif result.get('rate_limited'):
+        flash(
+            'AI rate limit hit (Gemini free tier). Your previous cover letter was kept — '
+            'wait about a minute, then try Regenerate again.',
+            'warning',
+        )
+    else:
+        flash(
+            'Could not regenerate the cover letter right now. '
+            'Your previous draft was kept — try again in a moment.',
+            'warning',
+        )
+    return redirect(redirect_target)
 
 
 @apply_bp.route('/<uuid:application_id>/download-cover-letter')

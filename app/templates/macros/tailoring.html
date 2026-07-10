@@ -194,7 +194,7 @@
 {% endmacro %}
 
 {% macro render_cover_letter(draft, application, readonly=false) %}
-<div class="card mb-4">
+<div class="card mb-4 js-cover-letter-card">
   <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
     <div>
       <h6 class="card-title mb-0">Cover letter</h6>
@@ -215,15 +215,42 @@
       {% for key, value in (draft.form_fields or {}).items() %}
       <input type="hidden" name="{{ key }}" value="{{ value }}">
       {% endfor %}
-      <textarea name="cover_letter" class="form-control font-monospace mb-3" rows="12">{{ draft.cover_letter or '' }}</textarea>
+      <textarea name="cover_letter" class="form-control font-monospace mb-3 js-cover-letter-text" rows="12">{{ draft.cover_letter or '' }}</textarea>
       <div class="d-flex flex-wrap gap-2">
         <button type="submit" class="btn btn-sm btn-primary">Save cover letter</button>
       </div>
     </form>
-    <form method="post" action="{{ url_for('apply.regenerate_cover_letter', application_id=application.id) }}" class="d-inline mt-2">
+    <form
+      method="post"
+      action="{{ url_for('apply.regenerate_cover_letter', application_id=application.id) }}"
+      class="d-inline mt-2 js-regenerate-cover-letter"
+    >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="btn btn-sm btn-outline-secondary">Regenerate with AI</button>
+      <button type="submit" class="btn btn-sm btn-outline-secondary js-regenerate-cover-btn">
+        <span class="js-regenerate-idle">
+          <i class="icon-base ti tabler-sparkles me-1"></i>Regenerate with AI
+        </span>
+        <span class="js-regenerate-busy d-none">
+          <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          Waiting for AI…
+        </span>
+      </button>
     </form>
+    <div class="alert alert-info d-none mt-3 mb-0 js-cover-letter-waiting" role="status" aria-live="polite">
+      <div class="d-flex align-items-start gap-3">
+        <div class="spinner-border spinner-border-sm text-primary mt-1" role="status" aria-hidden="true"></div>
+        <div class="flex-grow-1">
+          <strong class="js-wait-title">Generating cover letter…</strong>
+          <div class="small mt-1 js-wait-detail">
+            Contacting the AI provider. On Gemini free tier this can take a while, and rate limits may pause the request.
+          </div>
+          <div class="small text-muted mt-2">
+            Elapsed: <span class="js-wait-elapsed">0</span>s
+            · Please keep this tab open
+          </div>
+        </div>
+      </div>
+    </div>
     {% else %}
     <pre class="resume-preview mb-0">{{ draft.cover_letter or 'No cover letter yet.' }}</pre>
     {% endif %}
@@ -232,6 +259,59 @@
     {% endif %}
   </div>
 </div>
+<script>
+(function () {
+  if (window.__coverLetterRegenBound) return;
+  window.__coverLetterRegenBound = true;
+
+  var MESSAGES = [
+    'Contacting the AI provider…',
+    'Still working — free-tier models can be slow under load.',
+    'If the free-tier quota is busy, this may take longer or need a retry.',
+    'Almost there — keep this tab open while the letter is generated.',
+  ];
+
+  document.addEventListener('submit', function (event) {
+    var form = event.target;
+    if (!form || !form.classList || !form.classList.contains('js-regenerate-cover-letter')) {
+      return;
+    }
+
+    var card = form.closest('.js-cover-letter-card');
+    if (!card) return;
+
+    var btn = form.querySelector('.js-regenerate-cover-btn');
+    var idle = form.querySelector('.js-regenerate-idle');
+    var busy = form.querySelector('.js-regenerate-busy');
+    var panel = card.querySelector('.js-cover-letter-waiting');
+    var detail = panel ? panel.querySelector('.js-wait-detail') : null;
+    var elapsedEl = panel ? panel.querySelector('.js-wait-elapsed') : null;
+    var textarea = card.querySelector('.js-cover-letter-text');
+
+    if (btn) btn.disabled = true;
+    if (idle) idle.classList.add('d-none');
+    if (busy) busy.classList.remove('d-none');
+    if (panel) panel.classList.remove('d-none');
+    if (textarea) textarea.setAttribute('readonly', 'readonly');
+
+    var started = Date.now();
+    var msgIndex = 0;
+    var timer = window.setInterval(function () {
+      var seconds = Math.floor((Date.now() - started) / 1000);
+      if (elapsedEl) elapsedEl.textContent = String(seconds);
+      if (detail && seconds > 0 && seconds % 8 === 0) {
+        msgIndex = Math.min(msgIndex + 1, MESSAGES.length - 1);
+        detail.textContent = MESSAGES[msgIndex];
+      }
+      if (seconds >= 20 && panel) {
+        panel.classList.remove('alert-info');
+        panel.classList.add('alert-warning');
+      }
+    }, 1000);
+    form.dataset.waitTimer = String(timer);
+  });
+})();
+</script>
 {% endmacro %}
 
 {% macro render_keyword_impact(keyword_impact) %}

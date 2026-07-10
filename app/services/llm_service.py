@@ -238,13 +238,8 @@ class LLMService:
             f'applying to {job_title} at {company}. Use only facts from this profile: '
             f'{json.dumps(profile_data)[:4000]}. Job description excerpt: {job_description[:2000]}'
         )
-        try:
-            return cls._chat([{'role': 'user', 'content': prompt}])
-        except Exception as exc:
-            logger.warning(
-                'LLM cover letter failed (%s): %s', cls.provider(), cls._redact(str(exc))
-            )
-            return ''
+        # Let callers handle rate limits / failures (UI flashes a friendly message).
+        return cls._chat([{'role': 'user', 'content': prompt}])
 
     @classmethod
     def extract_salary(cls, description: str) -> Dict[str, Optional[float]]:
