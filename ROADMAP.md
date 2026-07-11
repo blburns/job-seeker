@@ -421,8 +421,8 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 | Ashby discovery connector | P2 | New `discovery/ashby.py`, register in `__init__.py` | ⬜ |
 | Adzuna connector tests | P1 | `tests/test_adzuna_connector.py` | ✅ |
 | Remotive + RSS connector tests | P2 | `tests/test_remotive_connector.py`, `tests/test_rss_connector.py` | ⬜ |
-| Company blocklist CRUD UI + API | P1 | New routes, `jobs/api.py`, template | ⬜ |
-| Celery beat: verify scheduled discovery runs | P1 | `celery_config.py`, `job_tasks.py` | ⬜ |
+| Company blocklist CRUD UI + API | P1 | New routes, `jobs/api.py`, template | ✅ |
+| Celery beat: verify scheduled discovery runs | P1 | `celery_config.py`, `job_tasks.py` | ✅ |
 
 ### 4.5 LLM
 
