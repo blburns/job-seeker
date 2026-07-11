@@ -197,3 +197,62 @@ def test_linkedin_run_on_page_needs_manual_without_easy_apply(tmp_path, monkeypa
     )
     assert result.status == 'needs_manual'
     assert 'Easy Apply' in result.message
+
+
+def test_indeed_can_handle():
+    from app.services.apply_adapters.indeed import IndeedAdapter
+    adapter = IndeedAdapter()
+    assert adapter.can_handle('https://www.indeed.com/viewjob?jk=abc')
+    assert not adapter.can_handle('https://linkedin.com/jobs/view/1')
+
+
+def test_indeed_disabled_without_flag(monkeypatch):
+    from app.services.apply_adapters.indeed import IndeedAdapter
+    monkeypatch.setenv('INDEED_AUTO_APPLY_ENABLED', 'false')
+    result = IndeedAdapter().submit(_context(
+        job_url='https://www.indeed.com/viewjob?jk=abc',
+        portal_credentials={'storage_state': {'cookies': [], 'origins': []}},
+    ))
+    assert result.status == 'needs_manual'
+    assert 'disabled' in result.message.lower()
+
+
+def test_indeed_run_on_page_needs_manual_with_proof(tmp_path, monkeypatch):
+    from app.services.apply_adapters.indeed import IndeedAdapter
+
+    monkeypatch.setenv('INDEED_AUTO_APPLY_ENABLED', 'true')
+    monkeypatch.setenv('APPLY_AUTOMATION_ENABLED', 'true')
+    adapter = IndeedAdapter()
+    page = MagicMock()
+    page.url = 'https://www.indeed.com/viewjob?jk=abc'
+    page.inner_text.return_value = 'Apply now to this job'
+    page.locator.return_value.first.count.return_value = 1
+    proof = str(tmp_path / 'indeed.png')
+
+    # Make screenshot create the file
+    def fake_screenshot(path=None, **_kwargs):
+        with open(path, 'wb') as fh:
+            fh.write(b'png')
+
+    page.screenshot.side_effect = fake_screenshot
+
+    result = adapter._run_on_page(
+        page,
+        _context(job_url='https://www.indeed.com/viewjob?jk=abc'),
+        proof,
+    )
+    assert result.status == 'needs_manual'
+    assert result.proof_path == proof
+    assert 'manually' in result.message.lower() or 'pre-filled' in result.message.lower()
+
+
+def test_indeed_detect_confirmation():
+    from app.services.apply_adapters.indeed import IndeedAdapter
+    assert IndeedAdapter.detect_confirmation(
+        'https://www.indeed.com/thanks',
+        '',
+    )
+    assert IndeedAdapter.detect_confirmation(
+        'https://www.indeed.com/viewjob?jk=1',
+        'Thank you for applying! We received your application.',
+    )
