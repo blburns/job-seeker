@@ -396,7 +396,8 @@ result = check_session_health(portal='linkedin', credentials=decrypted)
 |------|-------------|
 | `batch_tailor_applications` | Tailor multiple applications in background |
 | `submit_apply_batch` | Submit approved batch via adapters |
-| `run_scheduled_discovery` | Run discovery for all active search profiles |
+| `run_all_active_discoveries` | Run discovery for all active search profiles (beat every 6h) |
+| `run_discovery_for_profile` | Run discovery for a single search profile |
 
 ### Running tasks locally
 

@@ -417,7 +417,8 @@ Aggregates pipeline metrics: funnel conversion, response rates, source effective
 |------|---------|---------------|
 | `batch_tailor_applications` | User clicks batch tailor | `tailoring_service`, `apply_draft_service` |
 | `submit_apply_batch` | User approves batch | `apply_submission_service`, adapters |
-| `run_scheduled_discovery` | Celery beat schedule | `discovery_orchestrator` |
+| `run_all_active_discoveries` | Celery beat schedule (every 6h) | `discovery_orchestrator` |
+| `run_discovery_for_profile` | Manual / programmatic | `discovery_orchestrator` |
 
 **Local dev:** Discovery and tailoring run synchronously in the Flask process when Redis/Celery are not configured.
 

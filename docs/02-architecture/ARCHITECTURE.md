@@ -132,7 +132,7 @@ flowchart TB
 **Background Tasks** (`app/tasks/job_tasks.py`):
 - `batch_tailor_applications` — Background tailoring for multiple apps
 - `submit_apply_batch` — Portal submission via Celery
-- `run_scheduled_discovery` — Scheduled discovery runs (Celery beat)
+- `run_all_active_discoveries` — Scheduled discovery runs (Celery beat every 6h)
 
 ### 4. Data Layer
 

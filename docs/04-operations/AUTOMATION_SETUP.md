@@ -245,9 +245,21 @@ celery -A celery_app.celery beat --loglevel=info
 
 | Task | Queue | Trigger |
 |------|-------|---------|
-| `run_scheduled_discovery` | scraping | Celery beat schedule |
+| `run_all_active_discoveries` | scraping | Celery beat every 6h (`run-active-job-discoveries`) |
+| `run_discovery_for_profile` | scraping | Manual / programmatic |
 | `batch_tailor_applications` | default | User batch tailor action |
 | `submit_apply_batch` | scraping | User batch approve action |
+
+### Verify scheduled discovery
+
+With Redis + worker + beat running:
+
+```bash
+# Force one scheduled discovery pass now
+celery -A celery_app.celery call app.tasks.job_tasks.run_all_active_discoveries
+```
+
+Expect `{'success': True, 'profiles_run': N}` where `N` is active profiles whose `last_run_at` is older than their `schedule_hours` (or never run). Check worker logs and Discovery Inbox for new items.
 
 ### Local dev without Celery
 
