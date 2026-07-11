@@ -30,12 +30,20 @@ def submit_application(context: ApplyContext) -> ApplyResult:
 
 
 def _load_adapters():
+    from app.services.apply_adapters.ashby import AshbyAdapter
     from app.services.apply_adapters.generic import GenericAdapter
     from app.services.apply_adapters.greenhouse import GreenhouseAdapter
     from app.services.apply_adapters.indeed import IndeedAdapter
     from app.services.apply_adapters.lever import LeverAdapter
     from app.services.apply_adapters.linkedin import LinkedInAdapter
-    for cls in (GreenhouseAdapter, LeverAdapter, LinkedInAdapter, IndeedAdapter, GenericAdapter):
+    for cls in (
+        GreenhouseAdapter,
+        LeverAdapter,
+        AshbyAdapter,
+        LinkedInAdapter,
+        IndeedAdapter,
+        GenericAdapter,
+    ):
         register_adapter(cls())
 
 

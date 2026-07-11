@@ -20,7 +20,7 @@ from . import jobs_bp
 
 logger = logging.getLogger(__name__)
 
-SEARCH_SOURCES = ['adzuna', 'remotive', 'greenhouse', 'lever', 'rss', 'indeed', 'linkedin']
+SEARCH_SOURCES = ['adzuna', 'remotive', 'greenhouse', 'lever', 'ashby', 'rss', 'indeed', 'linkedin']
 
 
 def _search_profile_from_form(form) -> dict:
@@ -33,6 +33,7 @@ def _search_profile_from_form(form) -> dict:
         'sources': [s for s in form.getlist('sources')],
         'greenhouse_boards': [b.strip() for b in form.get('greenhouse_boards', '').split(',') if b.strip()],
         'lever_boards': [b.strip() for b in form.get('lever_boards', '').split(',') if b.strip()],
+        'ashby_boards': [b.strip() for b in form.get('ashby_boards', '').split(',') if b.strip()],
         'rss_feeds': [f.strip() for f in form.get('rss_feeds', '').split(',') if f.strip()],
         'schedule_hours': int(form.get('schedule_hours', 6) or 6),
         'is_active': form.get('is_active') == 'on',
@@ -50,6 +51,7 @@ def _apply_search_profile_fields(profile: JobSearchProfile, fields: dict) -> Non
     profile.sources = fields['sources']
     profile.greenhouse_boards = fields['greenhouse_boards']
     profile.lever_boards = fields['lever_boards']
+    profile.ashby_boards = fields['ashby_boards']
     profile.rss_feeds = fields['rss_feeds']
     profile.schedule_hours = fields['schedule_hours']
     profile.is_active = fields['is_active']
@@ -90,6 +92,7 @@ def _duplicate_search_profile(source: JobSearchProfile, user_id) -> JobSearchPro
         sources=list(source.sources or []),
         greenhouse_boards=list(source.greenhouse_boards) if source.greenhouse_boards else None,
         lever_boards=list(source.lever_boards) if source.lever_boards else None,
+        ashby_boards=list(source.ashby_boards) if source.ashby_boards else None,
         rss_feeds=list(source.rss_feeds) if source.rss_feeds else None,
         indeed_max_age_days=source.indeed_max_age_days,
         indeed_radius_miles=source.indeed_radius_miles,

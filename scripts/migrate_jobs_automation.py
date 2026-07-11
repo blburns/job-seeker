@@ -75,6 +75,12 @@ COLUMN_MIGRATIONS = [
         'INTEGER',
         'INTEGER',
     ),
+    (
+        'job_search_profiles',
+        'ashby_boards',
+        'JSON',
+        'JSONB',
+    ),
 ]
 
 

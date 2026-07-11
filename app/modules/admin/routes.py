@@ -4,6 +4,7 @@ Administrative interface for RBAC management
 """
 
 import logging
+import os
 from datetime import datetime, timedelta
 from flask import render_template, redirect, url_for, request, flash, jsonify, current_app
 from flask_login import login_required, current_user
@@ -924,18 +925,49 @@ def email_template_edit(name):
 @login_required
 @admin_required()
 def system_settings():
-    """System settings – read-only view of application config (from env)."""
+    """System settings – config view plus runtime automation kill switch toggle."""
     try:
+        from app.services.automation_kill_switch import (
+            file_kill_switch_enabled,
+            is_automation_disabled,
+            kill_switch_source,
+        )
+
         settings_sections = admin_service.get_settings_display_config(current_app)
         return render_template(
             'modules/admin/settings.html',
             settings_sections=settings_sections,
+            kill_switch_on=is_automation_disabled(),
+            file_kill_switch_on=file_kill_switch_enabled(),
+            kill_switch_source=kill_switch_source(),
+            env_kill_switch_on=os.getenv('AUTOMATION_DISABLED', 'false').lower() in ('true', '1', 'yes'),
         )
     except Exception:
         logger.exception('Error loading system settings')
         db.session.rollback()
         flash('An error occurred loading settings', 'danger')
         return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/settings/kill-switch', methods=['POST'])
+@login_required
+@admin_required()
+def toggle_kill_switch():
+    """Enable or clear the no-restart file kill switch."""
+    try:
+        from app.services.automation_kill_switch import set_file_kill_switch
+
+        enabled = request.form.get('enabled', '').lower() in ('1', 'true', 'yes', 'on')
+        set_file_kill_switch(enabled)
+        if enabled:
+            flash('File kill switch enabled — all auto-submit is blocked (no restart needed).', 'warning')
+        else:
+            flash('File kill switch cleared. Env AUTOMATION_DISABLED still applies if set.', 'success')
+        return redirect(url_for('admin.system_settings'))
+    except Exception:
+        logger.exception('Error toggling automation kill switch')
+        flash('Could not update the kill switch', 'danger')
+        return redirect(url_for('admin.system_settings'))
 
 
 @admin_bp.route('/logs')

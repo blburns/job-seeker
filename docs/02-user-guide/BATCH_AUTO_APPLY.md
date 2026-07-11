@@ -65,7 +65,9 @@ Recommended habit:
 2. If status is **Re-auth needed** or **Untested**, re-run `export_playwright_storage.py` and replace the credential
 3. After a successful test, status shows **Healthy** for about 7 days (`expires_at`)
 
-Emergency stop: set `AUTOMATION_DISABLED=true` and restart to block all automated submits.
+Emergency stop (no restart): Admin → Settings → **Enable file kill switch**, or create `instance/automation_disabled.flag`.
+
+Env override: set `AUTOMATION_DISABLED=true` and restart — clears only after you unset it and restart again.
 
 ## Supported Portals
 

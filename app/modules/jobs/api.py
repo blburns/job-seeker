@@ -205,6 +205,7 @@ def create_search_profile():
         sources=data.get('sources') or ['adzuna', 'remotive'],
         greenhouse_boards=data.get('greenhouse_boards') or [],
         lever_boards=data.get('lever_boards') or [],
+        ashby_boards=data.get('ashby_boards') or [],
         rss_feeds=data.get('rss_feeds') or [],
         schedule_hours=int(data.get('schedule_hours', 6)),
         is_active=True,
@@ -225,7 +226,7 @@ def update_search_profile(profile_id):
     data = request.get_json() or {}
     for field in (
         'titles', 'locations', 'remote_preference', 'min_fit_score', 'sources',
-        'greenhouse_boards', 'lever_boards', 'rss_feeds', 'schedule_hours', 'is_active',
+        'greenhouse_boards', 'lever_boards', 'ashby_boards', 'rss_feeds', 'schedule_hours', 'is_active',
         'indeed_max_age_days', 'indeed_radius_miles',
     ):
         if field in data:

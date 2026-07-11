@@ -26,9 +26,54 @@
         </a>
       </div>
 
+      <div class="card mb-4 border-{% if kill_switch_on %}warning{% else %}secondary{% endif %}">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+              <h5 class="mb-1">
+                <i class="ti ti-alert-octagon me-2"></i>
+                Automation kill switch
+              </h5>
+              <p class="mb-1 text-muted small">
+                Blocks all automated submits immediately.
+                {% if kill_switch_on %}
+                  Currently <strong class="text-warning">ON</strong> ({{ kill_switch_source }}).
+                {% else %}
+                  Currently <strong>off</strong>.
+                {% endif %}
+              </p>
+              {% if env_kill_switch_on %}
+              <p class="mb-0 small text-warning">
+                Env <code>AUTOMATION_DISABLED</code> is set — clear it in <code>.env</code> and restart to fully re-enable.
+              </p>
+              {% else %}
+              <p class="mb-0 small text-muted">
+                File flag toggles without restart. Env override still requires a restart when changed.
+              </p>
+              {% endif %}
+            </div>
+            <form method="post" action="{{ url_for('admin.toggle_kill_switch') }}" class="d-flex gap-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              {% if file_kill_switch_on %}
+              <input type="hidden" name="enabled" value="0"/>
+              <button type="submit" class="btn btn-success" {% if env_kill_switch_on %}title="Env kill switch still blocks automation"{% endif %}>
+                Clear file kill switch
+              </button>
+              {% else %}
+              <input type="hidden" name="enabled" value="1"/>
+              <button type="submit" class="btn btn-warning">
+                Enable file kill switch
+              </button>
+              {% endif %}
+            </form>
+          </div>
+        </div>
+      </div>
+
       <div class="alert alert-info mb-4" role="status">
         <i class="ti ti-info-circle me-2"></i>
-        <strong>Read-only.</strong> These values are loaded from environment variables and your <code>.env</code> file. To change them, edit <code>.env</code> (or set environment variables) and restart the application.
+        <strong>Mostly read-only.</strong> Values below come from environment variables and your <code>.env</code> file.
+        Edit <code>.env</code> and restart for those. The kill switch file flag above applies immediately.
       </div>
 
       <div class="row">

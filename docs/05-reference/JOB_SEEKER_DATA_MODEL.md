@@ -214,6 +214,7 @@ Automated discovery criteria.
 | `sources` | JSON/JSONB | Enabled connectors: `adzuna`, `remotive`, `greenhouse`, `lever`, `rss`, `indeed`, `linkedin` |
 | `greenhouse_boards` | JSON/JSONB | Greenhouse board slugs |
 | `lever_boards` | JSON/JSONB | Lever board slugs |
+| `ashby_boards` | JSON/JSONB | Ashby board slugs (`jobs.ashbyhq.com/<slug>`) |
 | `rss_feeds` | JSON/JSONB | RSS feed URLs |
 | `indeed_max_age_days` | Integer | Indeed listing age filter (default 7) |
 | `indeed_radius_miles` | Integer | Indeed location radius |

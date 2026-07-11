@@ -29,10 +29,13 @@ class ApplySubmissionService:
     @classmethod
     def automation_blocked(cls) -> str:
         """Return a reason string if automation must not run, else empty."""
-        if os.getenv('AUTOMATION_DISABLED', 'false').lower() in ('true', '1', 'yes'):
+        from app.services.automation_kill_switch import is_automation_disabled, kill_switch_source
+
+        if is_automation_disabled():
+            source = kill_switch_source()
             return (
-                'Automation kill switch is on (AUTOMATION_DISABLED=true). '
-                'Clear it in the environment and restart to re-enable.'
+                f'Automation kill switch is on ({source}). '
+                'Turn it off in Admin → Settings (file flag) or clear AUTOMATION_DISABLED in the environment.'
             )
         if os.getenv('APPLY_AUTOMATION_ENABLED', 'false').lower() != 'true':
             return 'Apply automation disabled. Set APPLY_AUTOMATION_ENABLED=true.'

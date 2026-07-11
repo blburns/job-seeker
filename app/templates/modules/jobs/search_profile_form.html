@@ -77,6 +77,11 @@
           <input type="text" id="lever_boards" name="lever_boards" class="form-control" value="{{ (profile.lever_boards or [])|join(', ') if profile else '' }}" placeholder="netflix, spotify">
         </div>
         <div class="col-12">
+          <label class="form-label" for="ashby_boards">Ashby Boards (comma-separated)</label>
+          <input type="text" id="ashby_boards" name="ashby_boards" class="form-control" value="{{ (profile.ashby_boards or [])|join(', ') if profile else '' }}" placeholder="ramp, plaid">
+          <small class="text-muted">Slug from <code>jobs.ashbyhq.com/&lt;slug&gt;</code></small>
+        </div>
+        <div class="col-12">
           <label class="form-label" for="rss_feeds">RSS Feeds (comma-separated URLs)</label>
           <input type="text" id="rss_feeds" name="rss_feeds" class="form-control" value="{{ (profile.rss_feeds or [])|join(', ') if profile else '' }}" placeholder="https://example.com/jobs.rss">
         </div>

@@ -48,11 +48,12 @@ Configure:
 | `remotive` | API | None (public API) |
 | `greenhouse` | API + optional MyGreenhouse | Company board tokens (e.g. `stripe`) **or** `my` for [MyGreenhouse](https://my.greenhouse.io/jobs?query=) search (requires portal credentials) |
 | `lever` | API | Board slugs in search profile (e.g. `["netflix", "dropbox"]`) |
+| `ashby` | API | Board slugs from `jobs.ashbyhq.com/<slug>` (e.g. `ramp`, `plaid`) |
 | `rss` | RSS feeds | Feed URLs in search profile |
 | `indeed` | Playwright scrape | Portal credentials, `INDEED_SCRAPE_ENABLED=true` |
 | `linkedin` | Playwright scrape | Portal credentials, `LINKEDIN_SCRAPE_ENABLED=true` |
 
-API-based sources (Adzuna, Remotive, Greenhouse, Lever, RSS) work without browser automation. Indeed and LinkedIn require portal credentials and administrator setup.
+API-based sources (Adzuna, Remotive, Greenhouse, Lever, Ashby, RSS) work without browser automation. Indeed and LinkedIn require portal credentials and administrator setup.
 
 ### Step 2: Run discovery
 
@@ -165,6 +166,7 @@ For Indeed/LinkedIn postings, click **Refresh Details** (`POST /jobs/postings/<i
 4. **Review inbox regularly** — Discovery runs don't auto-accept; you control what enters your pipeline
 5. **Check keyword coverage on posting detail** — Before creating an application, see if the job is a good match
 6. **Greenhouse boards** — Use company tokens from career URLs (`boards.greenhouse.io/stripe` → `stripe`). For aggregated search on [MyGreenhouse](https://my.greenhouse.io/jobs?query=), add `my` to the boards list and store a Greenhouse portal session (`python scripts/export_playwright_storage.py greenhouse`). Do not paste the MyGreenhouse URL as a board token.
+7. **Ashby boards** — Use the slug from `jobs.ashbyhq.com/<slug>` (e.g. `ramp`). Enable the `ashby` source and list boards on the search profile.
 
 ## Troubleshooting
 

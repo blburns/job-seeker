@@ -256,3 +256,22 @@ def test_indeed_detect_confirmation():
         'https://www.indeed.com/viewjob?jk=1',
         'Thank you for applying! We received your application.',
     )
+
+
+def test_ashby_can_handle():
+    from app.services.apply_adapters.ashby import AshbyAdapter
+    adapter = AshbyAdapter()
+    assert adapter.can_handle('https://jobs.ashbyhq.com/acme/abc')
+    assert adapter.can_handle('https://api.ashbyhq.com/posting-api/job-board/acme')
+    assert not adapter.can_handle('https://boards.greenhouse.io/acme')
+
+
+def test_ashby_submit_needs_manual():
+    from app.services.apply_adapters.ashby import AshbyAdapter
+    result = AshbyAdapter().submit(
+        _context(job_url='https://jobs.ashbyhq.com/acme/abc'),
+    )
+    assert result.success is False
+    assert result.status == 'needs_manual'
+    assert result.metadata.get('portal') == 'ashby'
+    assert result.metadata.get('form_fields', {}).get('email') == 'a@b.com'

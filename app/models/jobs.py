@@ -311,6 +311,7 @@ class JobSearchProfile(BaseModel, TimestampMixin, SoftDeleteMixin):
     sources = Column(_json_type(), nullable=False, default=list)
     greenhouse_boards = Column(_json_type(), nullable=True)
     lever_boards = Column(_json_type(), nullable=True)
+    ashby_boards = Column(_json_type(), nullable=True)
     rss_feeds = Column(_json_type(), nullable=True)
     indeed_max_age_days = Column(Integer, default=7, nullable=True)
     indeed_radius_miles = Column(Integer, default=0, nullable=True)

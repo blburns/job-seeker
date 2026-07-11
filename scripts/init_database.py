@@ -31,6 +31,7 @@ COLUMN_MIGRATIONS = [
     ('apply_drafts', 'cover_letter', 'TEXT', 'TEXT'),
     ('job_search_profiles', 'indeed_max_age_days', 'INTEGER', 'INTEGER'),
     ('job_search_profiles', 'indeed_radius_miles', 'INTEGER', 'INTEGER'),
+    ('job_search_profiles', 'ashby_boards', 'JSON', 'JSONB'),
 ]
 
 

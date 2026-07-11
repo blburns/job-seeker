@@ -181,6 +181,7 @@ Extracts keywords from job descriptions and computes coverage against master pro
 | Remotive | `remotive.py` | API | None |
 | Greenhouse | `greenhouse.py` | API | Board slugs in search profile |
 | Lever | `lever.py` | API | Board slugs in search profile |
+| Ashby | `ashby.py` | API | Board slugs in search profile (`ashby_boards`) |
 | RSS | `rss_connector.py` | RSS feeds | Feed URLs in search profile |
 | Indeed | `indeed.py` | Playwright scrape | Portal credentials, `INDEED_SCRAPE_ENABLED` |
 | LinkedIn | `linkedin.py` | Playwright scrape | Portal credentials, `LINKEDIN_SCRAPE_ENABLED` |
@@ -329,9 +330,10 @@ Orchestrates per-application portal submission via adapters.
 | Adapter | File | Portal | Enabled by |
 |---------|------|--------|------------|
 | LinkedIn | `linkedin.py` | LinkedIn Easy Apply | `LINKEDIN_AUTO_APPLY_ENABLED` |
-| Indeed | `indeed.py` | Indeed Apply | `INDEED_AUTO_APPLY_ENABLED` |
+| Indeed | `indeed.py` | Indeed Apply | Pre-fill + proof; `needs_manual` (D6) |
 | Greenhouse | `greenhouse.py` | Greenhouse ATS | `APPLY_AUTOMATION_ENABLED` |
 | Lever | `lever.py` | Lever ATS | `APPLY_AUTOMATION_ENABLED` |
+| Ashby | `ashby.py` | Ashby ATS | Always `needs_manual` (pre-fill metadata) |
 | Generic | `generic.py` | Fallback | Always available |
 
 Registered via `apply_adapters/registry.py`. All implement `base.py` interface:

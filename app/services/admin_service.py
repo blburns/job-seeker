@@ -911,6 +911,12 @@ class AdminService:
         Build a safe, display-only view of application config for the admin settings page.
         Secrets are masked; values come from Flask config (env). Changes require .env edit and restart.
         """
+        from app.services.automation_kill_switch import (
+            file_kill_switch_enabled,
+            is_automation_disabled,
+            kill_switch_source,
+        )
+
         config = getattr(app, 'config', None) or {}
         get_ = lambda k, default=None: config.get(k, default)
 
@@ -979,10 +985,16 @@ class AdminService:
                     yes_no(os.getenv('APPLY_AUTOMATION_ENABLED', 'false').lower() in ('true', '1', 'yes')),
                 ),
                 (
-                    'Automation kill switch (AUTOMATION_DISABLED)',
-                    'ON — all auto-submit blocked'
-                    if os.getenv('AUTOMATION_DISABLED', 'false').lower() in ('true', '1', 'yes')
-                    else 'Off',
+                    'Automation kill switch',
+                    (
+                        f'ON ({kill_switch_source()}) — all auto-submit blocked'
+                        if is_automation_disabled()
+                        else 'Off'
+                    ),
+                ),
+                (
+                    'File kill switch (no restart)',
+                    yes_no(file_kill_switch_enabled()),
                 ),
                 ('Daily apply cap', os.getenv('DAILY_APPLY_CAP', '25')),
                 (

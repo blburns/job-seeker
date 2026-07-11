@@ -41,6 +41,7 @@ class DiscoveryOrchestrator:
             'keywords_exclude': profile.keywords_exclude or [],
             'greenhouse_boards': profile.greenhouse_boards or [],
             'lever_boards': profile.lever_boards or [],
+            'ashby_boards': getattr(profile, 'ashby_boards', None) or [],
             'rss_feeds': profile.rss_feeds or [],
             'indeed_max_age_days': getattr(profile, 'indeed_max_age_days', None) or 7,
             'indeed_radius_miles': getattr(profile, 'indeed_radius_miles', None) or 0,

@@ -94,11 +94,11 @@ Legend: ✅ Complete · 🟡 Partial · ❌ Missing · 🚫 Stub / not functiona
 | Greenhouse | ✅ | Board slugs in search profile | `test_connectors.py` |
 | Lever | ✅ | Board slugs in search profile | `test_connectors.py` |
 | Adzuna | ✅ | `ADZUNA_APP_ID/KEY` | None |
-| Remotive | ✅ | None (public API) | None |
-| RSS | ✅ | Feed URLs in search profile | None |
+| Remotive | ✅ | None (public API) | `test_remotive_connector.py` |
+| RSS | ✅ | Feed URLs in search profile | `test_rss_connector.py` |
 | LinkedIn | 🟡 | Credentials + `LINKEDIN_SCRAPE_ENABLED` | Parser only |
 | Indeed | 🟡 | Credentials + headed Chrome | Parser only |
-| Ashby | ❌ | Enum in `jobs.py` only | — |
+| Ashby | ✅ | Board slugs in search profile | `test_ashby_connector.py` |
 
 #### Applications module (`app/modules/applications/`)
 
@@ -131,8 +131,8 @@ Legend: ✅ Complete · 🟡 Partial · ❌ Missing · 🚫 Stub / not functiona
 | Greenhouse | 🟡 | Playwright pre-fill + screenshot; never clicks Submit |
 | Lever | 🟡 | Same as Greenhouse |
 | LinkedIn | 🚫 | Credential check only; no Easy Apply automation |
-| Indeed | 🚫 | Explicit stub — always `needs_manual` |
-| Ashby | ❌ | Not implemented |
+| Indeed | 🟡 | Pre-fill + proof; `needs_manual` (D6 — no fragile auto-submit) |
+| Ashby | 🟡 | `needs_manual` with pre-fill metadata |
 
 #### Analytics module (`app/modules/analytics/`)
 
@@ -411,14 +411,14 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 | Lever: complete Submit click + confirmation detection | P1 | `apply_adapters/lever.py` | `submitted` | ✅ |
 | LinkedIn Easy Apply: multi-step form automation | P1 | `apply_adapters/linkedin.py` | `submitted` or `needs_manual` with proof | ✅ |
 | Indeed Apply: implement (currently explicit stub) | P2 | `apply_adapters/indeed.py` | `submitted` or `needs_manual` | ✅ Pre-fill + proof (D6) |
-| Ashby apply adapter | P2 | New `apply_adapters/ashby.py` | `needs_manual` minimum | ⬜ |
+| Ashby apply adapter | P2 | New `apply_adapters/ashby.py` | `needs_manual` minimum | ✅ |
 | Adapter integration tests with mocked Playwright | P0 | `tests/test_apply_adapters.py` | Assert `submitted` path | ✅ |
 | Batch completion: handle `partial_failure` with retry UI | P1 | `apply_batch_service.py`, batch detail template | ✅ |
 ### 4.4 Discovery expansion
 
 | Task | Priority | Files | Status |
 |------|----------|-------|--------|
-| Ashby discovery connector | P2 | New `discovery/ashby.py`, register in `__init__.py` | ⬜ |
+| Ashby discovery connector | P2 | New `discovery/ashby.py`, register in `__init__.py` | ✅ |
 | Adzuna connector tests | P1 | `tests/test_adzuna_connector.py` | ✅ |
 | Remotive + RSS connector tests | P2 | `tests/test_remotive_connector.py`, `tests/test_rss_connector.py` | ✅ |
 | Company blocklist CRUD UI + API | P1 | New routes, `jobs/api.py`, template | ✅ |
@@ -440,7 +440,7 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 - [x] Audit log entry for every automated submission (`auto_submit` activity)
 - [x] Kill switch via `AUTOMATION_DISABLED` env (restart required; shown in Admin → Settings)
 - [x] Scrape rate limits enforced with Redis in Docker deployments (`SCRAPE_USE_REDIS=true` in compose)
-- [ ] True no-restart admin toggle (DB/file flag) — deferred; env kill switch covers ops for now
+- [x] True no-restart admin toggle (file flag `instance/automation_disabled.flag` + Admin → Settings)
 
 ### 4.7 Exit criteria
 
@@ -845,7 +845,7 @@ Decisions needed before or during upcoming phases:
 |---|----------|---------|----------------|-----------|
 | D1 | **Multi-user vs single-user** | (a) Full RBAC on job seeker routes (b) Document as single-user self-hosted (c) Tenant isolation | (b) for v1.0 — add RBAC in post-1.0 | Phase 6 |
 | D2 | **Anthropic LLM support** | (a) Implement (b) Remove env var (c) Defer post-1.0 | (b) or (c) — OpenAI sufficient for v1.0 | Phase 4 |
-| D3 | **Ashby support** | (a) Phase 4 (b) Post-1.0 | (b) — focus on Greenhouse/Lever first | Phase 4 |
+| D3 | **Ashby support** | (a) Phase 4 (b) Post-1.0 | (a) — discovery + `needs_manual` apply shipped | Phase 4 |
 | D4 | **DB init: one script or two** | (a) Merge into `init_database.py` (b) Keep separate with wrapper | ✅ (a) — merged 2026-07-10 | Done |
 | D5 | **Swagger/OpenAPI** | (a) Register all blueprints in Flask-RESTX (b) Drop Swagger claim (c) OpenAPI 3 static spec | (c) — lower effort, accurate | Phase 5 |
 | D6 | **Indeed auto-apply** | (a) Full automation (b) Pre-fill only, manual submit (c) Defer | (b) — Indeed blocks headless; high fragility | Phase 4 |
@@ -873,7 +873,7 @@ Prioritized features after v1.0.0:
 | Custom application stages |
 | Application templates (reuse tailoring settings) |
 | Chrome extension for job capture |
-| Ashby connector + adapter |
+| Ashby auto-submit (beyond `needs_manual`) |
 | Anthropic / multi-LLM provider support |
 | Interview prep / mock questions |
 
