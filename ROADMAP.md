@@ -83,7 +83,7 @@ Legend: ✅ Complete · 🟡 Partial · ❌ Missing · 🚫 Stub / not functiona
 | Discovery inbox | ✅ | `discovery_orchestrator.py` | — |
 | Keyword analysis | ✅ | `keyword_service.py` | Section-weighted extraction |
 | Posting DELETE | ✅ | `jobs/api.py`, `routes.py` | Soft delete |
-| Company blocklist UI | ❌ | `CompanyBlocklist` model only | Orchestrator uses it; no CRUD UI |
+| Company blocklist UI | ✅ | `CompanyBlocklist`, jobs routes/API, templates | Inbox “Block company” + CRUD |
 | Job detail enrichment | 🟡 | `job_detail_enrichment.py` | Indeed/LinkedIn fragile |
 | REST API | ✅ | `jobs/api.py` | Soft DELETE included |
 
@@ -860,8 +860,7 @@ Prioritized features after v1.0.0:
 
 | Feature | Rationale |
 |---------|-----------|
-| Scheduled discovery + email digest | Celery beat exists; needs email template + UI |
-| Company blocklist UI | Model + orchestrator logic done |
+| Scheduled discovery + email digest | Celery beat + `run_all_active_discoveries` verified; needs email template + UI |
 | LinkedIn Easy Apply full automation | High user demand |
 | Multi-user RBAC for job seeker routes | If D1 chooses (a) |
 | Webhook/API for integrations (Zapier, n8n) | Power users |
