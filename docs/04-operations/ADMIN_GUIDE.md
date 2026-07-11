@@ -204,6 +204,7 @@ curl http://localhost:5000/health/database
 - Application logs: `app/data/logs/` or `logs/app.log`
 - Admin log viewer: `/admin/logs`
 - Scrape proofs: `instance/scrape_proofs/`
+- Submission proofs: `instance/submission_proofs/` (also **Admin → Automation Proofs**)
 
 ### Error tracking (optional)
 

@@ -230,6 +230,8 @@ def batch_tailor():
 @login_required
 def detail(application_id):
     from app.models.jobs import ApplicationActivity
+    from app.services.proof_paths import resolve_safe_proof_path
+
     app_record = Application.query.filter_by(
         id=application_id, user_id=current_user.id, is_deleted=False
     ).first_or_404()
@@ -245,7 +247,25 @@ def detail(application_id):
         activities=activities,
         diff_summary=tailoring_diff_service.summarize(version.diff_log if version else []),
         coverage_delta=tailoring_diff_service.coverage_delta(version.diff_log if version else []),
+        has_submission_proof=bool(
+            resolve_safe_proof_path(app_record.submission_proof or '')
+        ),
     )
+
+
+@applications_bp.route('/<uuid:application_id>/submission-proof')
+@login_required
+def submission_proof(application_id):
+    from flask import abort, send_file
+    from app.services.proof_paths import resolve_safe_proof_path
+
+    app_record = Application.query.filter_by(
+        id=application_id, user_id=current_user.id, is_deleted=False
+    ).first_or_404()
+    path = resolve_safe_proof_path(app_record.submission_proof or '')
+    if not path:
+        abort(404)
+    return send_file(path, mimetype='image/png')
 
 
 @applications_bp.route('/<uuid:application_id>/delete', methods=['POST'])

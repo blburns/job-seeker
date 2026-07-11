@@ -454,15 +454,19 @@ def mock_browser(monkeypatch):
     monkeypatch.setattr('app.services.scraping.browser_manager.browser_manager.get_page', lambda **kw: MockPage())
 ```
 
-## Scrape Proofs
+## Scrape & Submission Proofs
 
-Screenshots saved during scraping and submission:
+Two directories under `instance/`:
 
-**Directory:** `instance/scrape_proofs/`
+| Kind | Directory | Written by |
+|------|-----------|------------|
+| Scrape / session | `instance/scrape_proofs/` | `BrowserManager.screenshot()` |
+| Apply submission | `instance/submission_proofs/` | Apply adapters (`{application_id}_{portal}.png`) |
 
-Naming: `{portal}_{timestamp}_{application_id}.png`
+Helpers: `app/services/proof_paths.py`
 
-Viewable from application detail page via `submission_proof` field.
+- Application detail shows submission proofs when `Application.submission_proof` is set
+- Admin → **Automation Proofs** (`/admin/proofs`) browses both folders
 
 ## Related Docs
 

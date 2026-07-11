@@ -52,13 +52,14 @@ class BrowserManager:
 
     @classmethod
     def _proof_dir(cls) -> str:
-        path = os.path.join('instance', 'scrape_proofs')
-        os.makedirs(path, exist_ok=True)
-        return path
+        from app.services.proof_paths import SCRAPE_PROOF_DIR, ensure_proof_dirs
+        ensure_proof_dirs()
+        return SCRAPE_PROOF_DIR
 
     @classmethod
     def screenshot(cls, page, name: str) -> str:
-        path = os.path.join(cls._proof_dir(), f'{name}.png')
+        from app.services.proof_paths import scrape_proof_path
+        path = scrape_proof_path(name)
         try:
             page.screenshot(path=path, full_page=True)
         except Exception as exc:

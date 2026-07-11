@@ -120,6 +120,7 @@ MODULES = [
         'parent': None,
         'children': [
             {'name': 'dashboard', 'display_name': 'Dashboard', 'route': 'dashboard', 'icon': 'chart'},
+            {'name': 'proofs', 'display_name': 'Automation Proofs', 'route': 'proofs_list', 'icon': 'photo'},
         ]
     },
     {

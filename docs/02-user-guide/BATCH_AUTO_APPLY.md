@@ -148,7 +148,9 @@ If you hit the cap:
 
 ## Submission Proofs
 
-For Playwright-based submissions, screenshots are saved to `instance/scrape_proofs/` as proof of submission. Viewable from the application detail page.
+For Playwright-based submissions, screenshots are saved to `instance/submission_proofs/` as proof of apply assist / submission. View them on the **application detail** page when a proof is attached, or in **Admin → Automation Proofs**.
+
+Scrape/session error screenshots use a separate folder: `instance/scrape_proofs/`.
 
 ## When to Use Manual vs Batch
 

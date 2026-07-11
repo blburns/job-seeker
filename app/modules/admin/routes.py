@@ -778,6 +778,39 @@ def email_templates():
         return redirect(url_for('admin.dashboard'))
 
 
+@admin_bp.route('/proofs')
+@login_required
+@admin_required()
+def proofs_list():
+    """Browse scrape and submission proof screenshots."""
+    from app.services.proof_paths import list_proof_files
+
+    kind = (request.args.get('kind') or 'all').strip().lower()
+    if kind not in ('all', 'scrape', 'submission'):
+        kind = 'all'
+    proofs = list_proof_files(kind=kind, limit=200)
+    return render_template(
+        'modules/admin/proofs.html',
+        proofs=proofs,
+        kind=kind,
+    )
+
+
+@admin_bp.route('/proofs/file')
+@login_required
+@admin_required()
+def proofs_file():
+    """Serve a proof PNG only if it lives under an allowed proof directory."""
+    from flask import abort, send_file
+    from app.services.proof_paths import resolve_safe_proof_path
+
+    stored = (request.args.get('path') or '').strip()
+    path = resolve_safe_proof_path(stored)
+    if not path:
+        abort(404)
+    return send_file(path, mimetype='image/png')
+
+
 @admin_bp.route('/email/templates/<name>/preview')
 @login_required
 @admin_required()

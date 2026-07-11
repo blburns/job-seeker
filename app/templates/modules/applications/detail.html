@@ -68,6 +68,27 @@
 </div>
 {% endif %}
 
+{% if has_submission_proof %}
+<div class="card mb-4">
+  <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+    <h5 class="card-title mb-0">Submission proof</h5>
+    <a href="{{ url_for('applications.submission_proof', application_id=application.id) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">Open full size</a>
+  </div>
+  <div class="card-body">
+    <p class="small text-muted mb-3">
+      Screenshot captured during automated apply assist. Stored under
+      <code>instance/submission_proofs/</code> (separate from scrape proofs).
+    </p>
+    <img
+      src="{{ url_for('applications.submission_proof', application_id=application.id) }}"
+      alt="Submission proof screenshot"
+      class="img-fluid border rounded"
+      style="max-height: 480px;"
+    >
+  </div>
+</div>
+{% endif %}
+
 <div class="card">
   <div class="card-header border-bottom">
     <h5 class="card-title mb-0">Notes</h5>

@@ -388,9 +388,9 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 | LinkedIn discovery: handle security checkpoints gracefully | P0 | `browser_manager.py`, `discovery/linkedin.py` | ✅ Re-auth messaging |
 | Indeed discovery: enforce headed mode, retry on block | P0 | `browser_launch_args.py`, `discovery/indeed.py` | ✅ Headed default + 1 retry |
 | Job detail enrichment: retry + partial result handling | P1 | `job_detail_enrichment.py` | ✅ |
-| Scrape proof audit UI (view screenshots from admin) | P2 | New admin route or application detail | ⬜ |
+| Scrape proof audit UI (view screenshots from admin) | P2 | New admin route or application detail | ✅ |
 | Connector tests for LinkedIn/Indeed (mocked browser) | P1 | `tests/test_linkedin_indeed_connectors.py` | ✅ |
-| Align proof paths: `instance/scrape_proofs/` vs `instance/submission_proofs/` | P2 | Docs + code consistency | ⬜ |
+| Align proof paths: `instance/scrape_proofs/` vs `instance/submission_proofs/` | P2 | Docs + code consistency | ✅ |
 
 ### 4.2 Portal credentials
 
@@ -410,7 +410,7 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 | Greenhouse: complete Submit click + confirmation detection | P0 | `apply_adapters/greenhouse.py` | First `submitted` adapter | ✅ |
 | Lever: complete Submit click + confirmation detection | P1 | `apply_adapters/lever.py` | `submitted` | ✅ |
 | LinkedIn Easy Apply: multi-step form automation | P1 | `apply_adapters/linkedin.py` | `submitted` or `needs_manual` with proof | ✅ |
-| Indeed Apply: implement (currently explicit stub) | P2 | `apply_adapters/indeed.py` | `submitted` or `needs_manual` | ⬜ |
+| Indeed Apply: implement (currently explicit stub) | P2 | `apply_adapters/indeed.py` | `submitted` or `needs_manual` | ✅ Pre-fill + proof (D6) |
 | Ashby apply adapter | P2 | New `apply_adapters/ashby.py` | `needs_manual` minimum | ⬜ |
 | Adapter integration tests with mocked Playwright | P0 | `tests/test_apply_adapters.py` | Assert `submitted` path | ✅ |
 | Batch completion: handle `partial_failure` with retry UI | P1 | `apply_batch_service.py`, batch detail template | ✅ |
@@ -420,7 +420,7 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 |------|----------|-------|--------|
 | Ashby discovery connector | P2 | New `discovery/ashby.py`, register in `__init__.py` | ⬜ |
 | Adzuna connector tests | P1 | `tests/test_adzuna_connector.py` | ✅ |
-| Remotive + RSS connector tests | P2 | `tests/test_remotive_connector.py`, `tests/test_rss_connector.py` | ⬜ |
+| Remotive + RSS connector tests | P2 | `tests/test_remotive_connector.py`, `tests/test_rss_connector.py` | ✅ |
 | Company blocklist CRUD UI + API | P1 | New routes, `jobs/api.py`, template | ✅ |
 | Celery beat: verify scheduled discovery runs | P1 | `celery_config.py`, `job_tasks.py` | ✅ |
 

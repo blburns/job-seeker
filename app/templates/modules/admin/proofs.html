@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}Automation Proofs{% endblock %}
+{% block content %}
+{% call page_header('Automation Proofs', 'Scrape and submission screenshots under instance/') %}
+  <a href="{{ url_for('admin.proofs_list', kind='all') }}" class="btn btn-sm {% if kind == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+  <a href="{{ url_for('admin.proofs_list', kind='scrape') }}" class="btn btn-sm {% if kind == 'scrape' %}btn-primary{% else %}btn-outline-primary{% endif %}">Scrape</a>
+  <a href="{{ url_for('admin.proofs_list', kind='submission') }}" class="btn btn-sm {% if kind == 'submission' %}btn-primary{% else %}btn-outline-primary{% endif %}">Submission</a>
+{% endcall %}
+
+<div class="alert alert-light border mb-4">
+  <strong>Scrape proofs</strong> live in <code>instance/scrape_proofs/</code> (discovery / session health).
+  <strong>Submission proofs</strong> live in <code>instance/submission_proofs/</code> (apply adapters).
+  Application detail also shows a submission proof when one is attached to that application.
+</div>
+
+<div class="row g-4">
+  {% for proof in proofs %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card h-100">
+      <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <span class="badge bg-label-{% if proof.kind == 'scrape' %}secondary{% else %}primary{% endif %}">{{ proof.kind }}</span>
+        <small class="text-muted text-truncate ms-2" title="{{ proof.name }}">{{ proof.name }}</small>
+      </div>
+      <div class="card-body">
+        <a href="{{ url_for('admin.proofs_file', path=proof.path) }}" target="_blank" rel="noopener">
+          <img
+            src="{{ url_for('admin.proofs_file', path=proof.path) }}"
+            alt="{{ proof.name }}"
+            class="img-fluid border rounded"
+            style="max-height: 220px; width: 100%; object-fit: contain;"
+          >
+        </a>
+        <p class="small text-muted mb-0 mt-2">{{ (proof.size / 1024)|round(1) }} KB</p>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="alert alert-info mb-0">No proof screenshots found yet.</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

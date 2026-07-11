@@ -183,6 +183,7 @@ curl http://localhost:5000/api/v1/health
 Configuration:     .env
 Logs:              app/data/logs/
 Scrape proofs:     instance/scrape_proofs/
+Submission proofs: instance/submission_proofs/
 Models:            app/models/jobs.py
 Services:          app/services/
 Routes:            app/modules/*/routes.py
