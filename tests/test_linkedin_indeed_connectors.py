@@ -41,9 +41,10 @@ def _enable_scrape_flags(monkeypatch):
     )
 
 
-def test_linkedin_connector_disabled_returns_empty(monkeypatch):
+def test_linkedin_connector_disabled_raises(monkeypatch):
     monkeypatch.setenv('LINKEDIN_SCRAPE_ENABLED', 'false')
-    assert LinkedInConnector().search({'titles': ['engineer']}, user_id='u1') == []
+    with pytest.raises(DiscoverySearchError, match='LINKEDIN_SCRAPE_ENABLED'):
+        LinkedInConnector().search({'titles': ['engineer']}, user_id='u1')
 
 
 def test_linkedin_connector_requires_credentials(monkeypatch):
@@ -85,6 +86,12 @@ def test_linkedin_connector_auth_error_is_actionable(mock_fetch, monkeypatch):
     )
     with pytest.raises(DiscoverySearchError, match='Portal Credentials'):
         LinkedInConnector().search({'titles': ['engineer']}, user_id='u1')
+
+
+def test_indeed_connector_disabled_raises(monkeypatch):
+    monkeypatch.setenv('INDEED_SCRAPE_ENABLED', 'false')
+    with pytest.raises(DiscoverySearchError, match='INDEED_SCRAPE_ENABLED'):
+        IndeedConnector().search({'titles': ['python']}, user_id='u1')
 
 
 @patch('app.services.discovery.indeed.browser_manager.fetch_html')

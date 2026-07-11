@@ -24,8 +24,9 @@ class LinkedInConnector:
         user_id=None,
     ) -> List[DiscoveredJobDTO]:
         if os.getenv('LINKEDIN_SCRAPE_ENABLED', 'false').lower() != 'true':
-            logger.info('LinkedIn scraping disabled (LINKEDIN_SCRAPE_ENABLED=false)')
-            return []
+            raise DiscoverySearchError(
+                'LinkedIn scraping is disabled. Set LINKEDIN_SCRAPE_ENABLED=true in .env and restart.'
+            )
 
         if not user_id:
             raise DiscoverySearchError('user_id required for LinkedIn scraping')

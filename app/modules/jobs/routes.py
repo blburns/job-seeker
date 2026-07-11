@@ -9,7 +9,8 @@ from sqlalchemy.orm import joinedload
 
 from app.extensions.core import db
 from app.models.jobs import (
-    CompanyBlocklist, DiscoveredJob, DiscoveredJobStatus, Application, JobPosting, JobSearchProfile,
+    CompanyBlocklist, DiscoveredJob, DiscoveredJobStatus, DiscoveryRunStatus,
+    Application, JobPosting, JobSearchProfile,
     JobSource, KeywordAnalysis, MasterProfile,
 )
 from app.services.discovery_orchestrator import discovery_orchestrator
@@ -477,14 +478,22 @@ def blocklist_delete(entry_id):
 def run_discovery(profile_id):
     try:
         run = discovery_orchestrator.run_discovery(profile_id, current_user.id)
-        if run:
+        if run and run.status == DiscoveryRunStatus.FAILED.value:
+            flash(
+                f'Discovery failed ({run.source}): {run.error_message or "unknown error"}',
+                'danger',
+            )
+        elif run:
             flash(
                 f'Discovery complete: {run.jobs_found or 0} found, '
                 f'{run.jobs_new or 0} added to inbox.',
                 'success',
             )
         else:
-            flash('Discovery run completed.', 'success')
+            flash(
+                'No discovery connectors ran. Check that the search profile has sources enabled.',
+                'warning',
+            )
     except Exception as exc:
         flash(f'Discovery failed: {exc}', 'danger')
     return redirect(url_for('jobs.discovery_inbox'))

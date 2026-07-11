@@ -24,8 +24,9 @@ class IndeedConnector:
         user_id=None,
     ) -> List[DiscoveredJobDTO]:
         if os.getenv('INDEED_SCRAPE_ENABLED', 'false').lower() != 'true':
-            logger.info('Indeed scraping disabled (INDEED_SCRAPE_ENABLED=false)')
-            return []
+            raise DiscoverySearchError(
+                'Indeed scraping is disabled. Set INDEED_SCRAPE_ENABLED=true in .env and restart.'
+            )
 
         if not user_id:
             raise DiscoverySearchError('user_id required for Indeed scraping')
@@ -84,7 +85,9 @@ class IndeedConnector:
 
                     if not fetch.ok:
                         if fetch.status == ScrapeStatus.DISABLED:
-                            return []
+                            raise DiscoverySearchError(
+                                'Indeed scraping is disabled. Set INDEED_SCRAPE_ENABLED=true in .env and restart.'
+                            )
                         from app.services.scraping.session_health import session_health
                         if fetch.status in (
                             ScrapeStatus.AUTH_REQUIRED,
