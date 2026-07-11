@@ -80,6 +80,7 @@ async function saveRssJobs() {
       <div class="card-body">
         <ul class="mb-0 ps-3">
           <li class="mb-2"><a href="{{ url_for('jobs.search_profiles_list') }}">Automated search profiles</a></li>
+          <li class="mb-2"><a href="{{ url_for('jobs.blocklist_list') }}">Company blocklist</a></li>
           <li class="mb-2"><a href="{{ url_for('jobs.posting_fetch') }}">Fetch job from URL</a></li>
           <li><a href="{{ url_for('jobs.posting_new') }}">Paste job description manually</a></li>
         </ul>

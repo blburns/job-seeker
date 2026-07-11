@@ -52,11 +52,13 @@
 
     const acceptBtn = row.querySelector('[data-action="accept"]');
     const skipBtn = row.querySelector('[data-action="skip"]');
+    const blockBtn = row.querySelector('[data-action="block"]');
     const original = btn.textContent;
     btn.disabled = true;
     if (acceptBtn) acceptBtn.disabled = true;
     if (skipBtn) skipBtn.disabled = true;
-    btn.textContent = action === 'accept' ? 'Accepting…' : 'Skipping…';
+    if (blockBtn) blockBtn.disabled = true;
+    btn.textContent = action === 'accept' ? 'Accepting…' : (action === 'block' ? 'Blocking…' : 'Skipping…');
 
     try {
       const resp = await fetch(`/api/v1/jobs/inbox/${id}/${action}`, {
@@ -80,13 +82,18 @@
       if (data.warning) {
         showToast(data.warning, 'warning');
       } else {
-        showToast(data.message || (action === 'accept' ? 'Job accepted.' : 'Job skipped.'), 'success');
+        const fallback =
+          action === 'accept' ? 'Job accepted.' :
+          action === 'block' ? 'Company blocked.' :
+          'Job skipped.';
+        showToast(data.message || fallback, 'success');
       }
     } catch (err) {
       showToast(err.message || 'Something went wrong.', 'danger');
       btn.disabled = false;
       if (acceptBtn) acceptBtn.disabled = false;
       if (skipBtn) skipBtn.disabled = false;
+      if (blockBtn) blockBtn.disabled = false;
       btn.textContent = original;
     }
   }
@@ -104,6 +111,7 @@
 {% set active_tab = request.args.get('tab', 'inbox') %}
 {% call page_header('Discovery Inbox', 'Review discovered jobs ranked by fit score') %}
   <a href="{{ url_for('jobs.search_profiles_list') }}" class="btn btn-outline-primary btn-sm">Search Profiles</a>
+  <a href="{{ url_for('jobs.blocklist_list') }}" class="btn btn-outline-secondary btn-sm">Company Blocklist</a>
   <a href="{{ url_for('apply.credentials_list') }}" class="btn btn-outline-secondary btn-sm">Portal Credentials</a>
 {% endcall %}
 
@@ -188,6 +196,9 @@
               <td class="text-end text-nowrap">
                 <button type="button" class="btn btn-sm btn-success" data-action="accept">Accept</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-action="skip">Skip</button>
+                {% if job.company %}
+                <button type="button" class="btn btn-sm btn-outline-danger" data-action="block" title="Block this company from future discovery">Block company</button>
+                {% endif %}
               </td>
             </tr>
             {% else %}

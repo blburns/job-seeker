@@ -1,6 +1,7 @@
 """Jobs web routes."""
 
 import logging
+from typing import Optional
 
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -373,6 +374,99 @@ def skip_discovered(discovered_id):
     discovery_orchestrator.skip_discovered_job(discovered_id, current_user.id)
     flash('Job skipped.', 'info')
     return redirect(url_for('jobs.discovery_inbox'))
+
+
+@jobs_bp.route('/inbox/<uuid:discovered_id>/block', methods=['POST'])
+@login_required
+def block_discovered(discovered_id):
+    try:
+        discovered = discovery_orchestrator.block_discovered_company(
+            discovered_id, current_user.id
+        )
+        flash(
+            f'Blocked “{discovered.company}” and skipped this listing. '
+            'Future discovery runs will hide matching companies.',
+            'success',
+        )
+    except ValueError as exc:
+        flash(str(exc), 'warning')
+    return redirect(url_for('jobs.discovery_inbox'))
+
+
+@jobs_bp.route('/blocklist')
+@login_required
+def blocklist_list():
+    entries = CompanyBlocklist.query.filter_by(
+        user_id=current_user.id,
+    ).order_by(CompanyBlocklist.created_at.desc()).all()
+    return render_template('modules/jobs/blocklist_list.html', entries=entries)
+
+
+def _blocklist_fields_from_form(form) -> dict:
+    company_name = sanitize_input(form.get('company_name', ''), 255).strip() or None
+    url_pattern = sanitize_input(form.get('url_pattern', ''), 512).strip() or None
+    reason = sanitize_input(form.get('reason', ''), 255).strip() or None
+    return {
+        'company_name': company_name,
+        'url_pattern': url_pattern,
+        'reason': reason,
+    }
+
+
+def _validate_blocklist_fields(fields: dict) -> Optional[str]:
+    if not fields.get('company_name') and not fields.get('url_pattern'):
+        return 'Enter a company name and/or a URL pattern.'
+    return None
+
+
+@jobs_bp.route('/blocklist/new', methods=['GET', 'POST'])
+@login_required
+def blocklist_new():
+    if request.method == 'POST':
+        fields = _blocklist_fields_from_form(request.form)
+        error = _validate_blocklist_fields(fields)
+        if error:
+            flash(error, 'warning')
+            return render_template('modules/jobs/blocklist_form.html', entry=None, form=fields)
+        entry = CompanyBlocklist(user_id=current_user.id, **fields)
+        db.session.add(entry)
+        db.session.commit()
+        flash('Blocklist entry created.', 'success')
+        return redirect(url_for('jobs.blocklist_list'))
+    return render_template('modules/jobs/blocklist_form.html', entry=None, form=None)
+
+
+@jobs_bp.route('/blocklist/<uuid:entry_id>/edit', methods=['GET', 'POST'])
+@login_required
+def blocklist_edit(entry_id):
+    entry = CompanyBlocklist.query.filter_by(
+        id=entry_id, user_id=current_user.id
+    ).first_or_404()
+    if request.method == 'POST':
+        fields = _blocklist_fields_from_form(request.form)
+        error = _validate_blocklist_fields(fields)
+        if error:
+            flash(error, 'warning')
+            return render_template('modules/jobs/blocklist_form.html', entry=entry, form=fields)
+        entry.company_name = fields['company_name']
+        entry.url_pattern = fields['url_pattern']
+        entry.reason = fields['reason']
+        db.session.commit()
+        flash('Blocklist entry updated.', 'success')
+        return redirect(url_for('jobs.blocklist_list'))
+    return render_template('modules/jobs/blocklist_form.html', entry=entry, form=None)
+
+
+@jobs_bp.route('/blocklist/<uuid:entry_id>/delete', methods=['POST'])
+@login_required
+def blocklist_delete(entry_id):
+    entry = CompanyBlocklist.query.filter_by(
+        id=entry_id, user_id=current_user.id
+    ).first_or_404()
+    db.session.delete(entry)
+    db.session.commit()
+    flash('Blocklist entry removed.', 'success')
+    return redirect(url_for('jobs.blocklist_list'))
 
 
 @jobs_bp.route('/search-profiles/<uuid:profile_id>/run', methods=['POST'])

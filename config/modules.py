@@ -61,6 +61,7 @@ MODULES = [
             {'name': 'fetch', 'display_name': 'Fetch from URL', 'route': 'posting_fetch', 'icon': 'link'},
             {'name': 'discover', 'display_name': 'Discover Jobs', 'route': 'discover', 'icon': 'search'},
             {'name': 'search_profiles', 'display_name': 'Search Profiles', 'route': 'search_profiles_list', 'icon': 'filter'},
+            {'name': 'blocklist', 'display_name': 'Company Blocklist', 'route': 'blocklist_list', 'icon': 'ban'},
             {'name': 'inbox', 'display_name': 'Discovery Inbox', 'route': 'discovery_inbox', 'icon': 'inbox'},
         ]
     },

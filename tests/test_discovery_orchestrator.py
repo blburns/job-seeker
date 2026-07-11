@@ -76,3 +76,39 @@ def test_is_blocked_company(app, user_id):
         db.session.commit()
         assert DiscoveryOrchestrator.is_blocked(user_id, 'BadCorp Inc', '') is True
         assert DiscoveryOrchestrator.is_blocked(user_id, 'GoodCo', '') is False
+
+
+def test_is_blocked_url_pattern(app, user_id):
+    from app.models.jobs import CompanyBlocklist
+    with app.app_context():
+        db.session.add(CompanyBlocklist(
+            user_id=user_id,
+            url_pattern='boards.greenhouse.io/badco',
+        ))
+        db.session.commit()
+        assert DiscoveryOrchestrator.is_blocked(
+            user_id, 'Anything', 'https://boards.greenhouse.io/badco/jobs/1'
+        ) is True
+        assert DiscoveryOrchestrator.is_blocked(
+            user_id, 'Anything', 'https://boards.greenhouse.io/goodco/jobs/1'
+        ) is False
+
+
+def test_block_discovered_company(app, user_id):
+    from app.models.jobs import CompanyBlocklist
+    with app.app_context():
+        discovered = DiscoveredJob(
+            user_id=user_id,
+            title='Engineer',
+            company='SpamCorp',
+            source='remotive',
+            source_id='sc-1',
+            status=DiscoveredJobStatus.NEW.value,
+        )
+        db.session.add(discovered)
+        db.session.commit()
+        result = DiscoveryOrchestrator.block_discovered_company(discovered.id, user_id)
+        assert result.status == DiscoveredJobStatus.SKIPPED.value
+        assert CompanyBlocklist.query.filter_by(
+            user_id=user_id, company_name='SpamCorp'
+        ).count() == 1

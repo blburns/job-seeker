@@ -85,12 +85,19 @@ Jobs are sorted by **fit score** (highest first). Each card shows:
 |--------|-------|--------|
 | Accept | `POST /jobs/inbox/<id>/accept` | Creates `JobPosting` + `Application` (stage: `saved`) |
 | Skip | `POST /jobs/inbox/<id>/skip` | Marks as skipped; removed from inbox |
+| Block company | `POST /jobs/inbox/<id>/block` | Adds company to blocklist and skips the listing |
 
 **Accept** may trigger job detail enrichment for Indeed/LinkedIn listings with thin descriptions (full JD scrape via Playwright).
 
 ### Company blocklist
 
-Block companies or URL patterns from appearing in discovery results. Configured per user in the search profile or blocklist settings.
+Block companies or URL patterns from appearing in discovery results.
+
+1. Go to **Jobs → Company Blocklist** (`/jobs/blocklist`)
+2. Add a company name and/or URL substring pattern
+3. Or from **Discovery Inbox**, click **Block company** on a listing
+
+Matching is case-insensitive substring. Blocklist is per user (not per search profile).
 
 ---
 

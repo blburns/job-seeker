@@ -300,3 +300,91 @@ def skip_inbox_job(discovered_id):
         logger.exception('Skip discovered job failed')
         return jsonify({'success': False, 'error': str(exc)}), 400
     return jsonify({'success': True, 'discovered_id': str(discovered_id), 'message': 'Job skipped.'})
+
+
+@jobs_api_bp.route('/inbox/<uuid:discovered_id>/block', methods=['POST'])
+@login_required
+def block_inbox_job(discovered_id):
+    try:
+        discovered = discovery_orchestrator.block_discovered_company(
+            discovered_id, current_user.id
+        )
+    except ValueError as exc:
+        return jsonify({'success': False, 'error': str(exc)}), 400
+    except Exception as exc:
+        logger.exception('Block discovered company failed')
+        return jsonify({'success': False, 'error': str(exc)}), 400
+    return jsonify({
+        'success': True,
+        'discovered_id': str(discovered_id),
+        'message': f'Blocked “{discovered.company}” and skipped this listing.',
+    })
+
+
+def _blocklist_payload(data: dict) -> tuple:
+    company_name = sanitize_input(data.get('company_name') or '', 255).strip() or None
+    url_pattern = sanitize_input(data.get('url_pattern') or '', 512).strip() or None
+    reason = sanitize_input(data.get('reason') or '', 255).strip() or None
+    if not company_name and not url_pattern:
+        return None, 'Enter a company name and/or a URL pattern.'
+    return {
+        'company_name': company_name,
+        'url_pattern': url_pattern,
+        'reason': reason,
+    }, None
+
+
+@jobs_api_bp.route('/blocklist', methods=['GET'])
+@login_required
+def list_blocklist():
+    entries = CompanyBlocklist.query.filter_by(
+        user_id=current_user.id,
+    ).order_by(CompanyBlocklist.created_at.desc()).all()
+    return jsonify({'data': [e.to_dict() for e in entries]})
+
+
+@jobs_api_bp.route('/blocklist', methods=['POST'])
+@login_required
+def create_blocklist_entry():
+    data = request.get_json() or {}
+    fields, error = _blocklist_payload(data)
+    if error:
+        return jsonify({'error': error}), 400
+    entry = CompanyBlocklist(user_id=current_user.id, **fields)
+    db.session.add(entry)
+    db.session.commit()
+    return jsonify(entry.to_dict()), 201
+
+
+@jobs_api_bp.route('/blocklist/<uuid:entry_id>', methods=['PATCH'])
+@login_required
+def update_blocklist_entry(entry_id):
+    entry = CompanyBlocklist.query.filter_by(
+        id=entry_id, user_id=current_user.id
+    ).first_or_404()
+    data = request.get_json() or {}
+    # Merge with existing so partial PATCH still validates
+    merged = {
+        'company_name': data['company_name'] if 'company_name' in data else entry.company_name,
+        'url_pattern': data['url_pattern'] if 'url_pattern' in data else entry.url_pattern,
+        'reason': data['reason'] if 'reason' in data else entry.reason,
+    }
+    fields, error = _blocklist_payload(merged)
+    if error:
+        return jsonify({'error': error}), 400
+    entry.company_name = fields['company_name']
+    entry.url_pattern = fields['url_pattern']
+    entry.reason = fields['reason']
+    db.session.commit()
+    return jsonify(entry.to_dict())
+
+
+@jobs_api_bp.route('/blocklist/<uuid:entry_id>', methods=['DELETE'])
+@login_required
+def delete_blocklist_entry(entry_id):
+    entry = CompanyBlocklist.query.filter_by(
+        id=entry_id, user_id=current_user.id
+    ).first_or_404()
+    db.session.delete(entry)
+    db.session.commit()
+    return jsonify({'success': True})

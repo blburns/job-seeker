@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}Company Blocklist{% endblock %}
+{% block content %}
+{% call page_header('Company Blocklist', 'Skip companies or URL patterns during discovery') %}
+  <a href="{{ url_for('jobs.blocklist_new') }}" class="btn btn-primary btn-sm">Add Entry</a>
+  <a href="{{ url_for('jobs.search_profiles_list') }}" class="btn btn-outline-secondary btn-sm">Search Profiles</a>
+  <a href="{{ url_for('jobs.discovery_inbox') }}" class="btn btn-outline-secondary btn-sm">Discovery Inbox</a>
+{% endcall %}
+
+<div class="alert alert-light border mb-4">
+  Blocked companies are filtered out when discovery runs. Matching is case-insensitive substring
+  on company name or listing URL. You can also block from the Discovery Inbox.
+</div>
+
+<div class="card">
+  <div class="card-datatable table-responsive">
+    <table class="table border-top">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>URL pattern</th>
+          <th>Reason</th>
+          <th>Added</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr>
+          <td>{{ entry.company_name or '—' }}</td>
+          <td><code class="small">{{ entry.url_pattern or '—' }}</code></td>
+          <td>{{ entry.reason or '—' }}</td>
+          <td>{{ entry.created_at.strftime('%Y-%m-%d') if entry.created_at else '—' }}</td>
+          <td class="text-end">
+            <a href="{{ url_for('jobs.blocklist_edit', entry_id=entry.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+            <form method="post" action="{{ url_for('jobs.blocklist_delete', entry_id=entry.id) }}" class="d-inline" onsubmit="return confirm('Remove this blocklist entry?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr class="table-empty">
+          <td colspan="5" class="text-center text-muted">
+            No blocked companies yet.
+            <a href="{{ url_for('jobs.blocklist_new') }}">Add one</a>
+            or use <strong>Block company</strong> in the Discovery Inbox.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

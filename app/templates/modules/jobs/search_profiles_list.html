@@ -4,6 +4,7 @@
 {% block content %}
 {% call page_header('Job Search Profiles', 'Automated discovery criteria and connected sources') %}
   <a href="{{ url_for('jobs.search_profile_new') }}" class="btn btn-primary btn-sm">New Profile</a>
+  <a href="{{ url_for('jobs.blocklist_list') }}" class="btn btn-outline-secondary btn-sm">Company Blocklist</a>
 {% endcall %}
 
 <div class="card">

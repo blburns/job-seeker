@@ -307,5 +307,28 @@ class DiscoveryOrchestrator:
         db.session.commit()
         return discovered
 
+    @classmethod
+    def block_discovered_company(cls, discovered_id, user_id, reason: str = 'Blocked from discovery inbox'):
+        """Add company to blocklist and skip the discovered job."""
+        discovered = DiscoveredJob.query.filter_by(id=discovered_id, user_id=user_id).first_or_404()
+        company = (discovered.company or '').strip()
+        if not company:
+            raise ValueError('This listing has no company name to block.')
+
+        existing = CompanyBlocklist.query.filter_by(
+            user_id=user_id,
+            company_name=company,
+        ).first()
+        if not existing:
+            db.session.add(CompanyBlocklist(
+                user_id=user_id,
+                company_name=company,
+                reason=(reason or '')[:255] or None,
+            ))
+
+        discovered.status = DiscoveredJobStatus.SKIPPED.value
+        db.session.commit()
+        return discovered
+
 
 discovery_orchestrator = DiscoveryOrchestrator()

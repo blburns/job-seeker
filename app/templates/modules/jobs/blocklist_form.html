@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from 'macros/page_layout.html' import page_header %}
+{% block title %}{% if entry %}Edit Blocklist Entry{% else %}Add Blocklist Entry{% endif %}{% endblock %}
+{% block content %}
+{% call page_header(
+  'Edit Blocklist Entry' if entry else 'Add Blocklist Entry',
+  'Require at least a company name or URL pattern'
+) %}
+  <a href="{{ url_for('jobs.blocklist_list') }}" class="btn btn-outline-secondary btn-sm">Back</a>
+{% endcall %}
+
+{% set f = form or {} %}
+<div class="card">
+  <div class="card-body">
+    <form method="post" action="{% if entry %}{{ url_for('jobs.blocklist_edit', entry_id=entry.id) }}{% else %}{{ url_for('jobs.blocklist_new') }}{% endif %}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="company_name">Company name</label>
+          <input
+            type="text"
+            class="form-control"
+            id="company_name"
+            name="company_name"
+            value="{{ f.company_name if f.company_name is not none else (entry.company_name if entry else '') }}"
+            placeholder="e.g. Acme Staffing"
+          >
+          <small class="text-muted">Substring match against discovered company names.</small>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="url_pattern">URL pattern</label>
+          <input
+            type="text"
+            class="form-control"
+            id="url_pattern"
+            name="url_pattern"
+            value="{{ f.url_pattern if f.url_pattern is not none else (entry.url_pattern if entry else '') }}"
+            placeholder="e.g. boards.greenhouse.io/badco"
+          >
+          <small class="text-muted">Substring match against listing URLs.</small>
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="reason">Reason (optional)</label>
+          <input
+            type="text"
+            class="form-control"
+            id="reason"
+            name="reason"
+            value="{{ f.reason if f.reason is not none else (entry.reason if entry else '') }}"
+            placeholder="e.g. Recruiter mill / not a fit"
+          >
+        </div>
+      </div>
+      <div class="mt-4 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{{ url_for('jobs.blocklist_list') }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
