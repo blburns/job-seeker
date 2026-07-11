@@ -403,7 +403,7 @@ Phases 4 and 5 can run in parallel after Phase 3 exit. Phase 8 can start during 
 
 ### 4.3 Apply adapters — critical path
 
-**Current state:** Greenhouse, Lever, and LinkedIn Easy Apply can return `submitted` when confirmation is detected (flag-gated). Indeed apply still stub/`needs_manual`.
+**Current state:** Greenhouse, Lever, and LinkedIn Easy Apply can return `submitted` when confirmation is detected (flag-gated). Indeed apply assists with pre-fill + proof and returns `needs_manual` (D6 — no fragile auto-submit).
 
 | Task | Priority | Files | Target | Status |
 |------|----------|-------|--------|--------|
