@@ -68,17 +68,23 @@ def save_draft(application_id):
         application_id=app_record.id, user_id=current_user.id
     ).order_by(ApplyDraft.created_at.desc()).first_or_404()
 
+    # Cover letter lives on its own column; never sync from form_fields.
+    # Prefer the last cover_letter value when duplicates exist (hidden + textarea).
+    cover_values = [v for v in request.form.getlist('cover_letter') if v is not None]
+    if cover_values:
+        draft.cover_letter = cover_values[-1]
+
     form_fields = dict(draft.form_fields or {})
-    for key in form_fields:
+    form_fields.pop('cover_letter', None)
+    for key in list(form_fields.keys()):
         if key in request.form:
-            form_fields[key] = request.form[key]
+            form_fields[key] = request.form.get(key, form_fields[key])
     draft.form_fields = form_fields
-    if 'cover_letter' in request.form:
-        draft.cover_letter = request.form['cover_letter']
     draft.status = 'approved'
     db.session.commit()
-    flash('Pre-fill draft saved.', 'success')
-    return redirect(url_for('apply.review', application_id=application_id))
+    flash('Cover letter and pre-fill draft saved.', 'success')
+    redirect_target = request.referrer or url_for('apply.review', application_id=application_id)
+    return redirect(redirect_target)
 
 
 @apply_bp.route('/<uuid:application_id>/regenerate-cover-letter', methods=['POST'])

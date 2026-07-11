@@ -53,10 +53,12 @@
         <form method="post" action="{{ url_for('apply.save_draft', application_id=application.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           {% for key, value in (draft.form_fields or {}).items() %}
+          {% if key != 'cover_letter' %}
           <div class="mb-2">
             <label class="form-label small text-capitalize">{{ key.replace('_', ' ') }}</label>
             <input type="text" name="{{ key }}" class="form-control form-control-sm" value="{{ value }}">
           </div>
+          {% endif %}
           {% endfor %}
           <button type="submit" class="btn btn-sm btn-primary mt-2">Save pre-fill</button>
         </form>

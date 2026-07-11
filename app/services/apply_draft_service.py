@@ -49,6 +49,11 @@ class ApplyDraftService:
 
         if draft:
             cls._backfill_from_profile(draft, contact)
+            # Cover letter is a dedicated column — strip legacy form_fields copy.
+            fields = dict(draft.form_fields or {})
+            if 'cover_letter' in fields:
+                fields.pop('cover_letter', None)
+                draft.form_fields = fields
             if regenerate_cover_letter or not (draft.cover_letter or '').strip():
                 try:
                     draft.cover_letter = cls._generate_cover_letter(job, letter_profile)

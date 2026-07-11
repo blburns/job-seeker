@@ -129,7 +129,6 @@ class JobDiscoveryService:
             'salary_expectation': defaults.get('salary_expectation', ''),
             'willing_to_relocate': defaults.get('willing_to_relocate', ''),
             'requires_sponsorship': defaults.get('requires_sponsorship', ''),
-            'cover_letter': '',
             'how_did_you_hear': defaults.get('how_did_you_hear', 'Job board'),
             'job_title': job_data.get('title', ''),
             'job_company': job_data.get('company', ''),
