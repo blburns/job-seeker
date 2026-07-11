@@ -8,6 +8,16 @@
   <a href="{{ url_for('applications.detail', application_id=application.id) }}" class="btn btn-outline-secondary btn-sm">
     <i class="icon-base ti tabler-arrow-left me-1"></i>Application
   </a>
+  {% if job %}
+  <a href="{{ url_for('jobs.posting_detail', posting_id=job.id) }}" class="btn btn-outline-secondary btn-sm">
+    <i class="icon-base ti tabler-file-description me-1"></i>View posting
+  </a>
+  {% if job.url %}
+  <a href="{{ job.url }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
+    <i class="icon-base ti tabler-external-link me-1"></i>Original URL
+  </a>
+  {% endif %}
+  {% endif %}
   {% if version %}
   <a href="{{ url_for('apply.download_resume', application_id=application.id) }}" class="btn btn-outline-primary btn-sm">
     <i class="icon-base ti tabler-download me-1"></i>Download DOCX

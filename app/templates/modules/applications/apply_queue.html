@@ -37,6 +37,9 @@
             <td>{{ app.job_posting.fit_score or '-' }}{% if app.job_posting and app.job_posting.fit_score %}%{% endif %}</td>
             <td class="text-end">
               <a href="{{ url_for('applications.detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+              {% if app.job_posting %}
+              <a href="{{ url_for('jobs.posting_detail', posting_id=app.job_posting.id) }}" class="btn btn-sm btn-outline-secondary">Posting</a>
+              {% endif %}
             </td>
           </tr>
           {% else %}

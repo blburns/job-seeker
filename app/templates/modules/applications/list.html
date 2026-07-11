@@ -28,6 +28,9 @@
           <td>{% if app.keyword_coverage_at_apply %}{{ app.keyword_coverage_at_apply }}%{% else %}-{% endif %}</td>
           <td class="text-end">
             <a href="{{ url_for('applications.detail', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+            {% if app.job_posting %}
+            <a href="{{ url_for('jobs.posting_detail', posting_id=app.job_posting.id) }}" class="btn btn-sm btn-outline-secondary">Posting</a>
+            {% endif %}
           </td>
         </tr>
         {% else %}

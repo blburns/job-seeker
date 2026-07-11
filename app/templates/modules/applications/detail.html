@@ -4,6 +4,16 @@
 {% block title %}Application Detail{% endblock %}
 {% block content %}
 {% call page_header(job.title if job else 'Application', (job.company if job else '') ~ ' · ' ~ application.stage) %}
+  {% if job %}
+  <a href="{{ url_for('jobs.posting_detail', posting_id=job.id) }}" class="btn btn-outline-secondary btn-sm">
+    <i class="icon-base ti tabler-file-description me-1"></i>View posting
+  </a>
+  {% if job.url or application.portal_url %}
+  <a href="{{ job.url or application.portal_url }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
+    <i class="icon-base ti tabler-external-link me-1"></i>Original URL
+  </a>
+  {% endif %}
+  {% endif %}
   {% if application.stage == 'saved' or application.stage == 'tailoring' %}
   <form method="post" action="{{ url_for('applications.tailor', application_id=application.id) }}" class="d-inline">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -32,6 +42,62 @@
     </button>
   </form>
 {% endcall %}
+
+{% if job %}
+<div class="card mb-4">
+  <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <h5 class="card-title mb-0">Original job posting</h5>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ url_for('jobs.posting_detail', posting_id=job.id) }}" class="btn btn-sm btn-outline-primary">
+        Full posting
+      </a>
+      {% if job.url or application.portal_url %}
+      <a href="{{ job.url or application.portal_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+        Open on {{ job.source|title if job.source else 'site' }}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-body">
+    <dl class="row mb-3 gy-2">
+      <dt class="col-sm-3 text-muted">Company</dt>
+      <dd class="col-sm-9 mb-0">{{ job.company or '—' }}</dd>
+      <dt class="col-sm-3 text-muted">Location</dt>
+      <dd class="col-sm-9 mb-0">{{ job.location or '—' }}</dd>
+      <dt class="col-sm-3 text-muted">Source</dt>
+      <dd class="col-sm-9 mb-0">
+        <span class="badge bg-label-secondary text-capitalize">{{ job.source or '—' }}</span>
+        {% if job.fit_score is not none %}
+        <span class="ms-2 small text-muted">Fit {{ job.fit_score }}%</span>
+        {% endif %}
+      </dd>
+      {% if job.url or application.portal_url %}
+      <dt class="col-sm-3 text-muted">URL</dt>
+      <dd class="col-sm-9 mb-0 text-break">
+        <a href="{{ job.url or application.portal_url }}" target="_blank" rel="noopener">{{ job.url or application.portal_url }}</a>
+      </dd>
+      {% endif %}
+    </dl>
+    {% if job.description %}
+    <h6 class="mb-2">Description</h6>
+    <div class="border rounded p-3 bg-body-tertiary" style="max-height: 28rem; overflow-y: auto; white-space: pre-wrap;">{{ job.description }}</div>
+    {% if job.requirements %}
+    <h6 class="mt-3 mb-2">Requirements</h6>
+    <div class="border rounded p-3 bg-body-tertiary" style="max-height: 16rem; overflow-y: auto; white-space: pre-wrap;">{{ job.requirements }}</div>
+    {% endif %}
+    {% else %}
+    <p class="text-muted mb-0">
+      No description stored yet.
+      <a href="{{ url_for('jobs.posting_detail', posting_id=job.id) }}">Open the posting page</a>
+      {% if job.url or application.portal_url %}
+      or
+      <a href="{{ job.url or application.portal_url }}" target="_blank" rel="noopener">view the original listing</a>
+      {% endif %}.
+    </p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 
 {% if version %}
 <div class="card mb-4">
