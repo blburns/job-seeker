@@ -100,16 +100,29 @@ class ApplyDraftService:
 
     @classmethod
     def _retry_settings(cls) -> tuple:
-        """Max attempts and base backoff seconds for free-tier rate limits."""
+        """
+        Retry policy for free-tier rate limits.
+
+        max_attempts: 0 = keep going until success or wall-clock timeout
+        base_seconds: delay between retries (capped)
+        timeout_seconds: safety stop so the request cannot hang forever
+        """
         try:
-            max_attempts = max(1, int(os.getenv('COVER_LETTER_RETRY_MAX', '6')))
+            max_attempts = int(os.getenv('COVER_LETTER_RETRY_MAX', '0'))
         except ValueError:
-            max_attempts = 6
+            max_attempts = 0
         try:
-            base_seconds = max(1.0, float(os.getenv('COVER_LETTER_RETRY_BASE_SECONDS', '20')))
+            base_seconds = max(1.0, float(os.getenv('COVER_LETTER_RETRY_BASE_SECONDS', '30')))
         except ValueError:
-            base_seconds = 20.0
-        return max_attempts, base_seconds
+            base_seconds = 30.0
+        try:
+            timeout_seconds = max(
+                60.0,
+                float(os.getenv('COVER_LETTER_RETRY_TIMEOUT_SECONDS', '1800')),
+            )
+        except ValueError:
+            timeout_seconds = 1800.0
+        return max_attempts, base_seconds, timeout_seconds
 
     @classmethod
     def regenerate_cover_letter(
@@ -120,9 +133,10 @@ class ApplyDraftService:
         profile_data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
-        Regenerate cover letter with automatic retries on rate limits.
+        Regenerate cover letter, keeping retrying on rate limits until success
+        (or until COVER_LETTER_RETRY_TIMEOUT_SECONDS elapses).
 
-        Returns dict: {draft, ok, error, rate_limited, attempts, retried}
+        Returns dict: {draft, ok, error, rate_limited, attempts, retried, timed_out}
         """
         draft = cls.ensure_draft(application, user_id, profile_data=profile_data)
         if not draft:
@@ -133,6 +147,7 @@ class ApplyDraftService:
                 'rate_limited': False,
                 'attempts': 0,
                 'retried': False,
+                'timed_out': False,
             }
 
         profile = MasterProfile.query.filter_by(
@@ -147,65 +162,101 @@ class ApplyDraftService:
                 'rate_limited': False,
                 'attempts': 0,
                 'retried': False,
+                'timed_out': False,
             }
 
         letter_profile = profile_data or profile.profile_data or {}
         previous = draft.cover_letter or ''
-        max_attempts, base_seconds = cls._retry_settings()
+        max_attempts, base_seconds, timeout_seconds = cls._retry_settings()
+        unlimited = max_attempts <= 0
         last_error = ''
         hit_rate_limit = False
         retried = False
+        started = time.monotonic()
+        attempt = 0
 
-        for attempt in range(1, max_attempts + 1):
+        while True:
+            attempt += 1
             try:
                 new_letter = (cls._generate_cover_letter(job, letter_profile) or '').strip()
             except Exception as exc:
                 last_error = str(exc)
+                rate_limited = _is_rate_limit_error(exc)
                 logger.warning(
-                    'Cover letter regeneration failed (attempt %s/%s): %s',
+                    'Cover letter regeneration failed (attempt %s): %s',
                     attempt,
-                    max_attempts,
                     exc,
                 )
-                if _is_rate_limit_error(exc) and attempt < max_attempts:
+                if rate_limited:
                     hit_rate_limit = True
                     retried = True
-                    # Exponential backoff: 20s, 40s, 80s… capped at 2 minutes
-                    delay = min(base_seconds * (2 ** (attempt - 1)), 120.0)
+                    elapsed = time.monotonic() - started
+                    if elapsed >= timeout_seconds:
+                        return {
+                            'draft': draft,
+                            'ok': False,
+                            'error': last_error,
+                            'rate_limited': True,
+                            'previous': previous,
+                            'attempts': attempt,
+                            'retried': retried,
+                            'timed_out': True,
+                        }
+                    if not unlimited and attempt >= max_attempts:
+                        return {
+                            'draft': draft,
+                            'ok': False,
+                            'error': last_error,
+                            'rate_limited': True,
+                            'previous': previous,
+                            'attempts': attempt,
+                            'retried': retried,
+                            'timed_out': False,
+                        }
+                    # Steady backoff for free tier; cap at 90s between tries
+                    delay = min(base_seconds, 90.0)
+                    remaining = timeout_seconds - elapsed
+                    delay = min(delay, max(1.0, remaining))
                     logger.info(
-                        'Rate limited — retrying cover letter in %.0fs (attempt %s/%s)',
+                        'Rate limited — retrying cover letter in %.0fs '
+                        '(attempt %s, %.0fs remaining)',
                         delay,
                         attempt + 1,
-                        max_attempts,
+                        remaining,
                     )
                     time.sleep(delay)
                     continue
+
+                # Non-rate-limit errors: fail immediately
                 return {
                     'draft': draft,
                     'ok': False,
                     'error': last_error,
-                    'rate_limited': _is_rate_limit_error(exc),
+                    'rate_limited': False,
                     'previous': previous,
                     'attempts': attempt,
                     'retried': retried,
+                    'timed_out': False,
                 }
 
             if not new_letter:
                 last_error = 'AI returned an empty cover letter.'
-                if attempt < max_attempts:
-                    retried = True
-                    delay = min(base_seconds * (2 ** (attempt - 1)), 120.0)
-                    time.sleep(delay)
-                    continue
-                return {
-                    'draft': draft,
-                    'ok': False,
-                    'error': last_error,
-                    'rate_limited': hit_rate_limit,
-                    'previous': previous,
-                    'attempts': attempt,
-                    'retried': retried,
-                }
+                retried = True
+                elapsed = time.monotonic() - started
+                if elapsed >= timeout_seconds or (not unlimited and attempt >= max_attempts):
+                    return {
+                        'draft': draft,
+                        'ok': False,
+                        'error': last_error,
+                        'rate_limited': hit_rate_limit,
+                        'previous': previous,
+                        'attempts': attempt,
+                        'retried': retried,
+                        'timed_out': elapsed >= timeout_seconds,
+                    }
+                delay = min(base_seconds, 90.0)
+                time.sleep(delay)
+                continue
 
             draft.cover_letter = new_letter
             return {
@@ -215,17 +266,8 @@ class ApplyDraftService:
                 'rate_limited': False,
                 'attempts': attempt,
                 'retried': retried,
+                'timed_out': False,
             }
-
-        return {
-            'draft': draft,
-            'ok': False,
-            'error': last_error or 'Cover letter regeneration failed after retries.',
-            'rate_limited': hit_rate_limit,
-            'previous': previous,
-            'attempts': max_attempts,
-            'retried': retried,
-        }
 
     @classmethod
     def _backfill_from_profile(cls, draft: ApplyDraft, contact: Dict[str, Any]) -> None:

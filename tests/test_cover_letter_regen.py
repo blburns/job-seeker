@@ -9,11 +9,18 @@ def _profile_patch():
     return patch('app.services.apply_draft_service.MasterProfile')
 
 
-def test_regenerate_cover_letter_retries_then_reports_rate_limit(monkeypatch):
+def test_regenerate_keeps_retrying_until_timeout(monkeypatch):
     draft = MagicMock()
     draft.cover_letter = 'Previous letter'
-    monkeypatch.setenv('COVER_LETTER_RETRY_MAX', '3')
+    monkeypatch.setenv('COVER_LETTER_RETRY_MAX', '0')
     monkeypatch.setenv('COVER_LETTER_RETRY_BASE_SECONDS', '1')
+    monkeypatch.setenv('COVER_LETTER_RETRY_TIMEOUT_SECONDS', '3')
+
+    # Force timeout after a couple of sleeps by advancing monotonic time.
+    times = [0.0, 0.5, 1.0, 1.5, 2.0, 3.5]
+
+    def fake_monotonic():
+        return times.pop(0) if times else 99.0
 
     with patch.object(ApplyDraftService, 'ensure_draft', return_value=draft), \
          patch.object(
@@ -22,6 +29,7 @@ def test_regenerate_cover_letter_retries_then_reports_rate_limit(monkeypatch):
              side_effect=RuntimeError('Gemini rate limit / quota exceeded (HTTP 429)'),
          ), \
          patch('app.services.apply_draft_service.time.sleep') as mock_sleep, \
+         patch('app.services.apply_draft_service.time.monotonic', side_effect=fake_monotonic), \
          _profile_patch() as MockProfile:
         MockProfile.query.filter_by.return_value.first.return_value = MagicMock(
             profile_data={'contact': {'name': 'Jane'}}
@@ -32,17 +40,18 @@ def test_regenerate_cover_letter_retries_then_reports_rate_limit(monkeypatch):
 
     assert result['ok'] is False
     assert result['rate_limited'] is True
-    assert result['attempts'] == 3
+    assert result['timed_out'] is True
     assert result['retried'] is True
-    assert mock_sleep.call_count == 2
+    assert mock_sleep.call_count >= 1
     assert draft.cover_letter == 'Previous letter'
 
 
 def test_regenerate_cover_letter_succeeds_after_retry(monkeypatch):
     draft = MagicMock()
     draft.cover_letter = 'Previous letter'
-    monkeypatch.setenv('COVER_LETTER_RETRY_MAX', '4')
+    monkeypatch.setenv('COVER_LETTER_RETRY_MAX', '0')
     monkeypatch.setenv('COVER_LETTER_RETRY_BASE_SECONDS', '1')
+    monkeypatch.setenv('COVER_LETTER_RETRY_TIMEOUT_SECONDS', '600')
 
     with patch.object(ApplyDraftService, 'ensure_draft', return_value=draft), \
          patch.object(
@@ -66,6 +75,7 @@ def test_regenerate_cover_letter_succeeds_after_retry(monkeypatch):
     assert result['ok'] is True
     assert result['attempts'] == 3
     assert result['retried'] is True
+    assert result['timed_out'] is False
     assert mock_sleep.call_count == 2
     assert draft.cover_letter == 'Fresh AI letter after wait'
 

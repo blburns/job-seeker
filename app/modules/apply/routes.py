@@ -109,15 +109,21 @@ def regenerate_cover_letter(application_id):
         if result.get('retried'):
             flash(
                 f'Cover letter regenerated after {result.get("attempts", "?")} attempt(s) '
-                '(automatic retries handled a temporary rate limit).',
+                '(kept retrying through rate limits).',
                 'success',
             )
         else:
             flash('Cover letter regenerated.', 'success')
+    elif result.get('timed_out'):
+        flash(
+            'Still rate-limited after waiting as long as allowed. Your previous cover letter '
+            'was kept — leave it a few minutes, then click Regenerate once more and it will '
+            'keep trying again.',
+            'warning',
+        )
     elif result.get('rate_limited'):
         flash(
-            'AI rate limit persisted after automatic retries. Your previous cover letter was kept — '
-            'wait a couple of minutes, then try Regenerate again.',
+            'AI rate limit persisted. Your previous cover letter was kept — try again shortly.',
             'warning',
         )
     else:
